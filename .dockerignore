@@ -1,0 +1,11 @@
+.idea
+.git
+.gitignore
+.dockerignore
+cmake-*
+cmake.lock
+data
+run
+tests
+Dockerfile
+README.md
