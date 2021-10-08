@@ -9,7 +9,8 @@ Run docker container: \
 View Map Matching Help: \
 `./map_matching_2 --help`
 
-Example (be aware, uses as much CPU cores as available, even scales with 128 cores, and in this example needs at least 64 GB of system memory available):
+Example (be aware, uses as much CPU cores as available, even scales with 128 cores, and in this example needs at least
+64 GB of available system memory):
 
 ```
 ./map_matching_2 \
@@ -25,7 +26,9 @@ Example (be aware, uses as much CPU cores as available, even scales with 128 cor
 
 If you don't have that much RAM, disable candidate adoption with \
 `--candidate-adoption-siblings off --candidate-adoption-nearby off` \
-but be aware that this reduces the map matching accuracy drastically.
+but be aware that this reduces the map matching accuracy drastically. \
+Works with about 16 GB of available system memory then, maybe less, depending on the amount of CPU cores available.
 
 If you don't want to use multi-threading for map matching enable \
-`--single-threading`. This also reduces global memory usage.
+`--single-threading`. \
+This also reduces global memory usage as parallel matching does not occur.
