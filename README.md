@@ -56,7 +56,7 @@ Build docker image: \
 Run docker container: \
 `docker run --rm -it -v $(pwd)/data:/app/data -u $(id -u ${USER}):$(id -g ${USER}) --name map-matching-2 map-matching-2`
 
-View Map Matching Help: \
+View Map Matching Help (or view [help.txt](help.txt)): \
 `./map_matching_2 --help`
 
 Example (be aware, uses as much CPU cores as available, even scales with 128 cores, and in this example needs at least

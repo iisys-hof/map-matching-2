@@ -1,0 +1,423 @@
+Available Options:
+  --help                                show this help
+
+Network Options:
+  --network arg                         path to .osm.pbf network file
+  --arcs arg                            path to arcs network file, requires 
+                                        nodes file
+  --nodes arg                           path to nodes network file, requires 
+                                        arcs file
+  --network-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
+                                        network spatial reference system (srs) 
+                                        as PROJ string, default is WGS84, 
+                                        tracks and compare tracks if given need
+                                        to be in the same reference system as 
+                                        the network
+  --network-srs-type arg                network srs type, can be set to 
+                                        'geographic' or 'cartesian'; by default
+                                        automatically detects type depending on
+                                        set srs
+  --network-transform-srs arg           network transform spatial reference 
+                                        system (srs) as PROJ string; when 
+                                        defined, network is transformed to 
+                                        given srs, tracks and compare tracks if
+                                        given need to be in the same reference 
+                                        system as the network
+  --network-transform-srs-type arg      network transform srs type, can be set 
+                                        to 'geographic' or 'cartesian'; by 
+                                        default automatically detects type 
+                                        depending on set transform srs
+  --simplify-network arg (=on)          simplify network graph
+  --simplify-network-complete arg (=on) simplify as much as possible in network
+                                        graph, osm ids and tags are not 
+                                        seperated, if only edges with same osm 
+                                        id and tags should be simplified, 
+                                        disable this option
+  --remove-unconnected arg (=off)       remove weakly unconnected components so
+                                        that only the largest subgraph remains
+  --routing-max-distance-factor arg (=10.0)
+                                        max distance factor for upper bound for
+                                        routing algorithm, removes all nodes 
+                                        from routing that are too far away from
+                                        the search area between a start and end
+                                        node, dramatically reduces routing 
+                                        duration in networks significantly 
+                                        larger than the given track
+
+Track Options:
+  --tracks arg                          path to .csv tracks file
+  --tracks-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
+                                        tracks spatial reference system (srs) 
+                                        as PROJ string, default is WGS84
+  --tracks-srs-type arg                 tracks srs type, can be set to 
+                                        'geographic' or 'cartesian'; by default
+                                        automatically detects type depending on
+                                        set srs
+  --tracks-transform-srs arg            tracks transform spatial reference 
+                                        system (srs) as PROJ string; when 
+                                        defined, tracks are transformed to 
+                                        given srs
+  --tracks-transform-srs-type arg       tracks transform srs type, can be set 
+                                        to 'geographic' or 'cartesian'; by 
+                                        default automatically detects type 
+                                        depending on set transform srs
+  --delimiter arg (=,)                  delimiter for .csv tracks file, only 
+                                        for import, export always uses ',' 
+                                        (because csv is 'comma' separated)
+  --no-header                           csv has no header, column 
+                                        specifications are interpreted as 
+                                        indices of columns
+  --no-id                               csv has no id column, in this case, an 
+                                        id of 0 is used and all points are 
+                                        asumed to be one track, except when WKT
+                                        read mode and linestrings are given, 
+                                        then the row index is used as id
+  --id arg (=id)                        id column of tracks .csv file, can be 
+                                        specified multiple times for composite 
+                                        primary keys over multiple columns, 
+                                        internally, the id-aggregator field is 
+                                        then used for concatenation of the 
+                                        values
+  --id-aggregator arg (=_)              used for aggregating the values of 
+                                        composite primary keys, see id
+  --wkt                                 use WKT read mode for .csv tracks file 
+                                        instead of default x,y coordinates read
+                                        mode
+  --x arg (=x)                          x column (or longitude) of tracks .csv 
+                                        file in coordinates read mode
+  --y arg (=y)                          y column (or latitude) of tracks .csv 
+                                        file in coordinates read mode
+  --geometry arg (=geometry)            geometry column of tracks .csv file in 
+                                        WKT read mode can either be of type 
+                                        POINT or LINESTRING, in POINT mode, 
+                                        points are sorted ascending by time 
+                                        column, if available, else by 
+                                        appearance, in LINESTRING mode, 
+                                        timestamp is just an incremented value 
+                                        for each point
+  --time arg (=time)                    time column of tracks .csv file, is 
+                                        optional if no such column exists, for 
+                                        example in WKT LINESTRING read mode, 
+                                        currently, the time column is only used
+                                        for sorting points while reading tracks
+                                        .csv file
+  --time-format arg (=%FT%T%Oz)         time format for parsing the time value 
+                                        in the time column into unix timestamp 
+                                        format, please review 
+                                        std::chrono::parse documentation for 
+                                        syntax, default reads ISO 8601 date and
+                                        time with time zone
+  --no-parse-time                       do not parse time, is needed when the 
+                                        time is given in seconds only
+  --selector arg                        track selector for matching a specific 
+                                        track from the tracks file, can be 
+                                        specified multiple times
+
+Output Options:
+  --output arg                          path to .csv output file for matched 
+                                        results
+  --export-edges arg (=off)             export matched routes based on original
+                                        edges from the network graph, this 
+                                        gives route segments that are exactly 
+                                        comparable to the underlying road 
+                                        network
+  --join-merges arg (=on)               by default or when export-edges is off,
+                                        the routes between candidates are 
+                                        concatenated, this parameter removes 
+                                        additional joint points when possible, 
+                                        so all joint points are removed except 
+                                        when reverse movements within an edge 
+                                        happen
+  --console                             output WKT to console
+
+Compare Options:
+  --compare-only                        disables map-matching, uses tracks only
+                                        for comparing with given ground truth 
+                                        matches, you can for example input 
+                                        pre-matched tracks for comparing them 
+                                        to given ground truth matches
+  --no-compare                          disables comparison completely
+  --compare-edges-list-mode             in this mode, compare is no .csv file 
+                                        but a file that contains a list of 
+                                        edges that form the ground truth route,
+                                        in this case, the number of the edge is
+                                        the id of the edge in the network 
+                                        graph, also the network-srs and 
+                                        network-transform-srs as well as the 
+                                        corresponding types are used
+  --compare arg                         path to .csv compare file for ground 
+                                        truth matches for statistics on results
+  --compare-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
+                                        compare spatial reference system (srs) 
+                                        as PROJ string, default is WGS84
+  --compare-srs-type arg                compare srs type, can be set to 
+                                        'geographic' or 'cartesian'; by default
+                                        automatically detects type depending on
+                                        set srs
+  --compare-transform-srs arg           compare transform spatial reference 
+                                        system (srs) as PROJ string; when 
+                                        defined, compare tracks are transformed
+                                        to given srs
+  --compare-transform-srs-type arg      compare transform srs type, can be set 
+                                        to 'geographic' or 'cartesian'; by 
+                                        default automatically detects type 
+                                        depending on set transform srs
+  --compare-output arg                  path to .csv compare output file for 
+                                        results of comparison, in compare-only 
+                                        mode, this is filled from output 
+                                        parameter if not specified
+  --compare-delimiter arg (=,)          see delimiter for tracks .csv
+  --compare-no-header                   see no-header for tracks .csv
+  --compare-no-id                       see no-id for tracks .csv
+  --compare-id arg (=id)                see id for tracks .csv
+  --compare-id-aggregator arg (=_)      see id-aggregator for tracks .csv
+  --compare-wkt                         see wkt for tracks .csv
+  --compare-x arg (=x)                  see x for tracks .csv
+  --compare-y arg (=y)                  see y for tracks .csv
+  --compare-geometry arg (=geometry)    see geometry for tracks .csv
+  --compare-simplify-distance-tolerance arg (=0.1)
+                                        compare simplify distance tolerance in 
+                                        meters around comparison lines for 
+                                        Douglas-Peucker algorithm
+  --compare-simplify-reverse-tolerance arg (=0.1)
+                                        compare reverse detection azimuth 
+                                        tolerance in degrees for splitting 
+                                        simplifications
+  --compare-adoption-distance-tolerance arg (=0.1)
+                                        compare adoption distance tolerance in 
+                                        meters around a point for merging close
+                                        points to remove tiny differences
+  --compare-split-distance-tolerance arg (=1.0)
+                                        compare split distance tolerance in 
+                                        meters for splitting lines at closest 
+                                        points between lines
+  --compare-split-direction-tolerance arg (=90.0)
+                                        compare split direction tolerance in 
+                                        degrees for allowing only splits at 
+                                        points that have no more direction 
+                                        change degrees than specified
+
+Network Export Options:
+  --export-candidates arg               export candidates to the folder given, 
+                                        if no folder is given, no candidates 
+                                        are exported
+  --export-network arg                  apply two times for exporting nodes.csv
+                                        and edges.csv of network graph
+  --export-simplified-network arg       apply two times for exporting nodes.csv
+                                        and edges.csv of simplified network 
+                                        graph
+  --export-retained-network arg         apply two times for exporting nodes.csv
+                                        and edges.csv of retained network graph
+                                        after removal of weakly unconnected 
+                                        components
+  --export-transformed-network arg      apply two times for exporting nodes.csv
+                                        and edges.csv of transformed network 
+                                        graph
+
+Console Options:
+  --readline                            read WKT track from console input
+  --quiet                               do not output anything except if 
+                                        console output is activated, 
+                                        deactivates verbose
+  --verbose                             show more output during matching
+
+Performance Options:
+  --single-threading                    disable multi-threading and use a 
+                                        single thread for all map matching 
+                                        algorithms, multi-threading is enabled 
+                                        by default, which allows to map match 
+                                        multiple tracks simultaneously
+
+Track Preparation Options:
+  --filter-duplicates arg (=on)         filter duplicate (equal) points in 
+                                        tracks before matching
+  --filter-defects arg (=off)           filter defects in tracks before 
+                                        matching, currently removes zig-zag 
+                                        curves manually
+  --simplify-track arg (=on)            simplify track with Douglas-Peucker 
+                                        algorithm
+  --simplify-track-distance-tolerance arg (=5.0)
+                                        distance tolerance in meters around 
+                                        line for Douglas-Peucker algorithm
+  --median-merge arg (=on)              simplify track by merging point clouds 
+                                        to their median point coordinates, this
+                                        reduces the amount of points when 
+                                        vehicles emit positions from static 
+                                        positions
+  --median-merge-distance-tolerance arg (=10.0)
+                                        distance tolerance in meters around a 
+                                        point to merge all points within the 
+                                        given radius
+  --adaptive-median-merge arg (=on)     adapt median-merge-distance-tolerance 
+                                        automatically for point clouds that are
+                                        far from streets, the distance can be 
+                                        raised up to half the distance of the 
+                                        nearest road edge for merging
+  --candidate-adoption-siblings arg (=on)
+                                        for each measurement, adopt candidates 
+                                        from preceding and succeeding 
+                                        candidate, in other words, each 
+                                        measurement can choose from at least 
+                                        three road positions and each road 
+                                        position is referenced by three 
+                                        candidates, gives much better results 
+                                        but has a huge calculation speed impact
+  --candidate-adoption-nearby arg (=on) for each measurement, adopt candidates 
+                                        from searching nearby candidates 
+                                        intersecting a search circle with 
+                                        distance of the farthest current 
+                                        candidate, in dense areas with very 
+                                        near records this exchanges all 
+                                        candidates between all records, gives 
+                                        much better results in dense record 
+                                        areas but has a very huge calculation 
+                                        speed impact
+  --candidate-adoption-reverse arg (=off)
+                                        for each nearby adoption, inject 
+                                        current candidate into candidate sets 
+                                        of adopting candidates this is 
+                                        especially useful when adaptive 
+                                        optimization rounds are enabled, new 
+                                        found candidates are then deployed to 
+                                        preceding and following locations 
+                                        around the high error location, has the
+                                        highest calculation speed impact
+  --candidate-search arg (=circle)      candidate search algorithm to use, 
+                                        possible options:
+                                        circle
+                                        searches for all edges around a point 
+                                        intersecting a circle with at least 
+                                        given radius
+                                        nearest
+                                        searches the k-nearest edges around a 
+                                        point
+                                        next
+                                        searches only the next nearest edge 
+                                        (within the nearest and adjacent as 
+                                        well as reversed edges)
+  --radius arg (=200.0)                 radius in meters for candidate search 
+                                        when circle algorithm is selected, is 
+                                        automatically doubled each time when no
+                                        candidates within given radius are 
+                                        found, radius is starting radius if 
+                                        adaptive-radius is enabled (which is by
+                                        default)
+  --radius-upper-limit arg (=10000.0)   radius upper limit in meters for 
+                                        candidate search when circle algorithm 
+                                        is selected, eventually stops 
+                                        automatically doubling of radius when 
+                                        no candidates are found
+  --radius-lower-limit arg (=200.0)     radius lower limit in meters for 
+                                        candidate search when adaptive-radius 
+                                        is used, prevents too small search 
+                                        radii in areas with dense track 
+                                        measurements
+  --adaptive-radius arg (=on)           adaptive-radius is only used when 
+                                        circle algorithm is selected, the 
+                                        radius is then reduced to the minimum 
+                                        distance to the next and previous 
+                                        candidate, the radius-lower-limit is 
+                                        never undershot, when no candidate is 
+                                        found, the radius is doubled until 
+                                        radius-upper-limit, this reduces the 
+                                        amount of candidates in dense road 
+                                        network areas, it works best with 
+                                        candidate-adoption enabled
+  --k-nearest arg (=8)                  k-nearest edges to search for in 
+                                        candidate search when nearest algorithm
+                                        is selected
+
+Model Options:
+  --model arg (=value-iteration)        model to use, possible options:
+                                        policy-iteration
+                                        uses policy iteration algorithm with 
+                                        markov decision process
+                                        value-iteration
+                                        uses value iteration algorithm with 
+                                        markov decision process
+                                        q-learning
+                                        uses Q-learning algorithm with markov 
+                                        decision process
+                                        viterbi
+                                        uses Viterbi algorithm with hidden 
+                                        markov model
+  --skip-errors arg (=on)               enable skipping high error situations 
+                                        in markov decision processes, leads to 
+                                        gaps in the exported track, but this is
+                                        much better than high errors
+  --state-size arg (=2)                 amount of adjacent track points to 
+                                        consider for a state in value iteration
+                                        and q-learning, default value of 2 
+                                        means two directly succeeding points, 
+                                        value of 3 means three directly 
+                                        succeeding points, with 3 succeeding 
+                                        points, additional metrics for 
+                                        direction changes and zig-zag movements
+                                        are processed, 3 has a huge impact on 
+                                        calculation speed because the state 
+                                        space becomes very large, other values 
+                                        are not permitted, also does not work 
+                                        with viterbi algorithm due to design 
+                                        principles
+  --discount arg (=0.99)                discount factor for value-iteration and
+                                        q-learning, discount of 0.0 means only 
+                                        the current state is of value, discount
+                                        of 1.0 means all state sequences up to 
+                                        the goal are of value fur the current 
+                                        state, defaults to 0.99 for making sure
+                                        that loops eventually unroll
+
+Markov-Decision-Process Options:
+  --mdp-distance-factor arg (=1.0)      distance factor for rewarding distances
+                                        between measurement point and candidate
+                                        position
+  --mdp-length-factor arg (=0.1)        length factor for rewarding length 
+                                        differences between track segments and 
+                                        routes in network
+  --mdp-azimuth-factor arg (=0.1)       azimuth factor for rewarding azimuth 
+                                        differences between track segments and 
+                                        routes in network
+  --mdp-direction-factor arg (=1.0)     direction factor for rewarding 
+                                        direction changes of routes in network
+
+Hidden-Markov-Model Options:
+  --hmm-distance-factor arg (=1.0)      distance factor for probability of 
+                                        distances between measurement point and
+                                        candidate position
+  --hmm-length-factor arg (=0.1)        length factor for probability of length
+                                        differences between track segments and 
+                                        routes in network
+  --hmm-azimuth-factor arg (=0.1)       azimuth factor for probability of 
+                                        azimuth differences between track 
+                                        segments and routes in network
+  --hmm-direction-factor arg (=1.0)     direction factor for probability of 
+                                        direction changes of routes in network
+
+Dynamic Programming Options:
+  --threshold arg (=1e-3)               threshold for stopping iterations in 
+                                        policy- and value-iteration when the 
+                                        previous round improvement was below 
+                                        the given threshold
+
+Q-Learning Options:
+  --learning-rate arg (=0.8)            learning rate for q-learning, only 
+                                        applies if q-learning model is 
+                                        selected, higher learning-rate means 
+                                        faster learning, lower learning-rate 
+                                        means slower learning
+  --epsilon arg (=0.2)                  epsilon random action selection value 
+                                        for q-learning, only applies if 
+                                        q-learning model is selected, epsilon 
+                                        of 0.0 means no random action 
+                                        selection, always choose next best, 
+                                        epsilon of 1.0 means always random 
+                                        selection, never select next best
+  --max-episodes arg (=1000000000)      maximum episodes for definitive stop in
+                                        q-learning, do not change except you 
+                                        know what you are doing, training is 
+                                        generally stopped early before 
+                                        max-episodes is ever reached, this is 
+                                        calculated from the found candidates, 
+                                        the more possible candidates, the 
+                                        longer the training
+
