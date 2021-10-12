@@ -32,3 +32,5 @@ Works with about 16 GB of available system memory then, maybe less, depending on
 If you don't want to use multi-threading for map matching enable \
 `--single-threading`. \
 This also reduces global memory usage as parallel matching does not occur.
+
+*This is the successor to the deprecated repository [Map Matching](https://github.com/iisys-hof/map-matching).*
