@@ -1,23 +1,28 @@
 # Map Matching 2 [Work-in-progress]
+
 **Map Matching based on Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs).**
 
 Currently the following models are implemented:
+
 * Markov Decision Process (MDP) for single tracks.
 * Hidden Markov Model (HMM) for single tracks.
 
 Currently the following algorithms are implemented:
+
 * for Hidden Markov Models
-  * Viterbi algorithm
+    * Viterbi algorithm
 * for Markov Decision Processes
-  * Policy Iteration
-  * Value Iteration
-  * Q-learning
+    * Policy Iteration
+    * Value Iteration
+    * Q-learning
 
 Various advanced map matching algorithms are implemented, for example:
+
 * OpenStreetMap `.osm.pbf` import of road network
 * `.csv` import of tracks, either as list of points or WKT lines or multilines
 * Import in shell pipeline mode of WKT lines or multilines (optional)
-* Native import and matching of the map matching dataset at [Dataset for testing and training map-matching methods](https://zenodo.org/record/57731) (optional)
+* Native import and matching of the map matching dataset
+  at [Dataset for testing and training map-matching methods](https://zenodo.org/record/57731) (optional)
 * Export of imported map data in various processing stages for easy view in [QGIS](https://www.qgis.org/)
 * Comparison methods for matching results of own results and results of external software (optional)
 * Lossless Network simplification for reducing nodes and edges
@@ -34,11 +39,16 @@ Various advanced map matching algorithms are implemented, for example:
 * Candidate adoption of siblings and/or nearby candidates
 * Matching of tracks with gaps with MDP and skip-errors option (default)
 * Tunable weights for HMM and MDP models
+* Index mapping for MDP model and algorithms for rewards, V and Q tables
 * Tunable parameters for all algorithms, such as learning rate, discount factor, epsilon, etc.
 * Output to `.csv` file for easy view in [QGIS](https://www.qgis.org/) or optional console for shell pipeline mode
 * Quiet mode and verbose mode with benchmark timings (optional)
 * Multi-threading which can optionally be disabled
+* Improved memory management with [rpmalloc](https://github.com/mjansson/rpmalloc)
 * *More features are in the making ...*
+
+The provided source code is heavily tuned and optimized for fast and accurate map matching. We are currently working on
+multiple research papers based on this open source code.
 
 Build docker image: \
 `docker build -t map-matching-2 .`
