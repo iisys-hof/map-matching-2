@@ -47,8 +47,11 @@ Various advanced map matching algorithms are implemented, for example:
 * Improved memory management with [rpmalloc](https://github.com/mjansson/rpmalloc)
 * *More features are in the making ...*
 
-The provided source code is heavily tuned and optimized for fast and accurate map matching. We are currently working on
-multiple research papers based on this open source code.
+The provided source code is heavily tuned and optimized for fast and accurate map matching. \
+Please read the
+paper [Evolving map matching with markov decision processes](https://opus4.kobv.de/opus4-hof/frontdoor/index/index/docId/119)
+for more information about this open source tool. \
+We are currently working on several new research papers based on this approach.
 
 Build docker image: \
 `docker build -t map-matching-2 .`
