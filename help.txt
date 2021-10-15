@@ -201,6 +201,8 @@ Network Export Options:
   --export-candidates arg               export candidates to the folder given, 
                                         if no folder is given, no candidates 
                                         are exported
+  --network-output arg                  output final network to .osm.pbf file 
+                                        for faster reimport on next run
   --export-network arg                  apply two times for exporting nodes.csv
                                         and edges.csv of network graph
   --export-simplified-network arg       apply two times for exporting nodes.csv
