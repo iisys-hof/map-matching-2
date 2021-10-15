@@ -24,8 +24,8 @@ Various advanced map matching algorithms are implemented, for example:
 * Native import and matching of the map matching dataset
   at [Dataset for testing and training map-matching methods](https://zenodo.org/record/57731) (optional)
 * Export of imported map data in various processing stages for easy view in [QGIS](https://www.qgis.org/)
-* Export of processed map data in `.osm.pbf` format for faster reimport or usage of same map data in third-party tools (
-  optional)
+* Export of processed map data in `.osm.pbf` format for faster reimport or usage of same map data in third-party tools
+  (optional)
 * Comparison methods for matching results of own results and results of external software (optional)
 * Lossless Network simplification for reducing nodes and edges
 * Reprojections between geographical and cartesian spatial reference systems (SRSs) and matching in both SRSs (optional)
