@@ -17,7 +17,6 @@
 #define MAP_MATCHING_2_EXPORTER_HPP
 
 #include <string>
-#include <fstream>
 
 namespace map_matching_2::io {
 
@@ -25,31 +24,9 @@ namespace map_matching_2::io {
 
     private:
         std::string _filename;
-        std::ofstream _out;
-
-    protected:
-        void open();
-
-        [[nodiscard]] std::ofstream &out();
-
-        void close();
 
     public:
         explicit exporter(std::string filename);
-
-        exporter() = default;
-
-        exporter(const exporter &other) = delete;
-
-        exporter(exporter &&other) noexcept = default;
-
-        exporter &operator=(const exporter &other) = delete;
-
-        exporter &operator=(exporter &&other) noexcept = default;
-
-        ~exporter();
-
-        [[nodiscard]] bool is_writable() const;
 
         [[nodiscard]] const std::string &filename() const;
 

@@ -13,14 +13,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#include "exporter.hpp"
+#include "file_exporter.hpp"
 
 namespace map_matching_2::io {
 
-    exporter::exporter(std::string filename) : _filename{std::move(filename)} {}
+    void file_exporter::open() {
+        if (not filename().empty()) {
+            _out = std::ofstream{filename(), std::ofstream::out | std::ofstream::trunc};
+        }
+    }
 
-    const std::string &exporter::filename() const {
-        return _filename;
+    std::ofstream &file_exporter::out() {
+        return _out;
+    }
+
+    void file_exporter::close() {
+        if (_out.is_open()) {
+            try {
+                _out.close();
+            } catch (std::exception &e) {}
+        }
+    }
+
+    file_exporter::file_exporter(std::string filename) : exporter{std::move(filename)} {
+        open();
+    }
+
+    file_exporter::~file_exporter() {
+        close();
+    }
+
+    bool file_exporter::is_writable() const {
+        return _out.is_open() and not filename().empty();
     }
 
 }

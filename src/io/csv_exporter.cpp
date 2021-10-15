@@ -19,7 +19,7 @@ namespace map_matching_2::io {
 
     template<char Delimiter, char Quote, bool Flush>
     csv_exporter<Delimiter, Quote, Flush>::csv_exporter(std::string filename)
-            : exporter{std::move(filename)}, csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush>{out()} {}
+            : file_exporter{std::move(filename)}, csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush>{out()} {}
 
     template
     class csv_exporter<>;

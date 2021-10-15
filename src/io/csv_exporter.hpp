@@ -18,12 +18,12 @@
 
 #include <csv.hpp>
 
-#include "exporter.hpp"
+#include "file_exporter.hpp"
 
 namespace map_matching_2::io {
 
     template<char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_exporter : public exporter, public csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush> {
+    class csv_exporter : public file_exporter, public csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush> {
 
     public:
         explicit csv_exporter(std::string filename);

@@ -34,6 +34,7 @@
 
 #include <io/network/arc_node_importer.hpp>
 #include <io/network/osm_car_importer.hpp>
+#include <io/network/osm_exporter.hpp>
 #include <geometry/network/types.hpp>
 #include <io/track/edges_list_importer.hpp>
 #include <io/track/csv_track_importer.hpp>
@@ -488,7 +489,7 @@ int main(int argc, char *argv[]) {
             candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
             simplify_network, simplify_network_complete, remove_unconnected, single_threading, quiet, verbose;
     std::string id_aggregator, compare_id_aggregator, x, y, compare_x, compare_y,
-            geometry, compare_geometry, time, time_format,
+            geometry, compare_geometry, time, time_format, network_output,
             export_network_nodes, export_network_edges,
             export_simplified_network_nodes, export_simplified_network_edges,
             export_retained_network_nodes, export_retained_network_edges,
@@ -675,6 +676,8 @@ int main(int argc, char *argv[]) {
         options_export.add_options()
                 ("export-candidates", po::value<std::string>(&candidates_folder),
                  "export candidates to the folder given, if no folder is given, no candidates are exported")
+                ("network-output", po::value<std::string>(&network_output),
+                 "output final network to .osm.pbf file for faster reimport on next run")
                 ("export-network", po::value<std::vector<std::string >>(&export_network),
                  "apply two times for exporting nodes.csv and edges.csv of network graph")
                 ("export-simplified-network", po::value<std::vector<std::string >>(&export_simplified_network),
@@ -864,7 +867,7 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument{"When specifying nodes and arcs, both files are needed."};
         }
 
-        if (tracks_file.empty() and not read_line) {
+        if (network_output.empty() and tracks_file.empty() and not read_line) {
             throw std::invalid_argument{"Please specify a tracks file or enable readline mode."};
         }
 
@@ -878,6 +881,10 @@ int main(int argc, char *argv[]) {
                     std::cout << "Compare-only mode, disabled map-matching." << std::endl;
                 }
             } else {
+                if (not network_output.empty()) {
+                    std::cout << "Enabled network output." << std::endl;
+                }
+
                 if (not filter_duplicates) {
                     std::cout << "Disabled duplicates filtering." << std::endl;
                 }
@@ -1372,6 +1379,24 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        // Export imported network
+        if (not network_output.empty()) {
+            if (verbose) {
+                std::cout << "Saving osm file ... " << std::flush;
+            }
+
+            if (network_srs_type == geographic) {
+                map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_geographic};
+                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
+            } else {
+                map_matching_2::io::network::osm_exporter osm_exporter{network_file, *network_cartesian};
+                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
+            }
+
+            if (verbose) {
+                std::cout << "done in " << duration << "s" << std::endl;
+            }
+        }
 
         // Building spatial indices
         if (network_srs_type == geographic) {
@@ -1676,14 +1701,14 @@ int main(int argc, char *argv[]) {
         }
 
         // Match
-        if (network_srs_type == geographic and tracks_srs_type == geographic and
+        if (network_srs_type == geographic and tracks_srs_type == geographic and not tracks_geographic.empty() and
             (compare_tracks_geographic.empty() or compare_srs_type == geographic)) {
             map_matching_2::matching::types_geographic::matcher_static matcher{*network_geographic, single_threading};
             match(matcher, std::move(tracks_geographic), compare_tracks_geographic,
                   std::move(output_file), std::move(compare_output_file), compare_settings,
                   std::move(candidates_folder), learn_settings, match_settings, model, selectors,
                   single_threading, console, quiet, verbose);
-        } else if (network_srs_type == cartesian and tracks_srs_type == cartesian and
+        } else if (network_srs_type == cartesian and tracks_srs_type == cartesian and not tracks_cartesian.empty() and
                    (compare_tracks_cartesian.empty() or compare_srs_type == cartesian)) {
             map_matching_2::matching::types_cartesian::matcher_static matcher{*network_cartesian, single_threading};
             match(matcher, std::move(tracks_cartesian), compare_tracks_cartesian,

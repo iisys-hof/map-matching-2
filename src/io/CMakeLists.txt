@@ -10,10 +10,12 @@ target_sources(io
         PRIVATE
         importer.cpp
         exporter.cpp
+        file_exporter.cpp
         csv_importer.cpp
         csv_exporter.cpp
         network/arc_node_importer.cpp
         network/osm_car_importer.cpp
+        network/osm_exporter.cpp
         network/osm_handler.cpp
         network/osm_importer.cpp
         network/osm_relations_manager.cpp
