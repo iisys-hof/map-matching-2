@@ -89,3 +89,16 @@ If you don't want to use multi-threading for map matching enable \
 This also reduces global memory usage as parallel matching does not occur.
 
 *This is the successor to the deprecated repository [Map Matching](https://github.com/iisys-hof/map-matching).*
+
+If you want to cite this work, please feel free to adapt the following Bibtex for your needs:
+```
+@article{Woeltche-2021-Evolvingmapmatchin,
+  title     = {{E}volving map matching with markov decision processes},
+  author    = {{W}öltche, {A}drian},
+  year      = {2021},
+  month     = {10},
+  publisher = {{H}of {U}niversity},
+  url       = {https://opus4.kobv.de/opus4-hof/frontdoor/index/index/docId/119},
+  keywords  = {map matching, geospatial information science, hidden markov model, markov decision process}
+}
+```
