@@ -131,8 +131,9 @@ and additionally the ground truth track that the matched track was compared agai
 fraction (see paper for formula), added and missed lengths as well as WKT lines are provided for easy view in QGIS. Use
 import of delimited text file for importing the WKT lines from the resulting csv files.
 
-The following examples all come from the [map matching dataset](https://doi.org/10.5281/zenodo.57731) from Kubicka, M.
-et al.
+The following five examples come from the [map matching dataset](https://doi.org/10.5281/zenodo.57731) from Kubicka, M.
+et al. All following examples were matched with our Markov Decision Process with Value Iteration and default parameter
+settings, see `help.txt` or `./map_matching_2 --help`.
 
 #### Example 1
 
@@ -140,8 +141,8 @@ et al.
 The original track is in red, the candidate policy projections are in orange, the matched result is in green and in gray
 are the provided edges from the arcs-nodes network. You can see that there are fewer candidate projections than the
 track has points (between each arrow there are two points). This comes from the track sanitation as unnecessary points
-are removed before matching. In this example, the green track is perfectly matched in the circle concerning the
-underlying road network in gray. The OpenStreetMap network in the background is for visual help.
+are removed before matching. In this example, the green match is perfectly matched in the circle concerning the
+underlying road network in gray because it is slightly off the OpenStreetMap background image.
 
 #### Example 2
 
@@ -155,28 +156,87 @@ which removed the noisy part in the green matched result.
 
 ![Example 3](docs/example-3.png "Example 3")
 Here the red track that comes from the north first goes to the south, then comes back later and then goes around a
-living location. It looks like the driver went off the car, walked around and later returned to the car. Though this
-situation created very many GPS measurements and noise, our algorithm found a well fitting solution to this situation on
-the underlying road network in the green matched result. Median merge for the point clouds as well as candidate adoption
-were key points for this solution.
+residential district. It looks like the driver went off the car, walked around and later returned to the car. Though
+this situation created very many GPS measurements and noise, our algorithm found a well fitting solution to this
+situation on the underlying road network in the green matched result without any large detours. Median merge for the
+point clouds as well as candidate adoption were key points for this solution.
 
 #### Example 4
 
 ![Example 4](docs/example-4.png "Example 4")
 In this extreme case, a detour around a park was made where no road network was provided in the underlying data. Our
-nearby candidate adoption feature allowed the detour to project onto the same road position. The given road network did
-not allow such a detour, as it can be seen that no gray lines lie aside of the red track in the park area. Our algorithm
-was able to remove the detour from the match so that it fits well to the provided road network.
+nearby candidate adoption feature allowed the detour to project onto the same road position, so again no driving around
+the noisy situation happened. The given road network did not allow the detour, as it can be seen that no gray lines lie
+aside of the red track in the park area. Our algorithm was able to remove the detour from the match so that it fits well
+to the provided road network.
 
 #### Example 5
 
 ![Example 5](docs/example-5.png "Example 5")
 Another example of a noisy part in the original red track that was completely removed by our track sanitation and
 candidate adoption features that allowed our stochastic MDP process to find an overall optimal solution concerning its
-defined metrics.
+defined metrics. The green match goes straight through without turning around multiple times in the high error
+situation.
 
-Of course the examples show only a fraction of what our open source software is able to do. More research in situations
-that don't work this well already are going on. Please review the paper for more extensive benchmarks.
+The following five examples come from the `points_anonymized.csv` matched with `oberfranken-latest.osm.pbf` as described
+above in this readme.
+
+#### Example 6
+
+![Example 6](docs/example-6.png "Example 6")
+Here is an example of the original candidates in light blue that our algorithm chose from. The chosen candidates are in
+orange. We can see how the candidate adoption feature works, each road position is mapped to multiple track positions.
+This enables the stochastic process to eliminate noisy parts as shown in the examples above by mapping multiple GPS
+positions to the same road candidate positions. In this example however there was no such noise.
+
+#### Example 7
+
+![Example 7](docs/example-7.png "Example 7")
+This is the same example as above but with the light blue candidates removed, only the orange selection remains. We can
+see that the red track is not always matched to the nearest road edge position but to the position that fits best
+concerning the metrics. In our paper, we describe this as typical road behavior. Currently our definition of typical
+road behavior already leads to fine results as we can see in the benchmarks in our paper. Still there is room for
+improvement, as usually with stochastic methods. In this case, we can all agree that the green matched result is
+perfectly representing the red track.
+
+#### Example 8
+
+![Example 8](docs/example-8.png "Example 8")
+This is the same example as above, just zoomed in to the positions where not the nearest road edge candidate was chosen
+but the ones that fit best in the overall result. We can see that the chosen candidate depends on the overall best
+route. If we only had chosen the best candidates for the track part that goes north (so only a local optimum), we might
+have ended up in the road directly north to the green match. As the later position is clearly on the orange road, the
+combination of the selected road positions is globally best in this way (global optimum).
+
+#### Example 9
+
+![Example 9](docs/example-9.png "Example 9")
+Here is an example of a gap in the result. Not the track has the gap but the result was automatically split in the
+Markov Decision Process. The track was recorded at a time when the bridge over the railways was open. The current
+OpenStreetMap data has the bridge closed, so the track as seen is currently not possible to drive. We know this is true
+because this is our hometown. Our algorithm (Value Iteration) decided not to route around the impossible situation but
+to split the matching result at the closed bridge. Overall, this leads to a smaller error than driving around this
+location far away, which people have to do in reality currently. For the old track this match is definitely fine, though
+not perfect. Our implementation of the Viterbi algorithm with Hidden Markov Models does not allow this dynamic split to
+happen because the Hidden Markov Model is a static model precomputed before the Viterbi algorithm solves it. The Markov
+Decision Process however allows for dynamic action selection during the optimization, this is why it can decide to
+introduce a gap (which means that it leads to new states at optimization time which the Viterbi algorithm cannot do)
+when it notices that large detours are needed in a specific situation. It should be possible to detect and precompute
+such situations for Hidden Markov Models as well but as our Markov Decision Process intrinsically enables such dynamic
+solutions as we described, we did not implement it in our Hidden Markov Model.
+
+#### Example 10
+
+![Example 10](docs/example-10.png "Example 10")
+This is the same example as above but the closed bridge is zoomed in. We can see that the green match result was split a
+bit earlier than only around the closed part of the bridge. This is a result that can be discussed. We can see that the
+orange candidate policy projections lie in a difficult situation. With the measurement points (at the red track arrows)
+it is definitely difficult to choose optimal candidates in this situation. Though this result is not perfect, it is
+quite good compared to a result that would make a large detour in this situation.
+
+Of course the examples only show a fraction of what our open source software is able to do. More research in situations
+that don't work this well already is going on. Please also review the paper for more extensive benchmarks, comparisons,
+and explanations.
 
 ### References
 
