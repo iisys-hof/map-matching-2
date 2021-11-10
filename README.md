@@ -64,7 +64,7 @@ paper [Evolving map matching with markov decision processes](https://opus4.kobv.
 for more information about this open source tool. \
 We are currently working on several new research papers based on this approach.
 
-Pull from Docker Hub:
+Pull from Docker Hub: \
 `docker pull addy90/map-matching-2:latest`
 
 Or build docker image: \
