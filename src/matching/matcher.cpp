@@ -801,27 +801,29 @@ namespace map_matching_2::matching {
                 const auto &measurement = track.measurements[index];
                 auto &edge_set = candidate_edge_sets[index];
                 auto edge_set_it = edge_set.crbegin();
-                const auto longest_distance = edge_set_it->distance;
+                if (edge_set_it != edge_set.crend()) {
+                    const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = _create_buffer(measurement.point, longest_distance);
+                    const auto buffer = _create_buffer(measurement.point, longest_distance);
 
-                std::vector<index_value_type> results;
-                candidates_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
+                    std::vector<index_value_type> results;
+                    candidates_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
 
-                for (const auto &index_value: results) {
-                    const auto &candidate_edge_pair = index_value.second;
-                    std::size_t result_index = candidate_edge_pair.first;
-                    if (index != result_index) {
-                        // skip self references
-                        const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
-                        add_candidate(measurement.point, candidate_edge, edge_set);
+                    for (const auto &index_value: results) {
+                        const auto &candidate_edge_pair = index_value.second;
+                        std::size_t result_index = candidate_edge_pair.first;
+                        if (index != result_index) {
+                            // skip self references
+                            const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
+                            add_candidate(measurement.point, candidate_edge, edge_set);
 
-                        if (candidate_adoption_reverse) {
-                            auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
-                            for (const auto &edge: edge_set) {
-                                if (not edge.adopted) {
-                                    const auto &reverse_measurement = track.measurements[result_index];
-                                    add_candidate(reverse_measurement.point, edge, reverse_candidate_edge_set);
+                            if (candidate_adoption_reverse) {
+                                auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
+                                for (const auto &edge: edge_set) {
+                                    if (not edge.adopted) {
+                                        const auto &reverse_measurement = track.measurements[result_index];
+                                        add_candidate(reverse_measurement.point, edge, reverse_candidate_edge_set);
+                                    }
                                 }
                             }
                         }
