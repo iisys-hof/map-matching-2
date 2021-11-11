@@ -65,13 +65,17 @@ for more information about this open source tool. \
 We are currently working on several new research papers based on this approach.
 
 Pull from Docker Hub: \
-`docker pull addy90/map-matching-2:latest`
+`docker pull addy90/map-matching-2`
 
 Or build docker image: \
 `docker build -t map-matching-2 .`
 
 Run docker container: \
 `docker run --rm -it -v $(pwd)/data:/app/data -u $(id -u ${USER}):$(id -g ${USER}) --name map-matching-2 map-matching-2`
+
+Place input files in current data directory `$(pwd)/data` that you created beforehand. \
+Within the Docker container, the directory is mounted under `/app/data`. \
+Results that you output to `/app/data` will become available under your user in `$(pwd)/data`.
 
 View Map Matching Help (or view [help.txt](help.txt)): \
 `./map_matching_2 --help`
@@ -81,13 +85,13 @@ Example (be aware, uses as much CPU cores as available, even scales with 128 cor
 
 ```
 ./map_matching_2 \
-  --network "data/oberfranken-latest.osm.pbf" \
-  --tracks "data/points_anonymized.csv" \
+  --network "/app/data/oberfranken-latest.osm.pbf" \
+  --tracks "/app/data/points_anonymized.csv" \
   --delimiter ";" \
   --id "device" --id "subid" \
   --x "lon" --y "lat" \
   --time "timestamp" --time-format "%F %T%Oz" \
-  --output "data/matches.csv" \
+  --output "/app/data/matches.csv" \
   --verbose
 ```
 
@@ -110,14 +114,14 @@ extract the zip file and use the following command:
 
 ```
 ./map_matching_2 \
-  --nodes "data/map-matching-dataset/00000000/00000000.nodes" \
-  --arcs "data/map-matching-dataset/00000000/00000000.arcs" \
-  --tracks "data/map-matching-dataset/00000000/00000000.track" \
+  --nodes "/app/data/map-matching-dataset/00000000/00000000.nodes" \
+  --arcs "/app/data/map-matching-dataset/00000000/00000000.arcs" \
+  --tracks "/app/data/map-matching-dataset/00000000/00000000.track" \
   --no-header --no-id --delimiter $'\t' --x 0 --y 1 --time 2 --no-parse-time \
-  --compare "data/map-matching-dataset/00000000/00000000.route" \
+  --compare "/app/data/map-matching-dataset/00000000/00000000.route" \
   --compare-edges-list-mode \
-  --output "data/map-matching-dataset/00000000/00000000.result.csv" \
-  --compare-output "data/map-matching-dataset/00000000/00000000.compared.csv" \
+  --output "/app/data/map-matching-dataset/00000000/00000000.result.csv" \
+  --compare-output "/app/data/map-matching-dataset/00000000/00000000.compared.csv" \
   --model value-iteration \
   --verbose
 ```
