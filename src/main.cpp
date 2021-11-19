@@ -1389,8 +1389,10 @@ int main(int argc, char *argv[]) {
                 map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_geographic};
                 duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
             } else {
-                map_matching_2::io::network::osm_exporter osm_exporter{network_file, *network_cartesian};
-                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
+                // cartesian export is unsupported by osm file format as it needs WGS84 coordinates
+                std::cout << "skipping because cartesian is unsupported in osm format ... " << std::flush;
+//                map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_cartesian};
+//                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
             }
 
             if (verbose) {
