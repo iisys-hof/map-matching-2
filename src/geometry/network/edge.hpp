@@ -16,7 +16,13 @@
 #ifndef MAP_MATCHING_2_EDGE_HPP
 #define MAP_MATCHING_2_EDGE_HPP
 
+#include <vector>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
 #include <osmium/osm/types.hpp>
@@ -69,6 +75,17 @@ namespace map_matching_2::geometry::network {
 
         template<typename LineT>
         friend std::ostream &operator<<(std::ostream &out, const edge<LineT> &edge);
+
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & boost::serialization::base_object<rich_line_type>(*this);
+            ar & index;
+            ar & id;
+            ar & nodes;
+            ar & tags;
+        }
 
     };
 

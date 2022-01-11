@@ -32,7 +32,7 @@ namespace map_matching_2::io::network {
     class osm_exporter : public exporter {
 
     private:
-        Network &_network;
+        const Network &_network;
 
         using node_type = typename Network::node_type;
         using edge_type = typename Network::edge_type;
@@ -52,7 +52,7 @@ namespace map_matching_2::io::network {
                      osmium::object_id_type index);
 
     public:
-        osm_exporter(std::string filename, Network &network);
+        osm_exporter(std::string filename, const Network &network);
 
         void write();
 

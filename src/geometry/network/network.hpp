@@ -16,12 +16,15 @@
 #ifndef MAP_MATCHING_2_NETWORK_HPP
 #define MAP_MATCHING_2_NETWORK_HPP
 
+#include <boost/serialization/serialization.hpp>
+
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/geometry/srs/epsg.hpp>
 #include <boost/geometry/srs/projection.hpp>
 #include <boost/geometry/srs/transformation.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/adj_list_serialize.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -155,6 +158,14 @@ namespace map_matching_2::geometry::network {
         void save_edges(std::string filename) const;
 
         void save(std::string nodes, std::string edges) const;
+
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & graph;
+            ar & tag_helper;
+        }
 
     private:
         void _merge(edge_descriptor in_edge, edge_descriptor out_edge, bool simplify_network_complete = true);

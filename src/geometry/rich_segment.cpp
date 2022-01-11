@@ -21,7 +21,14 @@
 namespace map_matching_2::geometry {
 
     template<typename Segment>
-    rich_segment<Segment>::rich_segment(Segment segment) : segment{std::move(segment)} {
+    rich_segment<Segment>::rich_segment()
+            : segment{} {
+        _complete();
+    }
+
+    template<typename Segment>
+    rich_segment<Segment>::rich_segment(Segment segment)
+            : segment{std::move(segment)} {
         _complete();
     }
 

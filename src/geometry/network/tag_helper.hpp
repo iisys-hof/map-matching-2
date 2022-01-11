@@ -20,6 +20,9 @@
 
 #include <boost/functional/hash.hpp>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/unordered_map.hpp>
+
 namespace map_matching_2::geometry::network {
 
     class tag_helper {
@@ -36,10 +39,24 @@ namespace map_matching_2::geometry::network {
         std::unordered_map<std::uint64_t, pair_type> _tags_map;
         std::unordered_map<pair_type, std::uint64_t, boost::hash<pair_type>> _ids_map;
 
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & _id_key_map;
+            ar & _key_id_map;
+
+            ar & _id_value_map;
+            ar & _value_id_map;
+
+            ar & _tags_map;
+            ar & _ids_map;
+        }
+
     public:
         std::uint64_t id(const std::string &key, const std::string &value);
 
-        std::pair<std::string, std::string> tag(const std::uint64_t tag_id) const;
+        std::pair<std::string, std::string> tag(std::uint64_t tag_id) const;
 
     };
 

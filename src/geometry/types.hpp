@@ -16,6 +16,9 @@
 #ifndef MAP_MATCHING_2_TYPES_HPP
 #define MAP_MATCHING_2_TYPES_HPP
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/nvp.hpp>
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/srs/epsg.hpp>

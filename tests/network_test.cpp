@@ -18,6 +18,8 @@
 
 #include <cmath>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <boost/geometry.hpp>
 #include <boost/test/unit_test.hpp>
 

@@ -18,6 +18,9 @@
 
 #include <vector>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
@@ -91,7 +94,33 @@ namespace map_matching_2::geometry {
         template<typename LineT>
         friend std::ostream &operator<<(std::ostream &out, const rich_line<LineT> &rich_line);
 
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & has_length;
+            ar & has_azimuth;
+            ar & has_directions;
+            ar & length;
+            ar & azimuth;
+            ar & directions;
+            ar & absolute_directions;
+            ar & segments_directions;
+            ar & segments_absolute_directions;
+            ar & line;
+            ar & rich_segments;
+        }
+
     };
+
+}
+
+namespace boost::serialization {
+
+    template<typename Archive, typename Point>
+    void serialize(Archive &ar, boost::geometry::model::linestring<Point> &line, const unsigned int version) {
+        ar & BOOST_SERIALIZATION_NVP((static_cast<std::vector<Point> &>(line)));
+    }
 
 }
 

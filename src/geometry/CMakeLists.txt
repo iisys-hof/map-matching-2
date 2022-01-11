@@ -1,4 +1,4 @@
-find_package(Boost REQUIRED COMPONENTS graph)
+find_package(Boost REQUIRED COMPONENTS graph serialization)
 
 list(APPEND CMAKE_MODULE_PATH "${OSMIUM_INCLUDE_DIR}/cmake")
 find_package(Osmium REQUIRED COMPONENTS io proj)
@@ -24,7 +24,8 @@ target_sources(geometry
 
 target_compile_definitions(geometry
         PUBLIC
-        BOOST_ALLOW_DEPRECATED_HEADERS)
+        BOOST_ALLOW_DEPRECATED_HEADERS
+        BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL)
 
 target_include_directories(geometry
         PUBLIC
@@ -41,4 +42,5 @@ target_link_libraries(geometry
         io
         Boost::boost
         Boost::graph
+        Boost::serialization
         ${OSMIUM_LIBRARIES})

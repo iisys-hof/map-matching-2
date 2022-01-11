@@ -16,6 +16,11 @@
 #ifndef MAP_MATCHING_2_NODE_HPP
 #define MAP_MATCHING_2_NODE_HPP
 
+#include <vector>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
@@ -59,6 +64,16 @@ namespace map_matching_2::geometry::network {
 
         template<typename PointT>
         friend std::ostream &operator<<(std::ostream &out, const node<PointT> &node);
+
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & index;
+            ar & id;
+            ar & point;
+            ar & tags;
+        }
 
     };
 

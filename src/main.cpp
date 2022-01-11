@@ -28,16 +28,20 @@
 #define BOOST_THREAD_VERSION 5
 #endif
 
+#include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/program_options.hpp>
 
 #include <io/network/arc_node_importer.hpp>
+#include <io/network/network_loader.hpp>
+#include <io/network/network_saver.hpp>
 #include <io/network/osm_car_importer.hpp>
 #include <io/network/osm_exporter.hpp>
 #include <geometry/network/types.hpp>
-#include <io/track/edges_list_importer.hpp>
 #include <io/track/csv_track_importer.hpp>
+#include <io/track/edges_list_importer.hpp>
+#include <io/track/gpx_track_importer.hpp>
 #include <io/track/input_importer.hpp>
 #include <geometry/track/types.hpp>
 #include <matching/types.hpp>
@@ -458,6 +462,19 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
     }
 }
 
+void detect_extension(const std::string &file, std::string &file_type) {
+    if (file.empty()) {
+        std::filesystem::path path{file};
+        file_type = path.extension();
+    }
+
+    boost::algorithm::to_lower(file_type);
+
+    if (not(file_type == ".csv" or file_type == ".gpx")) {
+        file_type = ".csv";
+    }
+}
+
 int main(int argc, char *argv[]) {
 #ifdef _WIN32
     // Set console code page to UTF-8 so console known how to interpret string data
@@ -470,9 +487,10 @@ int main(int argc, char *argv[]) {
     namespace po = boost::program_options;
 
     std::string network_file, arcs_file, nodes_file, network_srs, network_transform_srs, network_srs_type,
-            network_transform_srs_type, tracks_file, tracks_srs, tracks_transform_srs, tracks_srs_type,
-            tracks_transform_srs_type, output_file, candidates_folder, compare_file, compare_srs, compare_srs_type,
-            compare_transform_srs, compare_transform_srs_type, compare_output_file, model, candidate_search;
+            network_transform_srs_type, tracks_file, tracks_file_type, tracks_srs, tracks_transform_srs,
+            tracks_srs_type, tracks_transform_srs_type, output_file, candidates_folder, compare_file, compare_file_type,
+            compare_srs, compare_srs_type, compare_transform_srs, compare_transform_srs_type, compare_output_file,
+            model, candidate_search;
     std::vector<std::string> id, compare_id, selectors, export_network, export_simplified_network,
             export_retained_network, export_transformed_network;
     std::size_t state_size, k_nearest, episodes;
@@ -489,7 +507,7 @@ int main(int argc, char *argv[]) {
             candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
             simplify_network, simplify_network_complete, remove_unconnected, single_threading, quiet, verbose;
     std::string id_aggregator, compare_id_aggregator, x, y, compare_x, compare_y,
-            geometry, compare_geometry, time, time_format, network_output,
+            geometry, compare_geometry, time, time_format, network_output, network_save, network_load,
             export_network_nodes, export_network_edges,
             export_simplified_network_nodes, export_simplified_network_edges,
             export_retained_network_nodes, export_retained_network_edges,
@@ -519,6 +537,11 @@ int main(int argc, char *argv[]) {
                  "path to arcs network file, requires nodes file")
                 ("nodes", po::value<std::string>(&nodes_file),
                  "path to nodes network file, requires arcs file")
+                ("network-load", po::value<std::string>(&network_load),
+                 "loads network from binary file in deserialized form, works together with network-save;"
+                 "is much faster than initial import from original network source files, should be preferred; "
+                 "network is seen as ready and is not processed, transformed or changed in any way any further; "
+                 "with compare-edge-lists-mode an input network is still needed but only used for import of compare tracks")
                 ("network-srs",
                  po::value<std::string>(&network_srs)->default_value("+proj=longlat +datum=WGS84 +no_defs"),
                  "network spatial reference system (srs) as PROJ string, default is WGS84, "
@@ -548,7 +571,15 @@ int main(int argc, char *argv[]) {
 
         options_tracks.add_options()
                 ("tracks", po::value<std::string>(&tracks_file),
-                 "path to .csv tracks file")
+                 "path to tracks file")
+                ("tracks-file-type", po::value<std::string>(&tracks_file_type),
+                 "tracks file type; "
+                 "by default is automatically detected from filename extension"
+                 "falls back to .csv automatically if no other supported extension is detected; "
+                 "see remaining options for processing possibilities; "
+                 "can be manually overridden to supported file types:\n"
+                 ".csv\n"
+                 ".gpx")
                 ("tracks-srs",
                  po::value<std::string>(&tracks_srs)->default_value("+proj=longlat +datum=WGS84 +no_defs"),
                  "tracks spatial reference system (srs) as PROJ string, default is WGS84")
@@ -622,7 +653,15 @@ int main(int argc, char *argv[]) {
                  "in this case, the number of the edge is the id of the edge in the network graph, "
                  "also the network-srs and network-transform-srs as well as the corresponding types are used")
                 ("compare", po::value<std::string>(&compare_file),
-                 "path to .csv compare file for ground truth matches for statistics on results")
+                 "path to compare file for ground truth matches for statistics on results")
+                ("compare-file-type", po::value<std::string>(&compare_file_type),
+                 "compare file type; "
+                 "by default is automatically detected from filename extension; "
+                 "falls back to .csv automatically if no other supported extension is detected; "
+                 "see remaining options for processing possibilities; "
+                 "can be manually overridden to supported file types:\n"
+                 ".csv\n"
+                 ".gpx")
                 ("compare-srs",
                  po::value<std::string>(&compare_srs)->default_value("+proj=longlat +datum=WGS84 +no_defs"),
                  "compare spatial reference system (srs) as PROJ string, default is WGS84")
@@ -674,6 +713,8 @@ int main(int argc, char *argv[]) {
                  "that have no more direction change degrees than specified");
 
         options_export.add_options()
+                ("network-save", po::value<std::string>(&network_save),
+                 "saves network in serialized form in binary file, works together with network-load")
                 ("export-candidates", po::value<std::string>(&candidates_folder),
                  "export candidates to the folder given, if no folder is given, no candidates are exported")
                 ("network-output", po::value<std::string>(&network_output),
@@ -859,7 +900,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (network_file.empty() and nodes_file.empty() and arcs_file.empty()) {
+        if (network_file.empty() and nodes_file.empty() and arcs_file.empty() and network_load.empty()) {
             throw std::invalid_argument{"Please specify a network."};
         }
 
@@ -867,7 +908,7 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument{"When specifying nodes and arcs, both files are needed."};
         }
 
-        if (network_output.empty() and tracks_file.empty() and not read_line) {
+        if (network_output.empty() and network_save.empty() and tracks_file.empty() and not read_line) {
             throw std::invalid_argument{"Please specify a tracks file or enable readline mode."};
         }
 
@@ -1052,6 +1093,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // prepared checks
+    bool import_compare_edge_lists = not no_compare and not compare_file.empty() and compare_edges_list_mode;
+
     if (not quiet) {
         std::cout << "\nStart Preparation ..." << std::endl;
     }
@@ -1068,331 +1112,390 @@ int main(int argc, char *argv[]) {
 
     auto duration = map_matching_2::util::benchmark([&]() {
         // Network
-        if (not network_file.empty()) {
-            if (verbose) {
-                std::cout << "Import network ... " << std::flush;
-            }
-
-            double duration;
-            if (network_srs_type == geographic) {
-                network_geographic_import = new map_matching_2::geometry::network::types_geographic::network_modifiable;
-                map_matching_2::io::network::osm_car_importer osm_car_importer{network_file,
-                                                                               *network_geographic_import};
-                duration = map_matching_2::util::benchmark([&]() { osm_car_importer.read(); });
-            } else {
-                network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::network_modifiable;
-                map_matching_2::io::network::osm_car_importer osm_car_importer{network_file, *network_cartesian_import};
-                duration = map_matching_2::util::benchmark([&]() { osm_car_importer.read(); });
-            }
-
-            if (verbose) {
-                std::cout << "done in " << duration << "s" << std::endl;
-            }
-        } else if (not arcs_file.empty() and not nodes_file.empty()) {
-            if (verbose) {
-                std::cout << "Import arcs and nodes ... " << std::flush;
-            }
-
-            double duration;
-            if (network_srs_type == geographic) {
-                network_geographic_import = new map_matching_2::geometry::network::types_geographic::network_modifiable;
-                map_matching_2::io::network::arc_node_importer arc_node_importer{
-                        arcs_file, nodes_file, *network_geographic_import};
-                duration = map_matching_2::util::benchmark([&]() { arc_node_importer.read(); });
-            } else {
-                network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::network_modifiable;
-                map_matching_2::io::network::arc_node_importer arc_node_importer{
-                        arcs_file, nodes_file, *network_cartesian_import};
-                duration = map_matching_2::util::benchmark([&]() { arc_node_importer.read(); });
-            }
-
-            if (verbose) {
-                std::cout << "done in " << duration << "s" << std::endl;
-            }
-        }
-
-        if (verbose) {
-            if (network_srs_type == geographic) {
-                std::cout << "Graph has " << boost::num_vertices(network_geographic_import->graph) << " vertices and "
-                          << boost::num_edges(network_geographic_import->graph) << " edges" << std::endl;
-            } else {
-                std::cout << "Graph has " << boost::num_vertices(network_cartesian_import->graph) << " vertices and "
-                          << boost::num_edges(network_cartesian_import->graph) << " edges" << std::endl;
-            }
-        }
-
-        // Compare Edge List Tracks
-        if (not no_compare and not compare_file.empty() and compare_edges_list_mode) {
-            if (verbose) {
-                std::cout << "Import edge list ground truth tracks for comparison ... " << std::flush;
-            }
-
-            double duration;
-            if (network_srs_type == geographic) {
-                map_matching_2::io::track::edges_list_importer<
-                        map_matching_2::geometry::network::types_geographic::network_modifiable,
-                        map_matching_2::geometry::track::types_geographic::multi_track_type>
-                        edges_list_importer{compare_file, *network_geographic_import, compare_tracks_geographic};
-                duration = map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
-            } else {
-                map_matching_2::io::track::edges_list_importer<
-                        map_matching_2::geometry::network::types_cartesian::network_modifiable,
-                        map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                        edges_list_importer{compare_file, *network_cartesian_import, compare_tracks_cartesian};
-                duration = map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
-            }
-
-            if (verbose) {
-                std::cout << "done in " << duration << "s" << std::endl;
-
-                if (network_srs_type == geographic) {
-                    std::cout << "Number of ground truth tracks for comparison: "
-                              << compare_tracks_geographic.size() << std::endl;
-                } else {
-                    std::cout << "Number of ground truth tracks for comparison: "
-                              << compare_tracks_cartesian.size() << std::endl;
-                }
-            }
-        }
-
-        // Save imported network
-        if (not export_network_nodes.empty() and not export_network_edges.empty()) {
-            if (verbose) {
-                std::cout << "Saving graph ... " << std::flush;
-            }
-
-            double duration;
-            if (network_srs_type == geographic) {
-                duration = map_matching_2::util::benchmark(
-                        [&]() { network_geographic_import->save(export_network_nodes, export_network_edges); });
-            } else {
-                duration = map_matching_2::util::benchmark(
-                        [&]() { network_cartesian_import->save(export_network_nodes, export_network_edges); });
-            }
-
-            if (verbose) {
-                std::cout << "done in " << duration << "s" << std::endl;
-            }
-        }
-
-        // Simplify network
-        if (simplify_network) {
-            if (verbose) {
-                std::cout << "Simplifying ... " << std::flush;
-            }
-
-            double duration;
-            if (network_srs_type == geographic) {
-                duration = map_matching_2::util::benchmark([&]() {
-                    network_geographic_import->simplify(simplify_network_complete);
-                });
-            } else {
-                duration = map_matching_2::util::benchmark([&]() {
-                    network_cartesian_import->simplify(simplify_network_complete);
-                });
-            }
-
-            if (verbose) {
-                std::cout << "done in " << duration << "s" << std::endl;
-
-                if (network_srs_type == geographic) {
-                    std::cout << "Simplified graph has " << boost::num_vertices(network_geographic_import->graph)
-                              << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
-                              << std::endl;
-                } else {
-                    std::cout << "Simplified graph has " << boost::num_vertices(network_cartesian_import->graph)
-                              << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
-                              << std::endl;
-                }
-            }
-
-            // Save simplified network
-            if (not export_simplified_network_nodes.empty() and not export_simplified_network_edges.empty()) {
+        if (network_load.empty() or import_compare_edge_lists) {
+            // Regular Network Import
+            if (not network_file.empty()) {
                 if (verbose) {
-                    std::cout << "Saving simplified graph ... " << std::flush;
+                    std::cout << "Import network ... " << std::flush;
                 }
 
+                double duration;
                 if (network_srs_type == geographic) {
-                    duration = map_matching_2::util::benchmark([&]() {
-                        network_geographic_import->save(
-                                export_simplified_network_nodes, export_simplified_network_edges);
-                    });
+                    network_geographic_import = new map_matching_2::geometry::network::types_geographic::network_modifiable;
+                    map_matching_2::io::network::osm_car_importer osm_car_importer{network_file,
+                                                                                   *network_geographic_import};
+                    duration = map_matching_2::util::benchmark([&]() { osm_car_importer.read(); });
                 } else {
-                    duration = map_matching_2::util::benchmark([&]() {
-                        network_cartesian_import->save(
-                                export_simplified_network_nodes, export_simplified_network_edges);
-                    });
+                    network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::network_modifiable;
+                    map_matching_2::io::network::osm_car_importer osm_car_importer{network_file,
+                                                                                   *network_cartesian_import};
+                    duration = map_matching_2::util::benchmark([&]() { osm_car_importer.read(); });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+                }
+            } else if (not arcs_file.empty() and not nodes_file.empty()) {
+                if (verbose) {
+                    std::cout << "Import arcs and nodes ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic) {
+                    network_geographic_import = new map_matching_2::geometry::network::types_geographic::network_modifiable;
+                    map_matching_2::io::network::arc_node_importer arc_node_importer{
+                            arcs_file, nodes_file, *network_geographic_import};
+                    duration = map_matching_2::util::benchmark([&]() { arc_node_importer.read(); });
+                } else {
+                    network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::network_modifiable;
+                    map_matching_2::io::network::arc_node_importer arc_node_importer{
+                            arcs_file, nodes_file, *network_cartesian_import};
+                    duration = map_matching_2::util::benchmark([&]() { arc_node_importer.read(); });
                 }
 
                 if (verbose) {
                     std::cout << "done in " << duration << "s" << std::endl;
                 }
             }
+
+            if (verbose) {
+                if (network_srs_type == geographic) {
+                    std::cout << "Graph has " << boost::num_vertices(network_geographic_import->graph)
+                              << " vertices and "
+                              << boost::num_edges(network_geographic_import->graph) << " edges" << std::endl;
+                } else {
+                    std::cout << "Graph has " << boost::num_vertices(network_cartesian_import->graph)
+                              << " vertices and "
+                              << boost::num_edges(network_cartesian_import->graph) << " edges" << std::endl;
+                }
+            }
+
+            // Compare Edge List Tracks
+            if (import_compare_edge_lists) {
+                if (verbose) {
+                    std::cout << "Import edge list ground truth tracks for comparison ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic) {
+                    map_matching_2::io::track::edges_list_importer<
+                            map_matching_2::geometry::network::types_geographic::network_modifiable,
+                            map_matching_2::geometry::track::types_geographic::multi_track_type>
+                            edges_list_importer{compare_file, *network_geographic_import, compare_tracks_geographic};
+                    duration = map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                } else {
+                    map_matching_2::io::track::edges_list_importer<
+                            map_matching_2::geometry::network::types_cartesian::network_modifiable,
+                            map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                            edges_list_importer{compare_file, *network_cartesian_import, compare_tracks_cartesian};
+                    duration = map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+
+                    if (network_srs_type == geographic) {
+                        std::cout << "Number of ground truth tracks for comparison: "
+                                  << compare_tracks_geographic.size() << std::endl;
+                    } else {
+                        std::cout << "Number of ground truth tracks for comparison: "
+                                  << compare_tracks_cartesian.size() << std::endl;
+                    }
+                }
+            }
         }
 
-        // Retain network
-        if (remove_unconnected) {
-            if (verbose) {
-                std::cout << "Remove weakly unconnected components ... " << std::flush;
-            }
-
-            double duration;
-            if (network_srs_type == geographic) {
-                duration = map_matching_2::util::benchmark([&]() {
-                    network_geographic_import->remove_unconnected_components();
-                });
-            } else {
-                duration = map_matching_2::util::benchmark([&]() {
-                    network_cartesian_import->remove_unconnected_components();
-                });
-            }
-
-            if (verbose) {
-                std::cout << "done in " << duration << "s" << std::endl;
-
-                if (network_srs_type == geographic) {
-                    std::cout << "Retained graph has " << boost::num_vertices(network_geographic_import->graph)
-                              << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
-                              << std::endl;
-                } else {
-                    std::cout << "Retained graph has " << boost::num_vertices(network_cartesian_import->graph)
-                              << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
-                              << std::endl;
-                }
-            }
-
-            // Save simplified network
-            if (not export_retained_network_nodes.empty() and not export_retained_network_edges.empty()) {
+        if (network_load.empty()) {
+            // Save imported network
+            if (not export_network_nodes.empty() and not export_network_edges.empty()) {
                 if (verbose) {
-                    std::cout << "Saving retained graph ... " << std::flush;
+                    std::cout << "Saving graph ... " << std::flush;
                 }
 
+                double duration;
                 if (network_srs_type == geographic) {
-                    duration = map_matching_2::util::benchmark([&]() {
-                        network_geographic_import->save(export_retained_network_nodes, export_retained_network_edges);
-                    });
+                    duration = map_matching_2::util::benchmark(
+                            [&]() { network_geographic_import->save(export_network_nodes, export_network_edges); });
                 } else {
-                    duration = map_matching_2::util::benchmark([&]() {
-                        network_cartesian_import->save(export_retained_network_nodes, export_retained_network_edges);
-                    });
+                    duration = map_matching_2::util::benchmark(
+                            [&]() { network_cartesian_import->save(export_network_nodes, export_network_edges); });
                 }
 
                 if (verbose) {
                     std::cout << "done in " << duration << "s" << std::endl;
                 }
             }
-        }
 
-        // Transform network
-        if (network_transform) {
+            // Simplify network
+            if (simplify_network) {
+                if (verbose) {
+                    std::cout << "Simplifying ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic) {
+                    duration = map_matching_2::util::benchmark([&]() {
+                        network_geographic_import->simplify(simplify_network_complete);
+                    });
+                } else {
+                    duration = map_matching_2::util::benchmark([&]() {
+                        network_cartesian_import->simplify(simplify_network_complete);
+                    });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+
+                    if (network_srs_type == geographic) {
+                        std::cout << "Simplified graph has " << boost::num_vertices(network_geographic_import->graph)
+                                  << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
+                                  << std::endl;
+                    } else {
+                        std::cout << "Simplified graph has " << boost::num_vertices(network_cartesian_import->graph)
+                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
+                                  << std::endl;
+                    }
+                }
+
+                // Save simplified network
+                if (not export_simplified_network_nodes.empty() and not export_simplified_network_edges.empty()) {
+                    if (verbose) {
+                        std::cout << "Saving simplified graph ... " << std::flush;
+                    }
+
+                    if (network_srs_type == geographic) {
+                        duration = map_matching_2::util::benchmark([&]() {
+                            network_geographic_import->save(
+                                    export_simplified_network_nodes, export_simplified_network_edges);
+                        });
+                    } else {
+                        duration = map_matching_2::util::benchmark([&]() {
+                            network_cartesian_import->save(
+                                    export_simplified_network_nodes, export_simplified_network_edges);
+                        });
+                    }
+
+                    if (verbose) {
+                        std::cout << "done in " << duration << "s" << std::endl;
+                    }
+                }
+            }
+
+            // Retain network
+            if (remove_unconnected) {
+                if (verbose) {
+                    std::cout << "Remove weakly unconnected components ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic) {
+                    duration = map_matching_2::util::benchmark([&]() {
+                        network_geographic_import->remove_unconnected_components();
+                    });
+                } else {
+                    duration = map_matching_2::util::benchmark([&]() {
+                        network_cartesian_import->remove_unconnected_components();
+                    });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+
+                    if (network_srs_type == geographic) {
+                        std::cout << "Retained graph has " << boost::num_vertices(network_geographic_import->graph)
+                                  << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
+                                  << std::endl;
+                    } else {
+                        std::cout << "Retained graph has " << boost::num_vertices(network_cartesian_import->graph)
+                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
+                                  << std::endl;
+                    }
+                }
+
+                // Save simplified network
+                if (not export_retained_network_nodes.empty() and not export_retained_network_edges.empty()) {
+                    if (verbose) {
+                        std::cout << "Saving retained graph ... " << std::flush;
+                    }
+
+                    if (network_srs_type == geographic) {
+                        duration = map_matching_2::util::benchmark([&]() {
+                            network_geographic_import->save(export_retained_network_nodes,
+                                                            export_retained_network_edges);
+                        });
+                    } else {
+                        duration = map_matching_2::util::benchmark([&]() {
+                            network_cartesian_import->save(export_retained_network_nodes,
+                                                           export_retained_network_edges);
+                        });
+                    }
+
+                    if (verbose) {
+                        std::cout << "done in " << duration << "s" << std::endl;
+                    }
+                }
+            }
+
+            // Transform network
+            if (network_transform) {
+                if (verbose) {
+                    std::cout << "Transform graph ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic and network_transform_srs_type == cartesian) {
+                    network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::network_modifiable;
+                    duration = map_matching_2::util::benchmark([&]() {
+                        network_geographic_import->reproject(*network_cartesian_import,
+                                                             network_proj, *network_transform_proj);
+                    });
+                    delete network_geographic_import;
+                    network_srs_type = cartesian;
+                } else if (network_srs_type == cartesian and network_transform_srs_type == geographic) {
+                    network_geographic_import = new map_matching_2::geometry::network::types_geographic::network_modifiable;
+                    duration = map_matching_2::util::benchmark([&]() {
+                        network_cartesian_import->reproject(*network_geographic_import,
+                                                            network_proj, *network_transform_proj);
+                    });
+                    delete network_cartesian_import;
+                    network_srs_type = geographic;
+                }
+                delete network_transform_proj;
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+
+                    if (network_srs_type == geographic) {
+                        std::cout << "Transformed graph has " << boost::num_vertices(network_geographic_import->graph)
+                                  << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
+                                  << std::endl;
+                    } else {
+                        std::cout << "Transformed graph has " << boost::num_vertices(network_cartesian_import->graph)
+                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
+                                  << std::endl;
+                    }
+                }
+
+                // Save transformed network
+                if (not export_transformed_network_nodes.empty() and not export_transformed_network_edges.empty()) {
+                    if (verbose) {
+                        std::cout << "Saving transformed graph ... " << std::flush;
+                    }
+
+                    if (network_srs_type == geographic) {
+                        duration = map_matching_2::util::benchmark([&]() {
+                            network_geographic_import->save(
+                                    export_transformed_network_nodes, export_transformed_network_edges);
+                        });
+                    } else {
+                        duration = map_matching_2::util::benchmark([&]() {
+                            network_cartesian_import->save(
+                                    export_transformed_network_nodes, export_transformed_network_edges);
+                        });
+                    }
+
+                    if (verbose) {
+                        std::cout << "done in " << duration << "s" << std::endl;
+                    }
+                }
+            }
+
+            // Baking network
             if (verbose) {
-                std::cout << "Transform graph ... " << std::flush;
+                std::cout << "Baking graph ... " << std::flush;
             }
 
             double duration;
-            if (network_srs_type == geographic and network_transform_srs_type == cartesian) {
-                network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::network_modifiable;
+            if (network_srs_type == geographic) {
+                network_geographic = new map_matching_2::geometry::network::types_geographic::network_static;
                 duration = map_matching_2::util::benchmark([&]() {
-                    network_geographic_import->reproject(*network_cartesian_import,
-                                                         network_proj, *network_transform_proj);
+                    network_geographic_import->convert(*network_geographic);
                 });
                 delete network_geographic_import;
-                network_srs_type = cartesian;
-            } else if (network_srs_type == cartesian and network_transform_srs_type == geographic) {
-                network_geographic_import = new map_matching_2::geometry::network::types_geographic::network_modifiable;
+            } else {
+                network_cartesian = new map_matching_2::geometry::network::types_cartesian::network_static;
                 duration = map_matching_2::util::benchmark([&]() {
-                    network_cartesian_import->reproject(*network_geographic_import,
-                                                        network_proj, *network_transform_proj);
+                    network_cartesian_import->convert(*network_cartesian);
                 });
                 delete network_cartesian_import;
-                network_srs_type = geographic;
             }
-            delete network_transform_proj;
 
             if (verbose) {
                 std::cout << "done in " << duration << "s" << std::endl;
 
                 if (network_srs_type == geographic) {
-                    std::cout << "Transformed graph has " << boost::num_vertices(network_geographic_import->graph)
-                              << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
-                              << std::endl;
+                    std::cout << "Baked graph has " << boost::num_vertices(network_geographic->graph)
+                              << " vertices and "
+                              << boost::num_edges(network_geographic->graph) << " edges" << std::endl;
                 } else {
-                    std::cout << "Transformed graph has " << boost::num_vertices(network_cartesian_import->graph)
-                              << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
-                              << std::endl;
+                    std::cout << "Baked graph has " << boost::num_vertices(network_cartesian->graph) << " vertices and "
+                              << boost::num_edges(network_cartesian->graph) << " edges" << std::endl;
                 }
             }
 
-            // Save transformed network
-            if (not export_transformed_network_nodes.empty() and not export_transformed_network_edges.empty()) {
+            // Export imported network
+            if (not network_output.empty()) {
                 if (verbose) {
-                    std::cout << "Saving transformed graph ... " << std::flush;
+                    std::cout << "Saving osm file ... " << std::flush;
                 }
 
                 if (network_srs_type == geographic) {
-                    duration = map_matching_2::util::benchmark([&]() {
-                        network_geographic_import->save(
-                                export_transformed_network_nodes, export_transformed_network_edges);
-                    });
+                    map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_geographic};
+                    duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
                 } else {
-                    duration = map_matching_2::util::benchmark([&]() {
-                        network_cartesian_import->save(
-                                export_transformed_network_nodes, export_transformed_network_edges);
-                    });
+                    // cartesian export is unsupported by osm file format as it needs WGS84 coordinates
+                    std::cout << "skipping because cartesian is unsupported in osm format ... " << std::flush;
+//                map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_cartesian};
+//                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
                 }
 
                 if (verbose) {
                     std::cout << "done in " << duration << "s" << std::endl;
                 }
             }
-        }
 
-        // Baking network
-        if (verbose) {
-            std::cout << "Baking graph ... " << std::flush;
-        }
+            // Network Save
+            if (not network_save.empty()) {
+                if (verbose) {
+                    std::cout << "Saving network graph ... " << std::flush;
+                }
 
-        double duration;
-        if (network_srs_type == geographic) {
-            network_geographic = new map_matching_2::geometry::network::types_geographic::network_static;
-            duration = map_matching_2::util::benchmark([&]() {
-                network_geographic_import->convert(*network_geographic);
-            });
-            delete network_geographic_import;
+                if (network_srs_type == geographic) {
+                    map_matching_2::io::network::network_saver network_saver{network_save, *network_geographic};
+                    duration = map_matching_2::util::benchmark([&]() { network_saver.write(); });
+                } else {
+                    map_matching_2::io::network::network_saver network_saver{network_save, *network_cartesian};
+                    duration = map_matching_2::util::benchmark([&]() { network_saver.write(); });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+                }
+            }
         } else {
-            network_cartesian = new map_matching_2::geometry::network::types_cartesian::network_static;
-            duration = map_matching_2::util::benchmark([&]() {
-                network_cartesian_import->convert(*network_cartesian);
-            });
-            delete network_cartesian_import;
-        }
-
-        if (verbose) {
-            std::cout << "done in " << duration << "s" << std::endl;
-
-            if (network_srs_type == geographic) {
-                std::cout << "Baked graph has " << boost::num_vertices(network_geographic->graph) << " vertices and "
-                          << boost::num_edges(network_geographic->graph) << " edges" << std::endl;
-            } else {
-                std::cout << "Baked graph has " << boost::num_vertices(network_cartesian->graph) << " vertices and "
-                          << boost::num_edges(network_cartesian->graph) << " edges" << std::endl;
+            if (import_compare_edge_lists) {
+                // Imported Network for Compare Edge Lists Mode, remove as it is no longer used
+                if (network_srs_type == geographic) {
+                    delete network_geographic_import;
+                } else {
+                    delete network_cartesian_import;
+                }
             }
-        }
 
-        // Export imported network
-        if (not network_output.empty()) {
+            // Network Load
             if (verbose) {
-                std::cout << "Saving osm file ... " << std::flush;
+                std::cout << "Loading network graph ... " << std::flush;
             }
 
+            double duration;
             if (network_srs_type == geographic) {
-                map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_geographic};
-                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
+                network_geographic = new map_matching_2::geometry::network::types_geographic::network_static;
+                map_matching_2::io::network::network_loader network_loader{network_load, *network_geographic};
+                duration = map_matching_2::util::benchmark([&]() { network_loader.read(); });
             } else {
-                // cartesian export is unsupported by osm file format as it needs WGS84 coordinates
-                std::cout << "skipping because cartesian is unsupported in osm format ... " << std::flush;
-//                map_matching_2::io::network::osm_exporter osm_exporter{network_output, *network_cartesian};
-//                duration = map_matching_2::util::benchmark([&]() { osm_exporter.write(); });
+                network_cartesian = new map_matching_2::geometry::network::types_cartesian::network_static;
+                map_matching_2::io::network::network_loader network_loader{network_load, *network_cartesian};
+                duration = map_matching_2::util::benchmark([&]() { network_loader.read(); });
             }
 
             if (verbose) {
@@ -1434,35 +1537,50 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        double duration;
         if (not tracks_file.empty()) {
             if (verbose) {
                 std::cout << "Import tracks ... " << std::flush;
             }
 
-            map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
-            csv_track_importer_settings.delimiter = delimiter;
-            csv_track_importer_settings.no_header = no_header;
-            csv_track_importer_settings.no_id = no_id;
-            csv_track_importer_settings.wkt = wkt;
-            csv_track_importer_settings.field_id = id;
-            csv_track_importer_settings.id_aggregator = id_aggregator;
-            csv_track_importer_settings.field_x = x;
-            csv_track_importer_settings.field_y = y;
-            csv_track_importer_settings.field_time = time;
-            csv_track_importer_settings.time_format = time_format;
-            csv_track_importer_settings.no_parse_time = no_parse_time;
-            csv_track_importer_settings.field_geometry = geometry;
+            detect_extension(tracks_file, tracks_file_type);
 
-            if (tracks_srs_type == geographic) {
-                map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
-                        csv_track_importer{tracks_file, tracks_geographic};
-                csv_track_importer.settings = csv_track_importer_settings;
-                duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
-            } else {
-                map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                        csv_track_importer{tracks_file, tracks_cartesian};
-                csv_track_importer.settings = csv_track_importer_settings;
-                duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+            if (tracks_file_type == ".csv") {
+                map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
+                csv_track_importer_settings.delimiter = delimiter;
+                csv_track_importer_settings.no_header = no_header;
+                csv_track_importer_settings.no_id = no_id;
+                csv_track_importer_settings.wkt = wkt;
+                csv_track_importer_settings.field_id = id;
+                csv_track_importer_settings.id_aggregator = id_aggregator;
+                csv_track_importer_settings.field_x = x;
+                csv_track_importer_settings.field_y = y;
+                csv_track_importer_settings.field_time = time;
+                csv_track_importer_settings.time_format = time_format;
+                csv_track_importer_settings.no_parse_time = no_parse_time;
+                csv_track_importer_settings.field_geometry = geometry;
+
+                if (tracks_srs_type == geographic) {
+                    map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                            csv_track_importer{tracks_file, tracks_geographic};
+                    csv_track_importer.settings = csv_track_importer_settings;
+                    duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                } else {
+                    map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                            csv_track_importer{tracks_file, tracks_cartesian};
+                    csv_track_importer.settings = csv_track_importer_settings;
+                    duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                }
+            } else if (tracks_file_type == ".gpx") {
+                if (tracks_srs_type == geographic) {
+                    map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                            gpx_track_importer{tracks_file, tracks_geographic};
+                    duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                } else {
+                    map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                            gpx_track_importer{tracks_file, tracks_cartesian};
+                    duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                }
             }
 
             if (verbose) {
@@ -1552,27 +1670,41 @@ int main(int argc, char *argv[]) {
                     std::cout << "Import ground truth tracks for comparison ... " << std::flush;
                 }
 
-                map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
-                csv_track_importer_settings.delimiter = compare_delimiter;
-                csv_track_importer_settings.no_header = compare_no_header;
-                csv_track_importer_settings.no_id = compare_no_id;
-                csv_track_importer_settings.wkt = compare_wkt;
-                csv_track_importer_settings.field_id = compare_id;
-                csv_track_importer_settings.id_aggregator = compare_id_aggregator;
-                csv_track_importer_settings.field_x = compare_x;
-                csv_track_importer_settings.field_y = compare_y;
-                csv_track_importer_settings.field_geometry = compare_geometry;
+                detect_extension(compare_file, compare_file_type);
 
-                if (compare_srs_type == geographic) {
-                    map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
-                            csv_track_importer{compare_file, compare_tracks_geographic};
-                    csv_track_importer.settings = csv_track_importer_settings;
-                    duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
-                } else {
-                    map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                            csv_track_importer{compare_file, compare_tracks_cartesian};
-                    csv_track_importer.settings = csv_track_importer_settings;
-                    duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                if (compare_file_type == ".csv") {
+                    map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
+                    csv_track_importer_settings.delimiter = compare_delimiter;
+                    csv_track_importer_settings.no_header = compare_no_header;
+                    csv_track_importer_settings.no_id = compare_no_id;
+                    csv_track_importer_settings.wkt = compare_wkt;
+                    csv_track_importer_settings.field_id = compare_id;
+                    csv_track_importer_settings.id_aggregator = compare_id_aggregator;
+                    csv_track_importer_settings.field_x = compare_x;
+                    csv_track_importer_settings.field_y = compare_y;
+                    csv_track_importer_settings.field_geometry = compare_geometry;
+
+                    if (compare_srs_type == geographic) {
+                        map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                csv_track_importer{compare_file, compare_tracks_geographic};
+                        csv_track_importer.settings = csv_track_importer_settings;
+                        duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                    } else {
+                        map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                csv_track_importer{compare_file, compare_tracks_cartesian};
+                        csv_track_importer.settings = csv_track_importer_settings;
+                        duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                    }
+                } else if (compare_file_type == ".gpx") {
+                    if (compare_srs_type == geographic) {
+                        map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                gpx_track_importer{compare_file, compare_tracks_geographic};
+                        duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                    } else {
+                        map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                gpx_track_importer{compare_file, compare_tracks_cartesian};
+                        duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                    }
                 }
 
                 if (verbose) {

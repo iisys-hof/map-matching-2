@@ -16,6 +16,11 @@
 #ifndef MAP_MATCHING_2_RICH_SEGMENT_HPP
 #define MAP_MATCHING_2_RICH_SEGMENT_HPP
 
+#include <utility>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/utility.hpp>
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
@@ -36,6 +41,8 @@ namespace map_matching_2::geometry {
         length_type length;
         angle_type azimuth;
         segment_type segment;
+
+        rich_segment();
 
         rich_segment(Segment segment);
 
@@ -88,7 +95,27 @@ namespace map_matching_2::geometry {
         template<typename SegmentT>
         friend std::ostream &operator<<(std::ostream &out, const rich_segment<SegmentT> &rich_segment);
 
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & has_length;
+            ar & has_azimuth;
+            ar & length;
+            ar & azimuth;
+            ar & segment;
+        }
+
     };
+
+}
+
+namespace boost::serialization {
+
+    template<typename Archive, typename Point>
+    void serialize(Archive &ar, boost::geometry::model::segment<Point> &segment, const unsigned int version) {
+        ar & BOOST_SERIALIZATION_NVP((static_cast<std::pair<Point, Point> &>(segment)));
+    }
 
 }
 

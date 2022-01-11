@@ -17,6 +17,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <boost/geometry.hpp>
 
 BOOST_AUTO_TEST_SUITE(library_tests)
@@ -26,7 +28,6 @@ BOOST_AUTO_TEST_SUITE(library_tests)
         using point_type = boost::geometry::model::point<CT, 2, boost::geometry::cs::geographic<boost::geometry::degree>>;
         using segment_type = boost::geometry::model::segment<point_type>;
 
-        boost::geometry::strategy::closest_points::geographic_cross_track<> closest_point_strategy;
         boost::geometry::strategy::distance::geographic_cross_track<> cross_track_strategy;
         boost::geometry::strategy::distance::geographic<> distance_strategy;
 
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_SUITE(library_tests)
         const auto distance = boost::geometry::distance(point, segment, cross_track_strategy);
 
         segment_type projection;
-        boost::geometry::closest_points(point, segment, projection, closest_point_strategy);
+        boost::geometry::closest_points(point, segment, projection);
         const auto length = boost::geometry::length(projection, distance_strategy);
 
         std::cout << std::setprecision(15)

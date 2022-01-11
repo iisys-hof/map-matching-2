@@ -23,7 +23,7 @@
 namespace map_matching_2::io::network {
 
     template<typename Network>
-    osm_exporter<Network>::osm_exporter(std::string filename, Network &network)
+    osm_exporter<Network>::osm_exporter(std::string filename, const Network &network)
             : exporter(std::move(filename)), _network{network} {}
 
     template<typename Network>

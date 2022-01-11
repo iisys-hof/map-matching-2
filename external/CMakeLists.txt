@@ -25,6 +25,28 @@ endif ()
 add_subdirectory("${csv_parser_SOURCE_DIR}" "${csv_parser_BINARY_DIR}" EXCLUDE_FROM_ALL)
 set(CSV_PARSER_INCLUDE_DIRS "${csv_parser_SOURCE_DIR}/single_include" CACHE PATH "csv parser include dir" FORCE)
 
+# gpx
+FetchContent_Declare(gpx
+        GIT_REPOSITORY https://github.com/irdvo/gpxlib.git)
+
+FetchContent_GetProperties(gpx)
+if (NOT gpx_POPULATED)
+    FetchContent_Populate(gpx)
+endif ()
+
+set(BUILD_EXAMPLES OFF CACHE BOOL "do not build gpx examples" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "do not build gpx tests" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "disable shared libs" FORCE)
+
+# fix for wrong directory in library when using as subdirectory
+FILE(READ "${gpx_SOURCE_DIR}/CMakeLists.txt" gpx_CMAKE_LISTS)
+STRING(REGEX REPLACE "{CMAKE_SOURCE_DIR}" "{CMAKE_CURRENT_SOURCE_DIR}" gpx_CMAKE_LISTS_MOD "${gpx_CMAKE_LISTS}")
+STRING(REGEX REPLACE "{CMAKE_BINARY_DIR}" "{CMAKE_CURRENT_BINARY_DIR}" gpx_CMAKE_LISTS_MOD "${gpx_CMAKE_LISTS_MOD}")
+FILE(WRITE "${gpx_SOURCE_DIR}/CMakeLists.txt" "${gpx_CMAKE_LISTS_MOD}")
+
+add_subdirectory("${gpx_SOURCE_DIR}" "${gpx_BINARY_DIR}" EXCLUDE_FROM_ALL)
+set(GPX_INCLUDE_DIRS "${gpx_SOURCE_DIR}" CACHE PATH "gpx include dir" FORCE)
+
 ## google sparsehash
 #FetchContent_Declare(sparsehash_c11
 #        GIT_REPOSITORY https://github.com/sparsehash/sparsehash-c11.git
@@ -90,8 +112,8 @@ set(RPMALLOC_INCLUDE_DIRS "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc
 
 # boost
 FetchContent_Declare(boost
-        URL https://boostorg.jfrog.io/artifactory/main/release/1.77.0/source/boost_1_77_0.tar.gz
-        URL_HASH SHA256=5347464af5b14ac54bb945dc68f1dd7c56f0dad7262816b956138fc53bcc0131)
+        URL https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
+        URL_HASH SHA256=94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7)
 
 FetchContent_GetProperties(boost)
 if (NOT boost_POPULATED)
@@ -127,10 +149,18 @@ endif ()
 
 find_package(Boost QUIET REQUIRED CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
+## shortest points new
+#FetchContent_Declare(shortest_points_new
+#        GIT_REPOSITORY https://github.com/vissarion/geometry.git
+#        GIT_TAG feature/shortest_points_new)
+#
+#FetchContent_MakeAvailable(shortest_points_new)
+#set(SHORTEST_POINTS_NEW_INCLUDE_DIRS "${shortest_points_new_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
+
 # shortest points new
 FetchContent_Declare(shortest_points_new
         GIT_REPOSITORY https://github.com/vissarion/geometry.git
-        GIT_TAG feature/shortest_points_new)
+        GIT_TAG feature/shortest_points_new_strategies_non_cartesian)
 
 FetchContent_MakeAvailable(shortest_points_new)
 set(SHORTEST_POINTS_NEW_INCLUDE_DIRS "${shortest_points_new_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
