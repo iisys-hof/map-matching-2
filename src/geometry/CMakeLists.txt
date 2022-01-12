@@ -1,4 +1,7 @@
-find_package(Boost REQUIRED COMPONENTS graph serialization)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+find_package(Boost REQUIRED COMPONENTS graph serialization thread)
 
 list(APPEND CMAKE_MODULE_PATH "${OSMIUM_INCLUDE_DIR}/cmake")
 find_package(Osmium REQUIRED COMPONENTS io proj)
@@ -40,7 +43,9 @@ target_include_directories(geometry SYSTEM
 target_link_libraries(geometry
         PUBLIC
         io
+        Threads::Threads
         Boost::boost
         Boost::graph
         Boost::serialization
+        Boost::thread
         ${OSMIUM_LIBRARIES})

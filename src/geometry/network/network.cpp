@@ -15,6 +15,12 @@
 
 #include "network.hpp"
 
+#ifndef BOOST_THREAD_VERSION
+#define BOOST_THREAD_VERSION 5
+#endif
+
+#include <boost/thread.hpp>
+
 #include <geometry/util.hpp>
 #include <io/csv_exporter.hpp>
 
@@ -137,28 +143,44 @@ namespace map_matching_2::geometry::network {
 
     template<typename Graph>
     void network<Graph>::rebuild_spatial_indices() {
-        std::vector<std::pair<point_type, vertex_descriptor>> points;
-        points.reserve(boost::num_vertices(graph));
-        for (const auto vertex: boost::make_iterator_range(boost::vertices(graph))) {
-            points.emplace_back(std::pair{graph[vertex].point, vertex});
-        }
-
-        points_index = boost::geometry::index::rtree<std::pair<point_type, vertex_descriptor>,
-                boost::geometry::index::rstar<16 >>{points};
-
-        std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>> segments;
-        segments.reserve(boost::num_edges(graph));
-        for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(graph))) {
-            const auto &edge = graph[edge_descriptor];
-            for (std::size_t i = 0; i < edge.rich_segments.size(); ++i) {
-                const auto &rich_segment = edge.rich_segments[i];
-                segments.emplace_back(std::pair{rich_segment.segment, std::pair{i, edge_descriptor}});
+        const auto build_points_index = [&]() {
+            std::vector<std::pair<point_type, vertex_descriptor>> points;
+            points.reserve(boost::num_vertices(graph));
+            for (const auto vertex: boost::make_iterator_range(boost::vertices(graph))) {
+                points.emplace_back(std::pair{graph[vertex].point, vertex});
             }
-        }
 
-        segments_index =
-                boost::geometry::index::rtree<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>,
-                        boost::geometry::index::rstar<16 >>{segments};
+            points_index = boost::geometry::index::rtree<std::pair<point_type, vertex_descriptor>,
+                    boost::geometry::index::rstar<16 >>{points};
+        };
+
+        const auto build_segments_index = [&]() {
+            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>> segments;
+            segments.reserve(boost::num_edges(graph));
+            for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(graph))) {
+                const auto &edge = graph[edge_descriptor];
+                for (std::size_t i = 0; i < edge.rich_segments.size(); ++i) {
+                    const auto &rich_segment = edge.rich_segments[i];
+                    segments.emplace_back(std::pair{rich_segment.segment, std::pair{i, edge_descriptor}});
+                }
+            }
+
+            segments_index =
+                    boost::geometry::index::rtree<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>,
+                            boost::geometry::index::rstar<16 >>{segments};
+        };
+
+        std::uint32_t threads = boost::thread::hardware_concurrency();
+        if (threads >= 2) {
+            boost::thread points_index_thread{build_points_index};
+            boost::thread segments_index_thread{build_segments_index};
+
+            points_index_thread.join();
+            segments_index_thread.join();
+        } else {
+            build_points_index();
+            build_segments_index();
+        }
     }
 
     template<typename Graph>
