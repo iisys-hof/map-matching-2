@@ -268,13 +268,15 @@ BOOST_AUTO_TEST_SUITE(network_tests)
         std::vector<typename network_metric::vertex_descriptor> vertices;
         vertices.reserve(boost::num_vertices(network.graph));
 
-        auto predecessors = network.make_predecessors();
+        auto predecessors = network.make_precedessors();
         auto distances = network.make_distances();
         auto colors = network.make_colors();
+        auto heap_index = network.make_heap_index();
+        auto queue = network.make_queue();
 
         auto dijkstra_shortest_paths = network.dijkstra_shortest_paths(
                 starts.at(0), {goals.at(0)}, 10.0, 100.0,
-                vertices, predecessors, distances, colors);
+                vertices, predecessors, distances, colors, heap_index, queue);
 
         auto dijkstra_shortest_route = network.extract_route(dijkstra_shortest_paths.at(0));
 

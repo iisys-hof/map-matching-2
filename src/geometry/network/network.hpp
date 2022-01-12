@@ -101,18 +101,24 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] std::pair<bool, edge_descriptor> fitting_edge(const segment_type &segment) const;
 
-        [[nodiscard]] std::vector<vertex_descriptor> make_predecessors() const;
+        [[nodiscard]] std::vector<vertex_descriptor> make_precedessors() const;
 
         [[nodiscard]] std::vector<length_type> make_distances() const;
 
         [[nodiscard]] std::vector<typename boost::default_color_type> make_colors() const;
 
+        [[nodiscard]] std::vector<std::size_t> make_heap_index() const;
+
+        [[nodiscard]] std::vector<vertex_descriptor> make_queue() const;
+
         [[nodiscard]] std::vector<std::list<vertex_descriptor>>
         dijkstra_shortest_paths(const vertex_descriptor &start, const std::unordered_set<vertex_descriptor> &goals,
-                                const double max_distance_factor, const distance_type max_distance,
+                                double max_distance_factor, distance_type max_distance,
                                 std::vector<vertex_descriptor> &vertices, std::vector<vertex_descriptor> &predecessors,
                                 std::vector<length_type> &distances,
-                                std::vector<typename boost::default_color_type> &colors) const;
+                                std::vector<typename boost::default_color_type> &colors,
+                                std::vector<std::size_t> &heap_index,
+                                std::vector<vertex_descriptor> &queue) const;
 
         [[nodiscard]] route_type extract_route(const std::list<vertex_descriptor> &shortest_path) const;
 

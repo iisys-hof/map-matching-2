@@ -242,6 +242,8 @@ namespace map_matching_2::matching {
         boost::thread_specific_ptr<std::vector<vertex_descriptor>> _predecessors;
         boost::thread_specific_ptr<std::vector<length_type>> _distances;
         boost::thread_specific_ptr<std::vector<typename boost::default_color_type>> _colors;
+        boost::thread_specific_ptr<std::vector<std::size_t>> _heap_index;
+        boost::thread_specific_ptr<std::vector<vertex_descriptor>> _queue;
 
         using route_cache_type = std::unordered_map<route_cache_key_type, route_type, boost::hash<route_cache_key_type>>;
         using route_cache_iterator_type = typename route_cache_type::iterator;

@@ -218,7 +218,8 @@ namespace map_matching_2::matching {
 
         _prepare_shortest_path_memory();
         return network.dijkstra_shortest_paths(vertex_start, goals, max_distance_factor, max_distance,
-                                               *_vertices, *_predecessors, *_distances, *_colors);
+                                               *_vertices, *_predecessors, *_distances, *_colors,
+                                               *_heap_index, *_queue);
     }
 
     template<typename Network, typename Track>
@@ -971,6 +972,17 @@ namespace map_matching_2::matching {
             for (const auto vertex: boost::make_iterator_range(boost::vertices(network.graph))) {
                 _colors->emplace_back(boost::white_color);
             }
+        }
+        if (not _heap_index.get()) {
+            _heap_index.reset(new std::vector<std::size_t>{});
+            _heap_index->reserve(boost::num_vertices(network.graph));
+            for (const auto vertex: boost::make_iterator_range(boost::vertices(network.graph))) {
+                _heap_index->emplace_back(0);
+            }
+        }
+        if (not _queue.get()) {
+            _queue.reset(new std::vector<std::size_t>{});
+            _queue->reserve(boost::num_vertices(network.graph));
         }
     }
 

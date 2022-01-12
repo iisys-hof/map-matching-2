@@ -1500,6 +1500,16 @@ int main(int argc, char *argv[]) {
 
             if (verbose) {
                 std::cout << "done in " << duration << "s" << std::endl;
+
+                if (network_srs_type == geographic) {
+                    std::cout << "Loaded graph has " << boost::num_vertices(network_geographic->graph)
+                              << " vertices and " << boost::num_edges(network_geographic->graph) << " edges"
+                              << std::endl;
+                } else {
+                    std::cout << "Loaded graph has " << boost::num_vertices(network_cartesian->graph)
+                              << " vertices and " << boost::num_edges(network_cartesian->graph) << " edges"
+                              << std::endl;
+                }
             }
         }
 
