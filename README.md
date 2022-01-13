@@ -28,6 +28,9 @@ Various advanced map matching algorithms are implemented, for example:
 * Export of imported map data in various processing stages for easy view in [QGIS](https://www.qgis.org/)
 * Export of processed map data in `.osm.pbf` format for faster reimport or usage of same map data in third-party tools
   (optional)
+* Export of processed map data as native binary data file for about ten times faster reimport compared to
+  using `.osm.pbf`  file again, depends on the speed of the underlying storage, SSD or NVMe recommended, also the binary
+  files are about five to ten times larger than the `.osm.pbf` file (optional)
 * Comparison methods for matching results of own results and results of external software (optional)
 * Lossless Network simplification for reducing nodes and edges
 * Baking of imported modifiable graph (as lists) to a static graph (as vectors) for faster traversal with Dijkstra

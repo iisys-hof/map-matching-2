@@ -16,9 +16,8 @@
 #ifndef MAP_MATCHING_2_TAG_HELPER_HPP
 #define MAP_MATCHING_2_TAG_HELPER_HPP
 
-#include <unordered_map>
-
-#include <boost/functional/hash.hpp>
+#include <boost/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/unordered_map.hpp>
@@ -28,29 +27,25 @@ namespace map_matching_2::geometry::network {
     class tag_helper {
 
     private:
+        using id_key_map_type = boost::bimap<boost::bimaps::unordered_set_of<std::uint64_t>,
+                boost::bimaps::unordered_set_of<std::string>>;
+        using id_value_map_type = boost::bimap<boost::bimaps::unordered_set_of<std::uint64_t>,
+                boost::bimaps::unordered_set_of<std::string>>;
         using pair_type = std::pair<std::uint64_t, std::uint64_t>;
+        using tags_map_type = boost::bimap<boost::bimaps::unordered_set_of<std::uint64_t>,
+                boost::bimaps::unordered_set_of<pair_type>>;
 
-        std::unordered_map<std::uint64_t, std::string> _id_key_map;
-        std::unordered_map<std::string, std::uint64_t> _key_id_map;
-
-        std::unordered_map<std::uint64_t, std::string> _id_value_map;
-        std::unordered_map<std::string, std::uint64_t> _value_id_map;
-
-        std::unordered_map<std::uint64_t, pair_type> _tags_map;
-        std::unordered_map<pair_type, std::uint64_t, boost::hash<pair_type>> _ids_map;
+        id_key_map_type _id_key_map;
+        id_value_map_type _id_value_map;
+        tags_map_type _tags_map;
 
         friend class boost::serialization::access;
 
         template<typename Archive>
         void serialize(Archive &ar, const unsigned int version) {
             ar & _id_key_map;
-            ar & _key_id_map;
-
             ar & _id_value_map;
-            ar & _value_id_map;
-
             ar & _tags_map;
-            ar & _ids_map;
         }
 
     public:
