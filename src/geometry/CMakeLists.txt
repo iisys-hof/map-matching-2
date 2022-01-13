@@ -36,7 +36,7 @@ target_include_directories(geometry
 
 target_include_directories(geometry SYSTEM
         PUBLIC
-        ${SHORTEST_POINTS_NEW_INCLUDE_DIRS}
+        ${GEOMETRY_DEVELOP_INCLUDE_DIRS}
         ${PROTOZERO_INCLUDE_DIR}
         ${OSMIUM_INCLUDE_DIR}/include)
 

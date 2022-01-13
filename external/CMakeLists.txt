@@ -149,21 +149,13 @@ endif ()
 
 find_package(Boost QUIET REQUIRED CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
-## shortest points new
-#FetchContent_Declare(shortest_points_new
-#        GIT_REPOSITORY https://github.com/vissarion/geometry.git
-#        GIT_TAG feature/shortest_points_new)
-#
-#FetchContent_MakeAvailable(shortest_points_new)
-#set(SHORTEST_POINTS_NEW_INCLUDE_DIRS "${shortest_points_new_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
-
 # shortest points new
-FetchContent_Declare(shortest_points_new
-        GIT_REPOSITORY https://github.com/vissarion/geometry.git
-        GIT_TAG feature/shortest_points_new_strategies_non_cartesian)
+FetchContent_Declare(geometry_develop
+        GIT_REPOSITORY https://github.com/boostorg/geometry.git
+        GIT_TAG develop)
 
-FetchContent_MakeAvailable(shortest_points_new)
-set(SHORTEST_POINTS_NEW_INCLUDE_DIRS "${shortest_points_new_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
+FetchContent_MakeAvailable(geometry_develop)
+set(GEOMETRY_DEVELOP_INCLUDE_DIRS "${geometry_develop_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
 
 # protozero
 FetchContent_Declare(protozero

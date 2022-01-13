@@ -23,7 +23,7 @@ target_include_directories(matching
 
 target_include_directories(matching SYSTEM
         PUBLIC
-        ${SHORTEST_POINTS_NEW_INCLUDE_DIRS})
+        ${GEOMETRY_DEVELOP_INCLUDE_DIRS})
 
 target_link_libraries(matching
         PUBLIC
