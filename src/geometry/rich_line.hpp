@@ -97,19 +97,38 @@ namespace map_matching_2::geometry {
         friend class boost::serialization::access;
 
         template<typename Archive>
-        void serialize(Archive &ar, const unsigned int version) {
-            ar & has_length;
-            ar & has_azimuth;
-            ar & has_directions;
-            ar & length;
-            ar & azimuth;
-            ar & directions;
-            ar & absolute_directions;
-            ar & segments_directions;
-            ar & segments_absolute_directions;
-            ar & line;
-            ar & rich_segments;
+        void save(Archive &ar, const unsigned int version) const {
+            ar << has_length;
+            ar << has_azimuth;
+            ar << has_directions;
+            ar << length;
+            ar << azimuth;
+            ar << directions;
+            ar << absolute_directions;
+            ar << segments_directions;
+            ar << rich_segments;
         }
+
+        template<typename Archive>
+        void load(Archive &ar, const unsigned int version) {
+            ar >> has_length;
+            ar >> has_azimuth;
+            ar >> has_directions;
+            ar >> length;
+            ar >> azimuth;
+            ar >> directions;
+            ar >> absolute_directions;
+            ar >> segments_directions;
+            ar >> rich_segments;
+
+            line = rich_segment_type::template rich_segments2line<std::vector>(this->rich_segments);
+            segments_absolute_directions.reserve(segments_directions.size());
+            for (const auto segments_direction: segments_directions) {
+                segments_absolute_directions.emplace_back(std::fabs(segments_direction));
+            }
+        }
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     };
 

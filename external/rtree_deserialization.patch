@@ -1,0 +1,13 @@
+diff --git a/include/boost/geometry/index/detail/serialization.hpp b/include/boost/geometry/index/detail/serialization.hpp
+index 909c38e3c..02302b7a3 100644
+--- a/include/boost/geometry/index/detail/serialization.hpp
++++ b/include/boost/geometry/index/detail/serialization.hpp
+@@ -412,7 +412,7 @@ private:
+         ar >> boost::serialization::make_nvp("s", elements_count);
+ 
+         // leafs_level == 0 implies current_level == 0
+-        if ( (elements_count < parameters.get_min_elements() && leafs_level > 0)
++        if ( (elements_count < parameters.get_min_elements() && current_level > 0)
+                 || parameters.get_max_elements() < elements_count )
+             BOOST_THROW_EXCEPTION(std::runtime_error("rtree loading error"));
+ 

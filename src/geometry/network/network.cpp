@@ -143,33 +143,31 @@ namespace map_matching_2::geometry::network {
 
     template<typename Graph>
     void network<Graph>::rebuild_spatial_indices() {
+        reindex();
+        rebuild_maps();
+
         const auto build_points_index = [&]() {
-            std::vector<std::pair<point_type, vertex_descriptor>> points;
+            std::vector<std::pair<point_type, std::size_t>> points;
             points.reserve(boost::num_vertices(graph));
             for (const auto vertex: boost::make_iterator_range(boost::vertices(graph))) {
-                points.emplace_back(std::pair{graph[vertex].point, vertex});
+                points.emplace_back(std::pair{graph[vertex].point, graph[vertex].index});
             }
 
-            points_index = boost::geometry::index::rtree<std::pair<point_type, vertex_descriptor>,
-                    boost::geometry::index::rstar<16 >>
-                    {points};
+            points_index = rtree_points_type{points};
         };
 
         const auto build_segments_index = [&]() {
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>> segments;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> segments;
             segments.reserve(boost::num_edges(graph));
             for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(graph))) {
                 const auto &edge = graph[edge_descriptor];
                 for (std::size_t i = 0; i < edge.rich_segments.size(); ++i) {
                     const auto &rich_segment = edge.rich_segments[i];
-                    segments.emplace_back(std::pair{rich_segment.segment, std::pair{i, edge_descriptor}});
+                    segments.emplace_back(std::pair{rich_segment.segment, std::pair{edge.index, i}});
                 }
             }
 
-            segments_index =
-                    boost::geometry::index::rtree<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>,
-                            boost::geometry::index::rstar<16 >>
-                            {segments};
+            segments_index = rtree_segments_type{segments};
         };
 
         std::uint32_t threads = boost::thread::hardware_concurrency();
@@ -182,6 +180,23 @@ namespace map_matching_2::geometry::network {
         } else {
             build_points_index();
             build_segments_index();
+        }
+    }
+
+    template<typename Graph>
+    void network<Graph>::rebuild_maps() {
+        std::size_t vertices = boost::num_vertices(graph);
+        vertex_map.clear();
+        vertex_map.reserve(vertices);
+        for (const auto vertex: boost::make_iterator_range(boost::vertices(graph))) {
+            vertex_map.emplace_back(vertex);
+        }
+
+        std::size_t edges = boost::num_edges(graph);
+        edge_map.clear();
+        edge_map.reserve(edges);
+        for (const auto &edge: boost::make_iterator_range(boost::edges(graph))) {
+            edge_map.emplace_back(edge);
         }
     }
 
@@ -216,26 +231,28 @@ namespace map_matching_2::geometry::network {
     network<Graph>::point_in_nodes(const point_type &point) const {
         const auto nearest_points = query_points(boost::geometry::index::nearest(point, 1));
         if (not nearest_points.empty()) {
-            const auto &nearest_point = nearest_points.front().first;
+            const auto &nearest_point_pair = nearest_points.front();
+            const auto &nearest_point = nearest_point_pair.first;
             bool found = geometry::equals_points(nearest_point, point);
-            const auto vertex = nearest_points.front().second;
+            const auto vertex = vertex_map[nearest_point_pair.second];
             return std::pair{found, vertex};
         }
         return std::pair{false, typename network<Graph>::vertex_descriptor{}};
     }
 
     template<typename Graph>
-    std::pair<bool, std::pair<std::size_t, typename network<Graph>::edge_descriptor>>
+    std::pair<bool, std::pair<std::size_t, std::size_t>>
     network<Graph>::point_in_edges(const point_type &point) const {
         const auto nearest_segments = query_segments(boost::geometry::index::nearest(point, 1));
         if (not nearest_segments.empty()) {
-            const auto &nearest_segment = nearest_segments.front().first;
+            const auto &nearest_segment_pair = nearest_segments.front();
+            const auto &nearest_segment = nearest_segment_pair.first;
             bool found = geometry::equals_points(nearest_segment.first, point) or
                          geometry::equals_points(nearest_segment.second, point);
-            const auto edge = nearest_segments.front().second;
-            return std::pair{found, edge};
+            const auto edge_pair = nearest_segment_pair.second;
+            return std::pair{found, edge_pair};
         }
-        return std::pair{false, std::pair<std::size_t, typename network<Graph>::edge_descriptor>{}};
+        return std::pair{false, std::pair<std::size_t, std::size_t>{}};
     }
 
     template<typename Graph>
@@ -257,7 +274,7 @@ namespace map_matching_2::geometry::network {
                  geometry::equals_points(segment.second, near_segment.second)) or angle_diff < best_angle) {
                 best_angle = angle_diff;
                 best_segment = &near_segment;
-                edge_descriptor = &segment_pair.second.second;
+                edge_descriptor = &edge_map[segment_pair.second.first];
             }
         }
 
@@ -619,49 +636,25 @@ namespace map_matching_2::geometry::network {
 
     template<typename Graph>
     std::vector<typename network<Graph>::point_type> network<Graph>::_process_segments_points_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor
-            >>> &&pre_results) const {
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const {
         std::vector<point_type> results;
-        results.
-                reserve(pre_results
-                                .
-
-                                        size()
-
-                        * 2);
-        for (
-                std::size_t i = 0;
-                i < pre_results.
-
-                        size();
-
-                ++i) {
+        results.reserve(pre_results.size() * 2);
+        for (std::size_t i = 0; i < pre_results.size(); ++i) {
             auto &pre_result = pre_results[i];
-            results.
-                    emplace_back(std::move(pre_result.first.first)
-            );
-            results.
-                    emplace_back(std::move(pre_result.first.second)
-            );
+            results.emplace_back(std::move(pre_result.first.first));
+            results.emplace_back(std::move(pre_result.first.second));
         }
-        return
-                results;
+        return results;
     }
 
     template<typename Graph>
     std::set<typename network<Graph>::edge_descriptor> network<Graph>::_process_segments_unique_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor
-            >>> &&pre_results) const {
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const {
         std::set<edge_descriptor> results;
-        for (
-            const auto &pre_result
-                : pre_results) {
-            results.
-                    emplace(pre_result
-                                    .second.second);
+        for (const auto &pre_result: pre_results) {
+            results.emplace(edge_map[pre_result.second.first]);
         }
-        return
-                results;
+        return results;
     }
 
     template<typename Graph>
@@ -772,11 +765,11 @@ namespace map_matching_2::geometry::network {
     network<types_cartesian::graph_static>::point_in_nodes(const point_type &point) const;
 
     template
-    std::pair<bool, std::pair<std::size_t, typename network<types_geographic::graph_static>::edge_descriptor>>
+    std::pair<bool, std::pair<std::size_t, std::size_t>>
     network<types_geographic::graph_static>::point_in_edges(const point_type &point) const;
 
     template
-    std::pair<bool, std::pair<std::size_t, typename network<types_cartesian::graph_static>::edge_descriptor>>
+    std::pair<bool, std::pair<std::size_t, std::size_t>>
     network<types_cartesian::graph_static>::point_in_edges(const point_type &point) const;
 
     template
@@ -896,26 +889,22 @@ namespace map_matching_2::geometry::network {
     template
     std::vector<typename network<types_geographic::graph_static>::point_type>
     network<types_geographic::graph_static>::_process_segments_points_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor
-            >>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
     template
     std::vector<typename network<types_cartesian::graph_static>::point_type>
     network<types_cartesian::graph_static>::_process_segments_points_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor
-            >>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
     template
     std::set<typename network<types_geographic::graph_static>::edge_descriptor>
     network<types_geographic::graph_static>::_process_segments_unique_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor
-            >>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
     template
     std::set<typename network<types_cartesian::graph_static>::edge_descriptor>
     network<types_cartesian::graph_static>::_process_segments_unique_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor
-            >>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
     template
     class network<types_geographic::graph_modifiable>::vertex_reprojector<types_cartesian::graph_modifiable>;

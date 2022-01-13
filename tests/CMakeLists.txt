@@ -1,5 +1,5 @@
 set(Boost_USE_STATIC_LIBS OFF)
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS serialization unit_test_framework)
 
 add_executable(map_matching_2_tests)
 
@@ -14,11 +14,16 @@ endif ()
 
 target_sources(map_matching_2_tests
         PRIVATE
-        library_tests.cpp
-        route_tests.cpp
         compare_tests.cpp
+        library_tests.cpp
+        matcher_test.cpp
         network_test.cpp
-        matcher_test.cpp)
+        route_tests.cpp
+        serialization_tests.cpp)
+
+target_compile_definitions(map_matching_2_tests
+        PRIVATE
+        BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL)
 
 target_link_libraries(map_matching_2_tests
         PRIVATE
@@ -28,4 +33,5 @@ target_link_libraries(map_matching_2_tests
         io
         learning
         matching
+        Boost::serialization
         Boost::unit_test_framework)

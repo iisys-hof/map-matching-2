@@ -1454,6 +1454,13 @@ int main(int argc, char *argv[]) {
                 }
             }
 
+            // Building spatial indices
+            if (network_srs_type == geographic) {
+                build_spatial_indices(*network_geographic, verbose);
+            } else {
+                build_spatial_indices(*network_cartesian, verbose);
+            }
+
             // Network Save
             if (not network_save.empty()) {
                 if (verbose) {
@@ -1510,15 +1517,6 @@ int main(int argc, char *argv[]) {
                               << " vertices and " << boost::num_edges(network_cartesian->graph) << " edges"
                               << std::endl;
                 }
-            }
-        }
-
-        if (not(tracks_file.empty() and not read_line)) {
-            // Building spatial indices
-            if (network_srs_type == geographic) {
-                build_spatial_indices(*network_geographic, verbose);
-            } else {
-                build_spatial_indices(*network_cartesian, verbose);
             }
         }
 

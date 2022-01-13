@@ -149,13 +149,21 @@ endif ()
 
 find_package(Boost QUIET REQUIRED CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
-# shortest points new
+# geometry develop for closest points feature
 FetchContent_Declare(geometry_develop
         GIT_REPOSITORY https://github.com/boostorg/geometry.git
         GIT_TAG develop)
 
 FetchContent_MakeAvailable(geometry_develop)
 set(GEOMETRY_DEVELOP_INCLUDE_DIRS "${geometry_develop_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
+
+# apply shortest points new patch file
+message(STATUS "Git reset ${geometry_develop_SOURCE_DIR}")
+execute_process(COMMAND git reset --hard
+        WORKING_DIRECTORY "${geometry_develop_SOURCE_DIR}")
+message(STATUS "Git apply rtree_deserialization.patch")
+execute_process(COMMAND git apply -v "${CMAKE_CURRENT_SOURCE_DIR}/rtree_deserialization.patch"
+        WORKING_DIRECTORY "${geometry_develop_SOURCE_DIR}")
 
 # protozero
 FetchContent_Declare(protozero

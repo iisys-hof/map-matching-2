@@ -55,14 +55,17 @@ namespace map_matching_2::geometry::network {
         using length_type = typename boost::geometry::default_length_result<line_type>::type;
 
         using rtree_points_type = boost::geometry::index::rtree<
-                std::pair<point_type, vertex_descriptor>, boost::geometry::index::rstar<16>>;
+                std::pair<point_type, std::size_t>, boost::geometry::index::rstar<16>>;
         using rtree_segments_type = boost::geometry::index::rtree<
-                std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>, boost::geometry::index::rstar<16>>;
+                std::pair<segment_type, std::pair<std::size_t, std::size_t>>, boost::geometry::index::rstar<16>>;
 
         Graph graph;
 
         rtree_points_type points_index;
         rtree_segments_type segments_index;
+
+        std::vector<vertex_descriptor> vertex_map;
+        std::vector<edge_descriptor> edge_map;
 
         class tag_helper tag_helper;
 
@@ -90,13 +93,15 @@ namespace map_matching_2::geometry::network {
 
         void rebuild_spatial_indices();
 
+        void rebuild_maps();
+
         [[nodiscard]] std::vector<vertex_descriptor> find_node(osmium::object_id_type node_id) const;
 
         [[nodiscard]] std::vector<edge_descriptor> find_edge(osmium::object_id_type edge_id) const;
 
         [[nodiscard]] std::pair<bool, vertex_descriptor> point_in_nodes(const point_type &point) const;
 
-        [[nodiscard]] std::pair<bool, std::pair<std::size_t, edge_descriptor>>
+        [[nodiscard]] std::pair<bool, std::pair<std::size_t, std::size_t>>
         point_in_edges(const point_type &point) const;
 
         [[nodiscard]] std::pair<bool, edge_descriptor> fitting_edge(const segment_type &segment) const;
@@ -123,17 +128,17 @@ namespace map_matching_2::geometry::network {
         [[nodiscard]] route_type extract_route(const std::list<vertex_descriptor> &shortest_path) const;
 
         template<typename Predicate>
-        [[nodiscard]] std::vector<std::pair<point_type, vertex_descriptor>>
+        [[nodiscard]] std::vector<std::pair<point_type, std::size_t>>
         query_points(const Predicate &predicate) const {
-            std::vector<std::pair<point_type, vertex_descriptor>> results;
+            std::vector<std::pair<point_type, std::size_t>> results;
             points_index.query(predicate, std::back_inserter(results));
             return results;
         }
 
         template<typename Predicate>
-        [[nodiscard]] std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>>
+        [[nodiscard]] std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>>
         query_segments(const Predicate &predicate) const {
-            std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>> results;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> results;
             segments_index.query(predicate, std::back_inserter(results));
             return results;
         }
@@ -168,10 +173,24 @@ namespace map_matching_2::geometry::network {
         friend class boost::serialization::access;
 
         template<typename Archive>
-        void serialize(Archive &ar, const unsigned int version) {
-            ar & graph;
-            ar & tag_helper;
+        void save(Archive &ar, const unsigned int version) const {
+            ar << graph;
+            ar << points_index;
+            ar << segments_index;
+            ar << tag_helper;
         }
+
+        template<typename Archive>
+        void load(Archive &ar, const unsigned int version) {
+            ar >> graph;
+            ar >> points_index;
+            ar >> segments_index;
+            ar >> tag_helper;
+
+            rebuild_maps();
+        }
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     private:
         void _merge(edge_descriptor in_edge, edge_descriptor out_edge, bool simplify_network_complete = true);
@@ -184,10 +203,10 @@ namespace map_matching_2::geometry::network {
                 const vertex_descriptor &vertex) const;
 
         [[nodiscard]] std::vector<point_type> _process_segments_points_result(
-                std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>> &&pre_results) const;
+                std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
         [[nodiscard]] std::set<edge_descriptor> _process_segments_unique_result(
-                std::vector<std::pair<segment_type, std::pair<std::size_t, edge_descriptor>>> &&pre_results) const;
+                std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
         template<typename GraphReprojected>
         struct vertex_reprojector {
