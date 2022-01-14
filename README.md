@@ -22,6 +22,8 @@ Various advanced map matching algorithms are implemented, for example:
 * Tags for car-network currently implemented, other network types such as bycicles, walking, railroads will come in
   future updates, maybe also individual tag specifications
 * `.csv` import of tracks, either as list of points or WKT lines or multilines
+* `.gpx` import of tracks (from TRK records, multiple segments per track are supported)
+* Multiple input files supported by specifying multiple track files, for example multiple `.gpx` files
 * Import in shell pipeline mode of WKT lines or multilines (optional)
 * Native import and matching of the map matching dataset
   at [Dataset for testing and training map-matching methods](https://zenodo.org/record/57731) (optional)
@@ -108,6 +110,38 @@ If you don't want to use multi-threading for map matching enable \
 This also reduces global memory usage as parallel matching does not occur.
 
 ### Examples
+
+Exporting the network graph as binary file for (approximately ten times) faster reimport:
+
+```
+./map_matching_2 \
+  --network "/app/data/oberfranken-latest.osm.pbf" \
+  --network-save "/app/data/oberfranken-latest.dat" \
+  --verbose
+```
+
+Using exported network graph instead of original input file, simply replace `--network` with `--network-load` and the
+previously exported file from `--network-save` (see above):
+
+```
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  [... remaining options ...]
+  --verbose
+```
+
+Using `.gpx` files is as simple as `.csv` files. As the GPX scheme is well-defined, no additional configuration is
+needed, see here an example with multiple `.gpx` files and previously exported network:
+
+```
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --tracks "/app/data/record_1.gpx" \
+  --tracks "/app/data/record_2.gpx" \
+  --tracks "/app/data/record_3.gpx" \
+  --output "/app/data/matches.csv" \
+  --verbose
+```
 
 This tool has native support for the [map matching dataset](https://doi.org/10.5281/zenodo.57731) from Kubicka, M. et
 al.

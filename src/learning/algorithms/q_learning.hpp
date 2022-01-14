@@ -39,6 +39,10 @@ namespace map_matching_2::learning {
 
         q_learning(Environment &environment, const learning::settings &settings = learning::settings());
 
+        [[nodiscard]] auto &environment() {
+            return _environment;
+        }
+
         std::vector<std::pair<std::size_t, std::size_t>> operator()();
 
     private:

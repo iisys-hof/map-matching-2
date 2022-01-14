@@ -189,23 +189,30 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
                                           "error_added", "error_missed", "error_adds", "error_misses"};
     }
 
-    const auto candidate_export = [&](const auto &environment, const auto &learner,
-                                      const auto &policy, const auto &track) {
-        if (not candidates_folder.empty()) {
-            auto candidate_policy = matcher.candidates_policy(environment.candidates(), policy);
+    const auto candidate_export = [&](const auto &environments, const auto &learners,
+                                      const auto &policies, const auto &track) {
+        if (not candidates_folder.empty() and environments.size() > 0) {
+            std::vector<typename Matcher::candidate_type> candidates;
+            std::vector<typename Matcher::candidate_type> policy;
+            for (std::size_t i = 0; i < environments.size(); ++i) {
+                const auto &environment_candidates = environments[i].candidates();
+                candidates.insert(candidates.end(), environment_candidates.cbegin(), environment_candidates.cend());
+                auto candidate_policy = matcher.candidates_policy(environment_candidates, policies[i]);
+                policy.insert(policy.end(), candidate_policy.cbegin(), candidate_policy.cend());
+            }
 
             std::string id = track.id;
             std::regex reg{"[^_[:alnum:]]"};
             std::regex_replace(id, reg, "");
 
             std::filesystem::path prefix_path{candidates_folder};
-            prefix_path.append(id + "_" + environment.name + "_" + learner.name);
+            prefix_path.append(id + "_" + environments[0].name + "_" + learners[0].name);
 
             std::filesystem::path candidate_path = prefix_path;
             std::filesystem::path policy_path = prefix_path;
 
-            matcher.save_candidates(candidate_path.concat("_candidates.csv").string(), environment.candidates());
-            matcher.save_candidates(policy_path.concat("_policy.csv").string(), candidate_policy);
+            matcher.save_candidates(candidate_path.concat("_candidates.csv").string(), candidates);
+            matcher.save_candidates(policy_path.concat("_policy.csv").string(), policy);
         }
     };
 
@@ -223,17 +230,21 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
 
                 matcher.template match<LearnFunction>(
                         track.second, learn_settings, match_settings,
-                        [&](const auto &environment, const auto &learner, const auto &policy,
+                        [&](const auto &environments, const auto &learners, const auto &policies,
                             const auto &track, const auto &prepared, const auto &route, const auto duration) {
                             if (verbose) {
+                                std::size_t edges = 0, combinations = 0;
+                                for (std::size_t i = 0; i < environments.size(); ++i) {
+                                    edges += environments[i].edges();
+                                    combinations += environments[i].states();
+                                }
                                 std::cout << "done in " << duration << "s, track points: " << track.sizes()
-                                          << ", prepared points: " << prepared.sizes() << ", candidates: "
-                                          << environment.edges() << ", combinations: " << environment.states()
-                                          << std::endl;
+                                          << ", prepared points: " << prepared.sizes() << ", candidates: " << edges
+                                          << ", combinations: " << combinations << std::endl;
                                 original_points += track.sizes();
                                 filtered_points += prepared.sizes();
                             }
-                            candidate_export(environment, learner, policy, track);
+                            candidate_export(environments, learners, policies, track);
                             const auto ground_truth = find_ground_truth(track, compare_tracks);
                             const auto comparison = compare_track(comparator, ground_truth,
                                                                   route.get_multi_rich_line());
@@ -250,17 +261,22 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
             boost::mutex mtx;
             matcher.template match_all<LearnFunction>(
                     tracks, learn_settings, match_settings,
-                    [&](const auto &environment, const auto &learner, const auto &policy,
+                    [&](const auto &environments, const auto &learners, const auto &policies,
                         const auto &track, const auto &prepared, const auto &route, const auto duration) {
-                        candidate_export(environment, learner, policy, track);
+                        candidate_export(environments, learners, policies, track);
                         const auto ground_truth = find_ground_truth(track, compare_tracks);
                         const auto comparison = compare_track(comparator, ground_truth, route.get_multi_rich_line());
                         boost::lock_guard lock{mtx};
                         if (verbose) {
+                            std::size_t edges = 0, combinations = 0;
+                            for (std::size_t i = 0; i < environments.size(); ++i) {
+                                edges += environments[i].edges();
+                                combinations += environments[i].states();
+                            }
                             std::cout << "Matching " << (i + 1) << "/" << tracks.size() << " " << track.id
                                       << " done in " << duration << "s, track points: " << track.sizes()
-                                      << ", prepared points: " << prepared.sizes() << ", candidates: "
-                                      << environment.edges() << ", combinations: " << environment.states() << std::endl;
+                                      << ", prepared points: " << prepared.sizes() << ", candidates: " << edges
+                                      << ", combinations: " << combinations << std::endl;
                             original_points += track.sizes();
                             filtered_points += prepared.sizes();
                         }
@@ -487,12 +503,11 @@ int main(int argc, char *argv[]) {
     namespace po = boost::program_options;
 
     std::string network_file, arcs_file, nodes_file, network_srs, network_transform_srs, network_srs_type,
-            network_transform_srs_type, tracks_file, tracks_file_type, tracks_srs, tracks_transform_srs,
-            tracks_srs_type, tracks_transform_srs_type, output_file, candidates_folder, compare_file, compare_file_type,
-            compare_srs, compare_srs_type, compare_transform_srs, compare_transform_srs_type, compare_output_file,
-            model, candidate_search;
-    std::vector<std::string> id, compare_id, selectors, export_network, export_simplified_network,
-            export_retained_network, export_transformed_network;
+            network_transform_srs_type, tracks_file_type, tracks_srs, tracks_transform_srs, tracks_srs_type,
+            tracks_transform_srs_type, output_file, candidates_folder, compare_file_type, compare_srs, compare_srs_type,
+            compare_transform_srs, compare_transform_srs_type, compare_output_file, model, candidate_search;
+    std::vector<std::string> tracks_file, compare_file, id, compare_id, selectors, export_network,
+            export_simplified_network, export_retained_network, export_transformed_network;
     std::size_t state_size, k_nearest, episodes;
     char delimiter, compare_delimiter;
     double routing_max_distance_factor, radius, radius_upper_limit, radius_lower_limit, learning_rate, epsilon,
@@ -570,8 +585,9 @@ int main(int argc, char *argv[]) {
                  "dramatically reduces routing duration in networks significantly larger than the given track");
 
         options_tracks.add_options()
-                ("tracks", po::value<std::string>(&tracks_file),
-                 "path to tracks file")
+                ("tracks", po::value<std::vector<std::string>>(&tracks_file),
+                 "path to tracks file; "
+                 "can be specified multiple times for multiple files but all files need the same format per file type")
                 ("tracks-file-type", po::value<std::string>(&tracks_file_type),
                  "tracks file type; "
                  "by default is automatically detected from filename extension"
@@ -600,7 +616,7 @@ int main(int argc, char *argv[]) {
                 ("no-id", po::bool_switch(&no_id),
                  "csv has no id column, in this case, an id of 0 is used and all points are asumed to be one track, "
                  "except when WKT read mode and linestrings are given, then the row index is used as id")
-                ("id", po::value<std::vector<std::string >>(&id)->default_value({"id"}, "id"),
+                ("id", po::value<std::vector<std::string>>(&id)->default_value({"id"}, "id"),
                  "id column of tracks .csv file, "
                  "can be specified multiple times for composite primary keys over multiple columns, "
                  "internally, the id-aggregator field is then used for concatenation of the values")
@@ -652,8 +668,9 @@ int main(int argc, char *argv[]) {
                  "in this mode, compare is no .csv file but a file that contains a list of edges that form the ground truth route, "
                  "in this case, the number of the edge is the id of the edge in the network graph, "
                  "also the network-srs and network-transform-srs as well as the corresponding types are used")
-                ("compare", po::value<std::string>(&compare_file),
-                 "path to compare file for ground truth matches for statistics on results")
+                ("compare", po::value<std::vector<std::string>>(&compare_file),
+                 "path to compare file for ground truth matches for statistics on results; "
+                 "can be specified multiple times for multiple files but all files need the same format per file type")
                 ("compare-file-type", po::value<std::string>(&compare_file_type),
                  "compare file type; "
                  "by default is automatically detected from filename extension; "
@@ -1176,19 +1193,22 @@ int main(int argc, char *argv[]) {
                     std::cout << "Import edge list ground truth tracks for comparison ... " << std::flush;
                 }
 
-                double duration;
-                if (network_srs_type == geographic) {
-                    map_matching_2::io::track::edges_list_importer<
-                            map_matching_2::geometry::network::types_geographic::network_modifiable,
-                            map_matching_2::geometry::track::types_geographic::multi_track_type>
-                            edges_list_importer{compare_file, *network_geographic_import, compare_tracks_geographic};
-                    duration = map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
-                } else {
-                    map_matching_2::io::track::edges_list_importer<
-                            map_matching_2::geometry::network::types_cartesian::network_modifiable,
-                            map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                            edges_list_importer{compare_file, *network_cartesian_import, compare_tracks_cartesian};
-                    duration = map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                double duration = 0.0;
+                for (const auto &file: compare_file) {
+                    if (network_srs_type == geographic) {
+                        map_matching_2::io::track::edges_list_importer<
+                                map_matching_2::geometry::network::types_geographic::network_modifiable,
+                                map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                edges_list_importer{file, *network_geographic_import,
+                                                    compare_tracks_geographic};
+                        duration += map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                    } else {
+                        map_matching_2::io::track::edges_list_importer<
+                                map_matching_2::geometry::network::types_cartesian::network_modifiable,
+                                map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                edges_list_importer{file, *network_cartesian_import, compare_tracks_cartesian};
+                        duration += map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                    }
                 }
 
                 if (verbose) {
@@ -1553,43 +1573,46 @@ int main(int argc, char *argv[]) {
                 std::cout << "Import tracks ... " << std::flush;
             }
 
-            detect_extension(tracks_file, tracks_file_type);
+            map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
+            csv_track_importer_settings.delimiter = delimiter;
+            csv_track_importer_settings.no_header = no_header;
+            csv_track_importer_settings.no_id = no_id;
+            csv_track_importer_settings.wkt = wkt;
+            csv_track_importer_settings.field_id = id;
+            csv_track_importer_settings.id_aggregator = id_aggregator;
+            csv_track_importer_settings.field_x = x;
+            csv_track_importer_settings.field_y = y;
+            csv_track_importer_settings.field_time = time;
+            csv_track_importer_settings.time_format = time_format;
+            csv_track_importer_settings.no_parse_time = no_parse_time;
+            csv_track_importer_settings.field_geometry = geometry;
 
-            if (tracks_file_type == ".csv") {
-                map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
-                csv_track_importer_settings.delimiter = delimiter;
-                csv_track_importer_settings.no_header = no_header;
-                csv_track_importer_settings.no_id = no_id;
-                csv_track_importer_settings.wkt = wkt;
-                csv_track_importer_settings.field_id = id;
-                csv_track_importer_settings.id_aggregator = id_aggregator;
-                csv_track_importer_settings.field_x = x;
-                csv_track_importer_settings.field_y = y;
-                csv_track_importer_settings.field_time = time;
-                csv_track_importer_settings.time_format = time_format;
-                csv_track_importer_settings.no_parse_time = no_parse_time;
-                csv_track_importer_settings.field_geometry = geometry;
+            duration = 0.0;
+            for (const auto &file: tracks_file) {
+                detect_extension(file, tracks_file_type);
 
-                if (tracks_srs_type == geographic) {
-                    map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
-                            csv_track_importer{tracks_file, tracks_geographic};
-                    csv_track_importer.settings = csv_track_importer_settings;
-                    duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
-                } else {
-                    map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                            csv_track_importer{tracks_file, tracks_cartesian};
-                    csv_track_importer.settings = csv_track_importer_settings;
-                    duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
-                }
-            } else if (tracks_file_type == ".gpx") {
-                if (tracks_srs_type == geographic) {
-                    map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
-                            gpx_track_importer{tracks_file, tracks_geographic};
-                    duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
-                } else {
-                    map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                            gpx_track_importer{tracks_file, tracks_cartesian};
-                    duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                if (tracks_file_type == ".csv") {
+                    if (tracks_srs_type == geographic) {
+                        map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                csv_track_importer{file, tracks_geographic};
+                        csv_track_importer.settings = csv_track_importer_settings;
+                        duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                    } else {
+                        map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                csv_track_importer{file, tracks_cartesian};
+                        csv_track_importer.settings = csv_track_importer_settings;
+                        duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                    }
+                } else if (tracks_file_type == ".gpx") {
+                    if (tracks_srs_type == geographic) {
+                        map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                gpx_track_importer{file, tracks_geographic};
+                        duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                    } else {
+                        map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                gpx_track_importer{file, tracks_cartesian};
+                        duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                    }
                 }
             }
 
@@ -1680,40 +1703,43 @@ int main(int argc, char *argv[]) {
                     std::cout << "Import ground truth tracks for comparison ... " << std::flush;
                 }
 
-                detect_extension(compare_file, compare_file_type);
+                map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
+                csv_track_importer_settings.delimiter = compare_delimiter;
+                csv_track_importer_settings.no_header = compare_no_header;
+                csv_track_importer_settings.no_id = compare_no_id;
+                csv_track_importer_settings.wkt = compare_wkt;
+                csv_track_importer_settings.field_id = compare_id;
+                csv_track_importer_settings.id_aggregator = compare_id_aggregator;
+                csv_track_importer_settings.field_x = compare_x;
+                csv_track_importer_settings.field_y = compare_y;
+                csv_track_importer_settings.field_geometry = compare_geometry;
 
-                if (compare_file_type == ".csv") {
-                    map_matching_2::io::track::csv_track_importer_settings csv_track_importer_settings;
-                    csv_track_importer_settings.delimiter = compare_delimiter;
-                    csv_track_importer_settings.no_header = compare_no_header;
-                    csv_track_importer_settings.no_id = compare_no_id;
-                    csv_track_importer_settings.wkt = compare_wkt;
-                    csv_track_importer_settings.field_id = compare_id;
-                    csv_track_importer_settings.id_aggregator = compare_id_aggregator;
-                    csv_track_importer_settings.field_x = compare_x;
-                    csv_track_importer_settings.field_y = compare_y;
-                    csv_track_importer_settings.field_geometry = compare_geometry;
+                duration = 0.0;
+                for (const auto &file: compare_file) {
+                    detect_extension(file, compare_file_type);
 
-                    if (compare_srs_type == geographic) {
-                        map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
-                                csv_track_importer{compare_file, compare_tracks_geographic};
-                        csv_track_importer.settings = csv_track_importer_settings;
-                        duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
-                    } else {
-                        map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                                csv_track_importer{compare_file, compare_tracks_cartesian};
-                        csv_track_importer.settings = csv_track_importer_settings;
-                        duration = map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
-                    }
-                } else if (compare_file_type == ".gpx") {
-                    if (compare_srs_type == geographic) {
-                        map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
-                                gpx_track_importer{compare_file, compare_tracks_geographic};
-                        duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
-                    } else {
-                        map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
-                                gpx_track_importer{compare_file, compare_tracks_cartesian};
-                        duration = map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                    if (compare_file_type == ".csv") {
+                        if (compare_srs_type == geographic) {
+                            map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                    csv_track_importer{file, compare_tracks_geographic};
+                            csv_track_importer.settings = csv_track_importer_settings;
+                            duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                        } else {
+                            map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                    csv_track_importer{file, compare_tracks_cartesian};
+                            csv_track_importer.settings = csv_track_importer_settings;
+                            duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
+                        }
+                    } else if (compare_file_type == ".gpx") {
+                        if (compare_srs_type == geographic) {
+                            map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::multi_track_type>
+                                    gpx_track_importer{file, compare_tracks_geographic};
+                            duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                        } else {
+                            map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::multi_track_type>
+                                    gpx_track_importer{file, compare_tracks_cartesian};
+                            duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
+                        }
                     }
                 }
 

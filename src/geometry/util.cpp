@@ -23,7 +23,7 @@
 
 #include <boost/thread.hpp>
 
-#include <boost/geometry/algorithms/detail/azimuth.hpp>
+#include <boost/geometry/algorithms/azimuth.hpp>
 
 #include "types.hpp"
 
@@ -93,8 +93,7 @@ namespace map_matching_2::geometry {
         if (exists) {
             return search->second;
         } else {
-            const auto azimuth = boost::geometry::detail::azimuth<
-                    typename boost::geometry::coordinate_type<Point>::type>(a, b);
+            const auto azimuth = boost::geometry::azimuth(a, b);
             _azimuth_cache->emplace(key, azimuth);
             return azimuth;
         }

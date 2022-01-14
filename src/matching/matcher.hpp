@@ -141,18 +141,21 @@ namespace map_matching_2::matching {
         void match(const multi_track_type &multi_track,
                    const learning::settings &learn_settings = learning::settings{},
                    const matching::settings &match_settings = matching::settings{},
-                   const std::function<void(const typename Learner::environment_type &, const Learner &,
-                                            const std::vector<std::pair<std::size_t, std::size_t>> &,
+                   const std::function<void(const std::vector<typename Learner::environment_type> &,
+                                            const std::vector<Learner> &,
+                                            const std::vector<std::vector<std::pair<std::size_t, std::size_t>>> &,
                                             const multi_track_type &, const multi_track_type &, const route_type &,
                                             const double)>
-                   &callback = [](const auto &environment, const auto &learner, const auto &policy,
+                   &callback = [](const auto &environments, const auto &learners, const auto &policies,
                                   const auto &track, const auto &prepared, const auto &route, const auto duration) {}) {
             using environment_type = typename Learner::environment_type;
+            std::vector<environment_type> environments;
+            environments.reserve(multi_track.tracks.size());
+            std::vector<Learner> learners;
+            learners.reserve(multi_track.tracks.size());
 
-            environment_type environment{*this, match_settings};
-            Learner learner{environment, learn_settings};
-
-            std::vector<std::pair<std::size_t, std::size_t>> policy;
+            std::vector<std::vector<std::pair<std::size_t, std::size_t>>> policies;
+            policies.reserve(multi_track.tracks.size());
 
             std::vector<Track> prepared;
             prepared.reserve(multi_track.tracks.size());
@@ -161,6 +164,14 @@ namespace map_matching_2::matching {
 
             double duration = 0.0;
             for (const auto &track_part: multi_track.tracks) {
+                environments.emplace_back(environment_type{*this, match_settings});
+                auto &environment = environments.back();
+
+                learners.emplace_back(Learner{environments.back(), learn_settings});
+                auto &learner = learners.back();
+
+                std::vector<std::pair<std::size_t, std::size_t>> policy;
+
                 duration += util::benchmark([&]() {
                     environment.set(track_part);
                     policy = learner();
@@ -168,9 +179,11 @@ namespace map_matching_2::matching {
 
                 prepared.emplace_back(environment.track());
                 results.emplace_back(environment.template result<route_type>(policy));
+                policies.emplace_back(std::move(policy));
             }
 
-            callback(environment, learner, policy, multi_track, multi_track_type{multi_track.id, std::move(prepared)},
+            callback(environments, learners, policies, multi_track,
+                     multi_track_type{multi_track.id, std::move(prepared)},
                      route_type::merge({results.begin(), results.end()}), duration);
 
             clear_route_cache();
@@ -182,11 +195,12 @@ namespace map_matching_2::matching {
         void match(const Track &track,
                    const learning::settings &learn_settings = learning::settings{},
                    const matching::settings &match_settings = matching::settings{},
-                   const std::function<void(const typename Learner::environment_type &, const Learner &,
-                                            const std::vector<std::pair<std::size_t, std::size_t>> &,
+                   const std::function<void(const std::vector<typename Learner::environment_type> &,
+                                            const std::vector<Learner> &,
+                                            const std::vector<std::vector<std::pair<std::size_t, std::size_t>>> &,
                                             const multi_track_type &, const multi_track_type &, const route_type &,
                                             const double)>
-                   &callback = [](const auto &environment, const auto &learner, const auto &policy,
+                   &callback = [](const auto &environments, const auto &learners, const auto &policies,
                                   const auto &track, const auto &prepared, const auto &route, const auto duration) {}) {
             multi_track_type multi_track{track.id, track};
             this->template match<Learner>(multi_track, learn_settings, match_settings, callback);
@@ -196,11 +210,12 @@ namespace map_matching_2::matching {
         void match_all(const std::unordered_map<std::string, multi_track_type> &tracks,
                        const learning::settings &learn_settings = learning::settings{},
                        const matching::settings &match_settings = matching::settings{},
-                       const std::function<void(const typename Learner::environment_type &, const Learner &,
-                                                const std::vector<std::pair<std::size_t, std::size_t>> &,
+                       const std::function<void(const std::vector<typename Learner::environment_type> &,
+                                                const std::vector<Learner> &,
+                                                const std::vector<std::vector<std::pair<std::size_t, std::size_t>>> &,
                                                 const multi_track_type &, const multi_track_type &, const route_type &,
                                                 const double)>
-                       &callback = [](const auto &environment, const auto &learner, const auto &policy,
+                       &callback = [](const auto &environments, const auto &learners, const auto &policies,
                                       const auto &track, const auto &prepared, const auto &route,
                                       const auto duration) {}) {
             if (_single_threaded) {

@@ -38,6 +38,10 @@ namespace map_matching_2::learning {
 
         value_iteration(Environment &environment, const learning::settings &settings = learning::settings{});
 
+        [[nodiscard]] auto &environment() {
+            return _environment;
+        }
+
         void generate_states(std::vector<state_type> &states);
 
         std::vector<std::pair<std::size_t, std::size_t>> operator()();
