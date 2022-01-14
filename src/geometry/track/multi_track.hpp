@@ -45,6 +45,10 @@ namespace map_matching_2::geometry::track {
 
         multi_track(std::string id, std::vector<measurement_type> measurements);
 
+        multi_track(std::string id, std::vector<line_type> lines);
+
+        multi_track(std::string id, std::vector<rich_line_type> rich_lines);
+
         multi_track(std::string id, multi_rich_line_type multi_rich_line);
 
         multi_track(std::string id, std::vector<track_type> tracks);

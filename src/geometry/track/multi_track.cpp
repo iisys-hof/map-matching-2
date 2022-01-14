@@ -42,6 +42,14 @@ namespace map_matching_2::geometry::track {
             : multi_track{id, track_type{std::move(id), std::move(measurements)}} {}
 
     template<typename Measurement>
+    multi_track<Measurement>::multi_track(std::string id, std::vector<line_type> lines)
+            : multi_track{id, multi_rich_line_type{multi_rich_line_type::lines2multi_lines(lines)}} {}
+
+    template<typename Measurement>
+    multi_track<Measurement>::multi_track(std::string id, std::vector<rich_line_type> rich_lines)
+            : multi_track{id, multi_rich_line_type{std::move(rich_lines)}} {}
+
+    template<typename Measurement>
     multi_track<Measurement>::multi_track(std::string id, multi_rich_line_type multi_rich_line)
             : multi_rich_line_type{std::move(multi_rich_line)}, id{std::move(id)} {
         tracks.reserve(this->rich_lines.size());

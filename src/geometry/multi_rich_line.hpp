@@ -49,6 +49,8 @@ namespace map_matching_2::geometry {
 
         multi_rich_line(rich_line_type rich_line);
 
+        multi_rich_line(std::vector<line_type> lines);
+
         multi_rich_line(std::vector<rich_line_type> rich_lines);
 
         multi_rich_line(multi_line_type multi_line, std::vector<rich_line_type> rich_lines);
@@ -74,6 +76,8 @@ namespace map_matching_2::geometry {
 
         [[nodiscard]] static multi_rich_line
         merge(const std::vector<std::reference_wrapper<rich_line_type>> &rich_lines);
+
+        [[nodiscard]] static multi_line_type lines2multi_lines(const std::vector<line_type> &lines);
 
         [[nodiscard]] std::string wkt() const;
 

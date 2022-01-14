@@ -30,8 +30,6 @@ namespace map_matching_2::io {
         std::vector<std::string> _columns;
 
     protected:
-        virtual std::uint64_t parse_time(const std::string &time_str, const std::string &format);
-
         virtual void configure_format(csv::CSVFormat &format);
 
         virtual void process_row(const std::size_t n, const csv::CSVRow &row) = 0;

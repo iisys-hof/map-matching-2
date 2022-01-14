@@ -16,6 +16,7 @@
 #include "network_loader.hpp"
 
 #include <fstream>
+#include <filesystem>
 
 #include <boost/archive/binary_iarchive.hpp>
 
@@ -30,9 +31,14 @@ namespace map_matching_2::io::network {
     template<typename Network>
     void network_loader<Network>::read() {
         std::ifstream file;
-        file.open(this->filename(), std::ios_base::binary);
+        std::filesystem::path path{this->filename()};
 
-        if (file.good()) {
+        if (not std::filesystem::exists(path)) {
+            throw std::runtime_error("file " + this->filename() + " does not exist.");
+        }
+
+        file.open(path, std::ios_base::binary);
+        if (file.is_open() && file.good()) {
             boost::archive::binary_iarchive in{file};
             in >> _network;
         }

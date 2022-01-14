@@ -32,7 +32,7 @@ namespace map_matching_2::io::network {
         std::ofstream file;
         file.open(this->filename(), std::ios_base::binary | std::ios_base::trunc);
 
-        if (file.good()) {
+        if (file.is_open() && file.good()) {
             boost::archive::binary_oarchive out{file};
             out << _network;
         }

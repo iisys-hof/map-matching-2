@@ -29,7 +29,6 @@ namespace map_matching_2::io::track {
 
     template<typename MultiTrack>
     void input_importer<MultiTrack>::read() {
-        std::size_t id = 0;
         std::string wkt_string;
         while (std::getline(std::cin, wkt_string)) {
             boost::trim(wkt_string);
@@ -38,7 +37,7 @@ namespace map_matching_2::io::track {
             }
 
             try {
-                std::string id_str = std::to_string(id++);
+                std::string id_str = std::to_string(_tracks.size());
                 boost::to_upper(wkt_string);
                 if (wkt_string.starts_with("POINT")) {
                     std::vector<measurement_type> measurements;

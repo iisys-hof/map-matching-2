@@ -44,7 +44,7 @@ namespace map_matching_2::io {
     }
 
     bool file_exporter::is_writable() const {
-        return _out.is_open() and not filename().empty();
+        return _out.is_open() and _out.good() and not filename().empty();
     }
 
 }

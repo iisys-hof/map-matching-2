@@ -42,6 +42,10 @@ namespace map_matching_2::geometry {
             : multi_rich_line{std::vector{std::move(rich_line)}} {}
 
     template<typename Line>
+    multi_rich_line<Line>::multi_rich_line(std::vector<line_type> lines)
+            : multi_rich_line{lines2multi_lines(lines)} {}
+
+    template<typename Line>
     multi_rich_line<Line>::multi_rich_line(std::vector<rich_line_type> rich_lines)
             : rich_lines{std::move(rich_lines)} {
         multi_line.reserve(this->rich_lines.size());
@@ -166,6 +170,17 @@ namespace map_matching_2::geometry {
         new_rich_lines.emplace_back(rich_line_type::merge({start_it, it}));
 
         return multi_rich_line{std::move(new_rich_lines)};
+    }
+
+    template<typename Line>
+    typename multi_rich_line<Line>::multi_line_type
+    multi_rich_line<Line>::lines2multi_lines(const std::vector<line_type> &lines) {
+        multi_line_type multi_line;
+        multi_line.reserve(lines.size());
+        for (const auto &line: lines) {
+            multi_line.emplace_back(line);
+        }
+        return multi_line;
     }
 
     template<typename Line>

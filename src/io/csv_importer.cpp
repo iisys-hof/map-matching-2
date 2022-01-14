@@ -15,25 +15,14 @@
 
 #include "csv_importer.hpp"
 
-#include <date/date.h>
-
 namespace map_matching_2::io {
-
-    std::uint64_t csv_importer::parse_time(const std::string &time_str, const std::string &format) {
-        date::sys_time<std::chrono::milliseconds> time;
-        std::istringstream time_str_stream{time_str};
-        time_str_stream >> date::parse(format, time);
-        const auto count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
-        assert(count >= 0);
-        return (std::uint64_t) count;
-    }
 
     void csv_importer::configure_format(csv::CSVFormat &format) {}
 
     void csv_importer::finish_import() {}
 
-    csv_importer::csv_importer(std::string filename) : importer{std::move(filename)} {
-    }
+    csv_importer::csv_importer(std::string filename)
+            : importer{std::move(filename)} {}
 
     void csv_importer::read() {
         csv::CSVFormat format;

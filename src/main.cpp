@@ -463,7 +463,7 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
 }
 
 void detect_extension(const std::string &file, std::string &file_type) {
-    if (file.empty()) {
+    if (not file.empty()) {
         std::filesystem::path path{file};
         file_type = path.extension();
     }

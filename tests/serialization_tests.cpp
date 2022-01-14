@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_SUITE(serialization_tests)
         std::ofstream file_out;
         file_out.open(file, std::ios_base::trunc);
 
-        if (file_out.good()) {
+        if (file_out.is_open() && file_out.good()) {
             boost::archive::text_oarchive out{file_out};
             out << points_index;
         }
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_SUITE(serialization_tests)
         std::ifstream file_in;
         file_in.open(file);
 
-        if (file_in.good()) {
+        if (file_in.is_open() && file_in.good()) {
             boost::archive::text_iarchive in{file_in};
             in >> points_index_read;
         }
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_SUITE(serialization_tests)
         std::ofstream file_out;
         file_out.open(file, std::ios_base::trunc);
 
-        if (file_out.good()) {
+        if (file_out.is_open() && file_out.good()) {
             boost::archive::text_oarchive out{file_out};
             out << segments_index;
         }
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_SUITE(serialization_tests)
         std::ifstream file_in;
         file_in.open(file);
 
-        if (file_in.good()) {
+        if (file_in.is_open() && file_in.good()) {
             boost::archive::text_iarchive in{file_in};
             in >> segments_index_read;
         }

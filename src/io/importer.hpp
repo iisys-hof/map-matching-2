@@ -25,6 +25,9 @@ namespace map_matching_2::io {
     private:
         const std::string _filename;
 
+    protected:
+        virtual std::uint64_t parse_time(const std::string &time_str, const std::string &format);
+
     public:
         explicit importer(std::string filename);
 
