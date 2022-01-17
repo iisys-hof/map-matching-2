@@ -109,6 +109,30 @@ If you don't want to use multi-threading for map matching enable \
 `--single-threading`. \
 This also reduces global memory usage as parallel matching does not occur.
 
+### Build
+
+If you want to build the software yourself, consult the `Dockerfile` for instructions. \
+You need a recent and up-to-date Linux, for example Ubuntu 20.04 LTS.
+
+Install the following prerequisites:
+
+```
+sudo apt-get install -y build-essential cmake git
+sudo apt-get install -y zlib1g-dev libbz2-dev libexpat1-dev libproj-dev
+```
+
+You can build the software with the following commands:
+
+```
+cmake -DCMAKE_BUILD_TYPE=Release -B build
+cmake --build build --parallel $(nproc) --target install
+```
+
+Then the built software can be found in the newly created `run/bin` directory.
+
+For building under Windows you need Ubuntu 20.04 LTS for the Windows Subsystem for Linux (WSL). Building is the same as
+under Linux then. Native build currently is unsupported due to several dependencies not building natively under Windows.
+
 ### Examples
 
 Exporting the network graph as binary file for (approximately ten times) faster reimport:

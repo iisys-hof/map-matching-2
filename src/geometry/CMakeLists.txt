@@ -27,6 +27,7 @@ target_sources(geometry
 
 target_compile_definitions(geometry
         PUBLIC
+        _USE_MATH_DEFINES
         BOOST_ALLOW_DEPRECATED_HEADERS
         BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL)
 

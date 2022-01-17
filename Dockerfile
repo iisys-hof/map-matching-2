@@ -1,4 +1,4 @@
-FROM ubuntu:latest AS build
+FROM ubuntu:20.04 AS build
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -17,7 +17,7 @@ COPY src src
 RUN cmake -DCMAKE_BUILD_TYPE=Release -DINSTALL_ALL_SHARED_LIBS=ON -DENABLE_TESTS=OFF -B build
 RUN cmake --build build --parallel $(nproc) --target install
 
-FROM ubuntu:latest AS run
+FROM ubuntu:20.04 AS run
 
 COPY --from=build /app/run /app/run
 

@@ -47,27 +47,6 @@ FILE(WRITE "${gpx_SOURCE_DIR}/CMakeLists.txt" "${gpx_CMAKE_LISTS_MOD}")
 add_subdirectory("${gpx_SOURCE_DIR}" "${gpx_BINARY_DIR}" EXCLUDE_FROM_ALL)
 set(GPX_INCLUDE_DIRS "${gpx_SOURCE_DIR}" CACHE PATH "gpx include dir" FORCE)
 
-## google sparsehash
-#FetchContent_Declare(sparsehash_c11
-#        GIT_REPOSITORY https://github.com/sparsehash/sparsehash-c11.git
-#        GIT_TAG v2.11.1)
-#
-#FetchContent_GetProperties(sparsehash_c11)
-#if (NOT sparsehash_c11_POPULATED)
-#    FetchContent_Populate(sparsehash_c11)
-#endif ()
-#
-#add_subdirectory("${sparsehash_c11_SOURCE_DIR}" "${sparsehash_c11_BINARY_DIR}" EXCLUDE_FROM_ALL)
-#set(SPARSEHASH_INCLUDE_DIRS "${sparsehash_c11_SOURCE_DIR}" CACHE PATH "sparsehash include dir" FORCE)
-
-# parallel hash map
-#FetchContent_Declare(parallel_hashmap
-#        GIT_REPOSITORY https://github.com/greg7mdp/parallel-hashmap.git
-#        GIT_TAG 1.33)
-#
-#FetchContent_MakeAvailable(parallel_hashmap)
-#set(PHMAP_INCLUDE_DIRS "${parallel_hashmap_SOURCE_DIR}/parallel_hashmap" CACHE PATH "parallel hashmap include dir" FORCE)
-
 # rpmalloc
 FetchContent_Declare(rpmalloc
         GIT_REPOSITORY https://github.com/mjansson/rpmalloc.git
@@ -120,30 +99,44 @@ if (NOT boost_POPULATED)
     FetchContent_Populate(boost)
 endif ()
 
-if (NOT EXISTS "${boost_SOURCE_DIR}/b2")
-    execute_process(COMMAND ./bootstrap.sh --prefix="${boost_BINARY_DIR}"
+if (WIN32)
+    set(_boost_b2 "${boost_SOURCE_DIR}/b2.exe")
+else ()
+    set(_boost_b2 "${boost_SOURCE_DIR}/b2")
+endif ()
+
+if (NOT EXISTS "${_boost_b2}")
+    IF (WIN32)
+        set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.bat)
+    ELSE ()
+        set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.sh)
+    ENDIF ()
+    execute_process(COMMAND ${_bootstrap_path} --prefix="${boost_BINARY_DIR}"
             WORKING_DIRECTORY "${boost_SOURCE_DIR}")
 endif ()
 
 set(BOOST_ROOT "${boost_BINARY_DIR}" CACHE PATH "Boost root" FORCE)
 set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "Boost no system paths" FORCE)
+if (WIN32)
+    set(Boost_USE_STATIC_LIBS OFF CACHE BOOL "Boost shared on Windows" FORCE)
+endif ()
 
 find_package(Boost QUIET CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
 if (NOT Boost_FOUND)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(_variant "debug")
+        set(_variant "variant=debug")
     else ()
-        set(_variant "release")
+        set(_variant "variant=release")
     endif ()
     message(STATUS "Set boost variant to ${_variant}")
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(_toolset "gcc")
+        set(_toolset "toolset=gcc")
+        message(STATUS "Set boost toolset to ${_toolset}")
     endif ()
-    message(STATUS "Set boost toolset to ${_toolset}")
 
-    execute_process(COMMAND ./b2 install link=shared threading=multi variant=release toolset=${_toolset}
+    execute_process(COMMAND ./b2 install link=shared threading=multi ${_variant} ${_toolset} --without-python --prefix=${boost_BINARY_DIR}
             WORKING_DIRECTORY "${boost_SOURCE_DIR}")
 endif ()
 
@@ -155,7 +148,7 @@ FetchContent_Declare(geometry_develop
         GIT_TAG develop)
 
 FetchContent_MakeAvailable(geometry_develop)
-set(GEOMETRY_DEVELOP_INCLUDE_DIRS "${geometry_develop_SOURCE_DIR}/include" CACHE PATH "shortest points new include dir" FORCE)
+set(GEOMETRY_DEVELOP_INCLUDE_DIRS "${geometry_develop_SOURCE_DIR}/include" CACHE PATH "boost geometry develop" FORCE)
 
 # apply shortest points new patch file
 message(STATUS "Git reset ${geometry_develop_SOURCE_DIR}")
@@ -168,7 +161,7 @@ execute_process(COMMAND git apply -v "${CMAKE_CURRENT_SOURCE_DIR}/rtree_deserial
 # protozero
 FetchContent_Declare(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git
-        GIT_TAG v1.7.0)
+        GIT_TAG v1.7.1)
 
 FetchContent_GetProperties(protozero)
 if (NOT protozero_POPULATED)
@@ -182,7 +175,7 @@ add_subdirectory("${protozero_SOURCE_DIR}" "${protozero_BINARY_DIR}" EXCLUDE_FRO
 # libosmium
 FetchContent_Declare(libosmium
         GIT_REPOSITORY https://github.com/osmcode/libosmium.git
-        GIT_TAG v2.17.0)
+        GIT_TAG v2.17.2)
 
 FetchContent_GetProperties(libosmium)
 if (NOT libosmium_POPULATED)
@@ -193,7 +186,5 @@ list(APPEND CMAKE_MODULE_PATH "${libosmium_SOURCE_DIR}/cmake")
 set(OSMIUM_INCLUDE_DIR "${libosmium_SOURCE_DIR}" CACHE PATH "osmium include dir" FORCE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "do not build libosmium examples" FORCE)
 set(BUILD_TESTING OFF CACHE BOOL "do not build libosmium tests" FORCE)
-
-#add_subdirectory("${libosmium_SOURCE_DIR}" "${libosmium_BINARY_DIR}" EXCLUDE_FROM_ALL)
 
 find_package(Osmium QUIET REQUIRED MODULE)

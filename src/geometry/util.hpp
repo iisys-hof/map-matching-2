@@ -16,6 +16,8 @@
 #ifndef MAP_MATCHING_2_GEOMETRY_UTIL_HPP
 #define MAP_MATCHING_2_GEOMETRY_UTIL_HPP
 
+#include <cmath>
+
 #include <boost/serialization/serialization.hpp>
 
 #include <boost/geometry/geometry.hpp>
