@@ -106,7 +106,7 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] std::pair<bool, edge_descriptor> fitting_edge(const segment_type &segment) const;
 
-        [[nodiscard]] std::vector<vertex_descriptor> make_precedessors() const;
+        [[nodiscard]] std::vector<vertex_descriptor> make_predecessors() const;
 
         [[nodiscard]] std::vector<length_type> make_distances() const;
 

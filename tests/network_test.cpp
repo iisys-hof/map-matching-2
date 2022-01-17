@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_SUITE(network_tests)
         std::vector<typename network_metric::vertex_descriptor> vertices;
         vertices.reserve(boost::num_vertices(network.graph));
 
-        auto predecessors = network.make_precedessors();
+        auto predecessors = network.make_predecessors();
         auto distances = network.make_distances();
         auto colors = network.make_colors();
         auto heap_index = network.make_heap_index();

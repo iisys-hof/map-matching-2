@@ -285,13 +285,13 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Graph>
-    std::vector<typename network<Graph>::vertex_descriptor> network<Graph>::make_precedessors() const {
-        std::vector<vertex_descriptor> precedessors;
-        precedessors.reserve(boost::num_vertices(graph));
+    std::vector<typename network<Graph>::vertex_descriptor> network<Graph>::make_predecessors() const {
+        std::vector<vertex_descriptor> predecessors;
+        predecessors.reserve(boost::num_vertices(graph));
         for (const auto vertex: boost::make_iterator_range(boost::vertices(graph))) {
-            precedessors.emplace_back(vertex);
+            predecessors.emplace_back(vertex);
         }
-        return precedessors;
+        return predecessors;
     }
 
     template<typename Graph>
@@ -782,11 +782,11 @@ namespace map_matching_2::geometry::network {
 
     template
     std::vector<typename network<types_geographic::graph_static>::vertex_descriptor>
-    network<types_geographic::graph_static>::make_precedessors() const;
+    network<types_geographic::graph_static>::make_predecessors() const;
 
     template
     std::vector<typename network<types_cartesian::graph_static>::vertex_descriptor>
-    network<types_cartesian::graph_static>::make_precedessors() const;
+    network<types_cartesian::graph_static>::make_predecessors() const;
 
     template
     std::vector<typename network<types_geographic::graph_static>::length_type>
