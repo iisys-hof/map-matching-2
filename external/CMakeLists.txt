@@ -150,14 +150,6 @@ FetchContent_Declare(geometry_develop
 FetchContent_MakeAvailable(geometry_develop)
 set(GEOMETRY_DEVELOP_INCLUDE_DIRS "${geometry_develop_SOURCE_DIR}/include" CACHE PATH "boost geometry develop" FORCE)
 
-# apply shortest points new patch file
-message(STATUS "Git reset ${geometry_develop_SOURCE_DIR}")
-execute_process(COMMAND git reset --hard
-        WORKING_DIRECTORY "${geometry_develop_SOURCE_DIR}")
-message(STATUS "Git apply rtree_deserialization.patch")
-execute_process(COMMAND git apply -v "${CMAKE_CURRENT_SOURCE_DIR}/rtree_deserialization.patch"
-        WORKING_DIRECTORY "${geometry_develop_SOURCE_DIR}")
-
 # protozero
 FetchContent_Declare(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git

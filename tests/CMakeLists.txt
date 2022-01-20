@@ -15,7 +15,6 @@ endif ()
 target_sources(map_matching_2_tests
         PRIVATE
         compare_tests.cpp
-        library_tests.cpp
         matcher_test.cpp
         network_test.cpp
         route_tests.cpp
