@@ -205,10 +205,12 @@ namespace map_matching_2::geometry {
     std::string rich_segment<Segment>::str() const {
         std::string str = "RichSegment(";
         str.append(wkt());
-        str.append(",");
-        str.append(std::to_string(length));
-        str.append(",");
-        str.append(std::to_string(azimuth));
+        if (has_length) {
+            str.append(",");
+            str.append(std::to_string(length));
+            str.append(",");
+            str.append(std::to_string(azimuth));
+        }
         str.append(")");
         return str;
     }

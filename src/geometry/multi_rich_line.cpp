@@ -185,8 +185,10 @@ namespace map_matching_2::geometry {
 
     template<typename Line>
     std::string multi_rich_line<Line>::wkt() const {
-        if (multi_line.size() <= 1) {
-            return geometry::to_wkt(multi_line.front());
+        if (rich_lines.empty()) {
+            return geometry::to_wkt(line_type{});
+        } else if (rich_lines.size() <= 1) {
+            return rich_lines.front().wkt();
         } else {
             return geometry::to_wkt(multi_line);
         }
@@ -196,8 +198,10 @@ namespace map_matching_2::geometry {
     std::string multi_rich_line<Line>::str() const {
         std::string str = "MultiRichLine(";
         str.append(wkt());
-        str.append(",");
-        str.append(std::to_string(length));
+        if (has_length) {
+            str.append(",");
+            str.append(std::to_string(length));
+        }
         str.append(")");
         return str;
     }

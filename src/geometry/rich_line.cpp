@@ -248,8 +248,10 @@ namespace map_matching_2::geometry {
     std::string rich_line<Line>::str() const {
         std::string str = "RichLine(";
         str.append(wkt());
-        str.append(",");
-        str.append(std::to_string(length));
+        if (has_length) {
+            str.append(",");
+            str.append(std::to_string(length));
+        }
         str.append(")");
         return str;
     }
