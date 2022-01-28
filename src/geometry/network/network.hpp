@@ -85,6 +85,8 @@ namespace map_matching_2::geometry::network {
 
         edge_descriptor add_edge(vertex_descriptor u, vertex_descriptor v, edge_type &edge);
 
+        [[nodiscard]] length_type length() const;
+
         void simplify(bool simplify_network_complete = true);
 
         void remove_unconnected_components();

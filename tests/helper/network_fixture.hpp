@@ -131,14 +131,6 @@ struct network_fixture {
         return edge_descriptor;
     }
 
-    const auto network_length(Network &network) {
-        double length = 0.0;
-        for (const auto &edge: boost::make_iterator_range(boost::edges(network.graph))) {
-            length += network.graph[edge].length;
-        }
-        return length;
-    }
-
     Network generate_simplification_network() {
         Network network;
 

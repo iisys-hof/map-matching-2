@@ -42,6 +42,18 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Graph>
+    typename network<Graph>::length_type network<Graph>::length() const {
+        length_type length = geometry::default_float_type<length_type>::v0;
+        for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(graph))) {
+            const auto &edge = graph[edge_descriptor];
+            if (edge.has_length) {
+                length += edge.length;
+            }
+        }
+        return length;
+    }
+
+    template<typename Graph>
     void network<Graph>::simplify(const bool simplify_network_complete) {
         BOOST_CONCEPT_ASSERT((boost::VertexAndEdgeListGraphConcept<Graph>));
         BOOST_CONCEPT_ASSERT((boost::BidirectionalGraphConcept<Graph>));
@@ -733,6 +745,14 @@ namespace map_matching_2::geometry::network {
 
     template
     class network<types_cartesian::graph_modifiable>;
+
+    template
+    typename network<types_geographic::graph_static>::length_type
+    network<types_geographic::graph_static>::length() const;
+
+    template
+    typename network<types_cartesian::graph_static>::length_type
+    network<types_cartesian::graph_static>::length() const;
 
     template
     void network<types_geographic::graph_static>::rebuild_spatial_indices();

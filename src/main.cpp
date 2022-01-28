@@ -444,7 +444,8 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
 
             MultiTrack::sort_tracks(sorted_tracks, false);
 
-            std::list<boost::future<void>> futures;
+            std::list<boost::future<void>>
+                    futures;
             for (const auto &track: sorted_tracks) {
                 futures.emplace_back(boost::async(_compare_thread_pool, [&]() {
                     const auto ground_truth = find_ground_truth(track, compare_tracks);
@@ -1178,12 +1179,12 @@ int main(int argc, char *argv[]) {
             if (verbose) {
                 if (network_srs_type == geographic) {
                     std::cout << "Graph has " << boost::num_vertices(network_geographic_import->graph)
-                              << " vertices and "
-                              << boost::num_edges(network_geographic_import->graph) << " edges" << std::endl;
+                              << " vertices and " << boost::num_edges(network_geographic_import->graph)
+                              << " edges" << std::endl;
                 } else {
                     std::cout << "Graph has " << boost::num_vertices(network_cartesian_import->graph)
-                              << " vertices and "
-                              << boost::num_edges(network_cartesian_import->graph) << " edges" << std::endl;
+                              << " vertices and " << boost::num_edges(network_cartesian_import->graph)
+                              << " edges" << std::endl;
                 }
             }
 
@@ -1268,12 +1269,12 @@ int main(int argc, char *argv[]) {
 
                     if (network_srs_type == geographic) {
                         std::cout << "Simplified graph has " << boost::num_vertices(network_geographic_import->graph)
-                                  << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
-                                  << std::endl;
+                                  << " vertices and " << boost::num_edges(network_geographic_import->graph)
+                                  << " edges" << std::endl;
                     } else {
                         std::cout << "Simplified graph has " << boost::num_vertices(network_cartesian_import->graph)
-                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
-                                  << std::endl;
+                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph)
+                                  << " edges" << std::endl;
                     }
                 }
 
@@ -1323,12 +1324,12 @@ int main(int argc, char *argv[]) {
 
                     if (network_srs_type == geographic) {
                         std::cout << "Retained graph has " << boost::num_vertices(network_geographic_import->graph)
-                                  << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
-                                  << std::endl;
+                                  << " vertices and " << boost::num_edges(network_geographic_import->graph)
+                                  << " edges" << std::endl;
                     } else {
                         std::cout << "Retained graph has " << boost::num_vertices(network_cartesian_import->graph)
-                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
-                                  << std::endl;
+                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph)
+                                  << " edges" << std::endl;
                     }
                 }
 
@@ -1387,12 +1388,12 @@ int main(int argc, char *argv[]) {
 
                     if (network_srs_type == geographic) {
                         std::cout << "Transformed graph has " << boost::num_vertices(network_geographic_import->graph)
-                                  << " vertices and " << boost::num_edges(network_geographic_import->graph) << " edges"
-                                  << std::endl;
+                                  << " vertices and " << boost::num_edges(network_geographic_import->graph)
+                                  << " edges" << std::endl;
                     } else {
                         std::cout << "Transformed graph has " << boost::num_vertices(network_cartesian_import->graph)
-                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph) << " edges"
-                                  << std::endl;
+                                  << " vertices and " << boost::num_edges(network_cartesian_import->graph)
+                                  << " edges" << std::endl;
                     }
                 }
 
@@ -1445,11 +1446,12 @@ int main(int argc, char *argv[]) {
 
                 if (network_srs_type == geographic) {
                     std::cout << "Baked graph has " << boost::num_vertices(network_geographic->graph)
-                              << " vertices and "
-                              << boost::num_edges(network_geographic->graph) << " edges" << std::endl;
+                              << " vertices and " << boost::num_edges(network_geographic->graph)
+                              << " edges" << std::endl;
                 } else {
-                    std::cout << "Baked graph has " << boost::num_vertices(network_cartesian->graph) << " vertices and "
-                              << boost::num_edges(network_cartesian->graph) << " edges" << std::endl;
+                    std::cout << "Baked graph has " << boost::num_vertices(network_cartesian->graph)
+                              << " vertices and " << boost::num_edges(network_cartesian->graph)
+                              << " edges " << std::endl;
                 }
             }
 
@@ -1530,12 +1532,12 @@ int main(int argc, char *argv[]) {
 
                 if (network_srs_type == geographic) {
                     std::cout << "Loaded graph has " << boost::num_vertices(network_geographic->graph)
-                              << " vertices and " << boost::num_edges(network_geographic->graph) << " edges"
-                              << std::endl;
+                              << " vertices and " << boost::num_edges(network_geographic->graph)
+                              << " edges" << std::endl;
                 } else {
                     std::cout << "Loaded graph has " << boost::num_vertices(network_cartesian->graph)
-                              << " vertices and " << boost::num_edges(network_cartesian->graph) << " edges"
-                              << std::endl;
+                              << " vertices and " << boost::num_edges(network_cartesian->graph)
+                              << " edges" << std::endl;
                 }
             }
         }

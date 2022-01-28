@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL(boost::num_vertices(network.graph), 18);
         BOOST_CHECK_EQUAL(boost::num_edges(network.graph), 28);
-        BOOST_CHECK_CLOSE_FRACTION(network_length(network), 23.0 + 5 * std::sqrt(2), 1e-12);
+        BOOST_CHECK_CLOSE_FRACTION(network.length(), 23.0 + 5 * std::sqrt(2), 1e-12);
 
         network.simplify();
 
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL(boost::num_vertices(network.graph), 11);
         BOOST_CHECK_EQUAL(boost::num_edges(network.graph), 16);
-        BOOST_CHECK_CLOSE_FRACTION(network_length(network), 23.0 + 5 * std::sqrt(2), 1e-12);
+        BOOST_CHECK_CLOSE_FRACTION(network.length(), 23.0 + 5 * std::sqrt(2), 1e-12);
     }
 
     BOOST_FIXTURE_TEST_CASE(network_shortest_path_test, network_fixture<network_metric>) {
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL(boost::num_vertices(network.graph), 10 * 10);
         BOOST_CHECK_EQUAL(boost::num_edges(network.graph), 4 * 9 * 10);
-        BOOST_CHECK_CLOSE_FRACTION(network_length(network), 4 * 9 * 10.0, 1e-12);
+        BOOST_CHECK_CLOSE_FRACTION(network.length(), 4 * 9 * 10.0, 1e-12);
 
         network.rebuild_spatial_indices();
 
