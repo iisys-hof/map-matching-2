@@ -50,9 +50,6 @@ namespace map_matching_2::environment {
         decltype(_state_cache) state_cache;
         _state_cache.swap(state_cache);
 
-        // state-size in settings is only the points, add the actions which is points - 1
-        state_size = _match_settings.state_size + (_match_settings.state_size - 1);
-
         _init();
     }
 
@@ -90,6 +87,9 @@ namespace map_matching_2::environment {
 
     template<typename Matcher>
     void single<Matcher>::_init() {
+        // state-size in settings is only the points, add the actions which is points - 1
+        state_size = _match_settings.state_size + (_match_settings.state_size - 1);
+
         if (_match_settings.k_nearest_candidate_search) {
             _candidates = _matcher.candidate_search_nearest(
                     _track, _match_settings.k_nearest, _match_settings.k_nearest_reverse,
