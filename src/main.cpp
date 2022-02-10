@@ -765,7 +765,8 @@ int main(int argc, char *argv[]) {
                 ("filter-duplicates", po::value<bool>(&filter_duplicates)->default_value(true, "on"),
                  "filter duplicate (equal) points in tracks before matching")
                 ("filter-defects", po::value<bool>(&filter_defects)->default_value(false, "off"),
-                 "filter defects in tracks before matching, currently removes zig-zag curves manually")
+                 "filter defects in tracks before matching, currently removes zig-zag curves manually, "
+                 "not recommended, better use simplify-track which is on by default")
                 ("simplify-track", po::value<bool>(&simplify_track)->default_value(true, "on"),
                  "simplify track with Douglas-Peucker algorithm")
                 ("simplify-track-distance-tolerance",
@@ -820,7 +821,7 @@ int main(int argc, char *argv[]) {
                  "the radius is then reduced to the minimum distance to the next and previous candidate, "
                  "the radius-lower-limit is never undershot, when no candidate is found, the radius is doubled until radius-upper-limit, "
                  "this reduces the amount of candidates in dense road network areas, it works best with candidate-adoption enabled")
-                ("k-nearest", po::value<std::size_t>(&k_nearest)->default_value(8),
+                ("k-nearest", po::value<std::size_t>(&k_nearest)->default_value(16),
                  "k-nearest edges to search for in candidate search when nearest algorithm is selected");
 
         options_model.add_options()
@@ -850,23 +851,23 @@ int main(int argc, char *argv[]) {
                  "defaults to 0.99 for making sure that loops eventually unroll");
 
         options_mdp.add_options()
-                ("mdp-distance-factor", po::value<double>(&mdp_distance_factor)->default_value(1.0, "1.0"),
+                ("mdp-distance-factor", po::value<double>(&mdp_distance_factor)->default_value(0.9, "0.9"),
                  "distance factor for rewarding distances between measurement point and candidate position")
-                ("mdp-length-factor", po::value<double>(&mdp_length_factor)->default_value(0.1, "0.1"),
+                ("mdp-length-factor", po::value<double>(&mdp_length_factor)->default_value(0.15, "0.15"),
                  "length factor for rewarding length differences between track segments and routes in network")
-                ("mdp-azimuth-factor", po::value<double>(&mdp_azimuth_factor)->default_value(0.1, "0.1"),
+                ("mdp-azimuth-factor", po::value<double>(&mdp_azimuth_factor)->default_value(0.3, "0.3"),
                  "azimuth factor for rewarding azimuth differences between track segments and routes in network")
-                ("mdp-direction-factor", po::value<double>(&mdp_direction_factor)->default_value(1.0, "1.0"),
+                ("mdp-direction-factor", po::value<double>(&mdp_direction_factor)->default_value(0.8, "0.8"),
                  "direction factor for rewarding direction changes of routes in network");
 
         options_hmm.add_options()
-                ("hmm-distance-factor", po::value<double>(&hmm_distance_factor)->default_value(1.0, "1.0"),
+                ("hmm-distance-factor", po::value<double>(&hmm_distance_factor)->default_value(0.7, "0.7"),
                  "distance factor for probability of distances between measurement point and candidate position")
-                ("hmm-length-factor", po::value<double>(&hmm_length_factor)->default_value(0.1, "0.1"),
+                ("hmm-length-factor", po::value<double>(&hmm_length_factor)->default_value(0.05, "0.05"),
                  "length factor for probability of length differences between track segments and routes in network")
-                ("hmm-azimuth-factor", po::value<double>(&hmm_azimuth_factor)->default_value(0.1, "0.1"),
+                ("hmm-azimuth-factor", po::value<double>(&hmm_azimuth_factor)->default_value(0.2, "0.2"),
                  "azimuth factor for probability of azimuth differences between track segments and routes in network")
-                ("hmm-direction-factor", po::value<double>(&hmm_direction_factor)->default_value(1.0, "1.0"),
+                ("hmm-direction-factor", po::value<double>(&hmm_direction_factor)->default_value(0.5, "0.5"),
                  "direction factor for probability of direction changes of routes in network");
 
         options_dp_iteration.add_options()
