@@ -275,7 +275,9 @@ Track Preparation Options:
                                         tracks before matching
   --filter-defects arg (=off)           filter defects in tracks before 
                                         matching, currently removes zig-zag 
-                                        curves manually
+                                        curves manually, not recommended, 
+                                        better use simplify-track which is on 
+                                        by default
   --simplify-track arg (=on)            simplify track with Douglas-Peucker 
                                         algorithm
   --simplify-track-distance-tolerance arg (=5.0)
@@ -365,7 +367,7 @@ Track Preparation Options:
                                         amount of candidates in dense road 
                                         network areas, it works best with 
                                         candidate-adoption enabled
-  --k-nearest arg (=8)                  k-nearest edges to search for in 
+  --k-nearest arg (=16)                 k-nearest edges to search for in 
                                         candidate search when nearest algorithm
                                         is selected
 
@@ -410,29 +412,29 @@ Model Options:
                                         that loops eventually unroll
 
 Markov-Decision-Process Options:
-  --mdp-distance-factor arg (=1.0)      distance factor for rewarding distances
+  --mdp-distance-factor arg (=0.9)      distance factor for rewarding distances
                                         between measurement point and candidate
                                         position
-  --mdp-length-factor arg (=0.1)        length factor for rewarding length 
+  --mdp-length-factor arg (=0.15)       length factor for rewarding length 
                                         differences between track segments and 
                                         routes in network
-  --mdp-azimuth-factor arg (=0.1)       azimuth factor for rewarding azimuth 
+  --mdp-azimuth-factor arg (=0.3)       azimuth factor for rewarding azimuth 
                                         differences between track segments and 
                                         routes in network
-  --mdp-direction-factor arg (=1.0)     direction factor for rewarding 
+  --mdp-direction-factor arg (=0.8)     direction factor for rewarding 
                                         direction changes of routes in network
 
 Hidden-Markov-Model Options:
-  --hmm-distance-factor arg (=1.0)      distance factor for probability of 
+  --hmm-distance-factor arg (=0.7)      distance factor for probability of 
                                         distances between measurement point and
                                         candidate position
-  --hmm-length-factor arg (=0.1)        length factor for probability of length
+  --hmm-length-factor arg (=0.05)       length factor for probability of length
                                         differences between track segments and 
                                         routes in network
-  --hmm-azimuth-factor arg (=0.1)       azimuth factor for probability of 
+  --hmm-azimuth-factor arg (=0.2)       azimuth factor for probability of 
                                         azimuth differences between track 
                                         segments and routes in network
-  --hmm-direction-factor arg (=1.0)     direction factor for probability of 
+  --hmm-direction-factor arg (=0.5)     direction factor for probability of 
                                         direction changes of routes in network
 
 Dynamic Programming Options:
