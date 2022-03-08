@@ -4,11 +4,9 @@ add_library(learning STATIC)
 
 target_sources(learning
         PRIVATE
-        algorithms/policy_iteration_performance.cpp
+        algorithms/policy_iteration.cpp
         algorithms/q_learning.cpp
-        algorithms/q_learning_performance.cpp
         algorithms/value_iteration.cpp
-        algorithms/value_iteration_performance.cpp
         algorithms/viterbi.cpp)
 
 target_compile_definitions(learning

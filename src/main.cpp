@@ -49,11 +49,11 @@
 #include <geometry/util.hpp>
 #include <io/csv_exporter.hpp>
 #include <environment/environments/hmm.hpp>
-#include <environment/environments/single_performance.hpp>
+#include <environment/environments/single.hpp>
 #include <learning/algorithms/viterbi.hpp>
-#include <learning/algorithms/policy_iteration_performance.hpp>
-#include <learning/algorithms/value_iteration_performance.hpp>
-#include <learning/algorithms/q_learning_performance.hpp>
+#include <learning/algorithms/policy_iteration.hpp>
+#include <learning/algorithms/value_iteration.hpp>
+#include <learning/algorithms/q_learning.hpp>
 #include <util/benchmark.hpp>
 
 template<typename Network>
@@ -325,10 +325,10 @@ void match(Matcher &matcher, std::unordered_map<std::string, MultiTrack> tracks,
            map_matching_2::matching::settings &match_settings, const std::string &model,
            const std::vector<std::string> &selectors, const bool single_threading = false, const bool console = false,
            const bool quiet = false, const bool verbose = false) {
-    using mdp = map_matching_2::environment::single_performance<Matcher>;
-    using policy_iteration = map_matching_2::learning::policy_iteration_performance<mdp>;
-    using value_iteration = map_matching_2::learning::value_iteration_performance<mdp>;
-    using q_learning = map_matching_2::learning::q_learning_performance<mdp>;
+    using mdp = map_matching_2::environment::single<Matcher>;
+    using policy_iteration = map_matching_2::learning::policy_iteration<mdp>;
+    using value_iteration = map_matching_2::learning::value_iteration<mdp>;
+    using q_learning = map_matching_2::learning::q_learning<mdp>;
 
     using hmm = map_matching_2::environment::hmm<Matcher>;
     using viterbi = map_matching_2::learning::viterbi<hmm>;
@@ -875,11 +875,11 @@ int main(int argc, char *argv[]) {
                  "threshold for stopping iterations in policy- and value-iteration when the previous round improvement was below the given threshold");
 
         options_q_learning.add_options()
-                ("learning-rate", po::value<double>(&learning_rate)->default_value(0.8, "0.8"),
+                ("learning-rate", po::value<double>(&learning_rate)->default_value(0.9, "0.9"),
                  "learning rate for q-learning, only applies if q-learning model is selected, "
                  "higher learning-rate means faster learning, "
                  "lower learning-rate means slower learning")
-                ("epsilon", po::value<double>(&epsilon)->default_value(0.2, "0.2"),
+                ("epsilon", po::value<double>(&epsilon)->default_value(0.5, "0.5"),
                  "epsilon random action selection value for q-learning, only applies if q-learning model is selected, "
                  "epsilon of 0.0 means no random action selection, always choose next best, "
                  "epsilon of 1.0 means always random selection, never select next best")

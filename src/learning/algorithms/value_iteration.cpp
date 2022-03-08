@@ -18,24 +18,23 @@
 #include <deque>
 #include <unordered_set>
 
-#include <boost/functional/hash.hpp>
-
 #include <environment/environments/single.hpp>
-#include <environment/environments/single_performance.hpp>
 #include <geometry/util.hpp>
 #include <matching/types.hpp>
 
 namespace map_matching_2::learning {
 
     template<typename Environment>
-    value_iteration<Environment>::value_iteration(Environment &environment, const learning::settings &settings)
+    value_iteration<Environment>::value_iteration(
+            Environment &environment, const learning::settings &settings)
             : _environment{environment}, _settings{settings} {}
 
     template<typename Environment>
-    void value_iteration<Environment>::generate_states(std::vector<state_type> &states) {
+    std::size_t value_iteration<Environment>::generate_states(std::vector<state_type> &states) {
         auto state = _environment.reset();
+        state_type highest_state = state;
 
-        std::unordered_set<state_type, boost::hash<state_type>> states_visited;
+        std::unordered_set<state_type> states_visited;
         std::deque<state_type> states_to_visit;
 
         states_to_visit.emplace_back(state);
@@ -57,8 +56,12 @@ namespace map_matching_2::learning {
 
                 if (not done and not states_visited.contains(new_state)) {
                     states_to_visit.emplace_back(new_state);
-                    states_visited.emplace(new_state);
                     states.emplace_back(new_state);
+                    states_visited.emplace(new_state);
+                }
+
+                if (new_state > highest_state) {
+                    highest_state = new_state;
                 }
 
                 _environment.state = state;
@@ -71,23 +74,26 @@ namespace map_matching_2::learning {
         }
 
 //            std::cout << "Final States: " << states.size() << std::endl;
+        return highest_state;
     }
 
     template<typename Environment>
     std::vector<std::pair<std::size_t, std::size_t>> value_iteration<Environment>::operator()() {
+        assert(std::is_unsigned_v<state_type>);
+        assert(std::is_unsigned_v<action_type>);
+
         bool trained = false;
 
         _environment.init();
         std::vector<state_type> states;
-        std::unordered_map<state_type, double, boost::hash<state_type>> V;
+        std::vector<double> V;
         std::vector<std::pair<std::size_t, std::size_t>> policy;
 
-        generate_states(states);
+        std::size_t highest_state = generate_states(states);
 
-        for (const auto &state: states) {
-            if (not V.contains(state)) {
-                V.emplace(state, 0.0);
-            }
+        V.reserve(highest_state + 1);
+        while (V.size() < V.capacity()) {
+            V.emplace_back(0.0);
         }
 
         double delta = std::numeric_limits<double>::infinity();
@@ -125,7 +131,7 @@ namespace map_matching_2::learning {
                         _environment.state = state;
                     }
 
-                    V.insert_or_assign(state, max_action_value);
+                    V[state] = max_action_value;
                     trained = true;
 
                     value += max_action_value;
@@ -139,7 +145,7 @@ namespace map_matching_2::learning {
 
             episode++;
 
-//                                std::cout << "Episode: " << episode << ", value: " << std::setprecision(20) << value << std::endl;
+//                std::cout << "Episode: " << episode << ", value: " << std::setprecision(20) << value << std::endl;
         }
 
         auto state = _environment.reset();
@@ -185,15 +191,8 @@ namespace map_matching_2::learning {
 
                     rewards.emplace_back(reward);
 
-                    std::size_t candidate;
-                    std::int64_t edge;
-                    if constexpr(Environment::performance) {
-                        candidate = _environment.state2internal(current_state).back();
-                        edge = _environment.action2internal(new_action);
-                    } else {
-                        candidate = current_state.back();
-                        edge = new_action;
-                    }
+                    std::size_t candidate = _environment.state2internal(current_state).back();
+                    std::int64_t edge = _environment.action2internal(new_action);
                     if (edge >= 0) {
                         policy.emplace_back(std::pair{candidate, edge});
                     } else if (not policy.empty()) {
@@ -219,11 +218,5 @@ namespace map_matching_2::learning {
 
     template
     class value_iteration<environment::single<matching::types_cartesian::matcher_static>>;
-
-    template
-    class value_iteration<environment::single_performance<matching::types_geographic::matcher_static>>;
-
-    template
-    class value_iteration<environment::single_performance<matching::types_cartesian::matcher_static>>;
 
 }

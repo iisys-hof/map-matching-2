@@ -19,9 +19,9 @@
 
 #include <geometry/compare.hpp>
 
-#include <environment/environments/single_performance.hpp>
+#include <environment/environments/single.hpp>
 #include <environment/environments/hmm.hpp>
-#include <learning/algorithms/value_iteration_performance.hpp>
+#include <learning/algorithms/value_iteration.hpp>
 #include <learning/algorithms/viterbi.hpp>
 
 #include "helper/matcher_fixture.hpp"
@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         match_settings.simplify = false;
         match_settings.median_merge = false;
 
-        using environment = map_matching_2::environment::single_performance<typename matcher_metric::matcher_static>;
-        using learn_function = map_matching_2::learning::value_iteration_performance<environment>;
+        using environment = map_matching_2::environment::single<typename matcher_metric::matcher_static>;
+        using learn_function = map_matching_2::learning::value_iteration<environment>;
 
         auto track = create_track("one", {{0, {2.3, 2.2}},
                                           {1, {5.1, 2.3}},

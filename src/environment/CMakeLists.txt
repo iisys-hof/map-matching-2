@@ -3,8 +3,7 @@ add_library(environment STATIC)
 target_sources(environment
         PRIVATE
         environments/hmm.cpp
-        environments/single.cpp
-        environments/single_performance.cpp)
+        environments/single.cpp)
 
 target_include_directories(environment
         PUBLIC

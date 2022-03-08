@@ -31,7 +31,6 @@ namespace map_matching_2::learning {
 
         using action_type = typename Environment::action_type;
 
-        static constexpr bool performance = false;
         const std::string name = "viterbi";
 
         viterbi(Environment &environment, const learning::settings &settings = learning::settings{});

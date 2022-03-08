@@ -34,10 +34,9 @@ namespace map_matching_2::learning {
         using action_type = typename Environment::action_type;
         using reward_type = typename Environment::reward_type;
 
-        static constexpr bool performance = false;
         const std::string name = "q_learning";
 
-        q_learning(Environment &environment, const learning::settings &settings = learning::settings());
+        q_learning(Environment &environment, const learning::settings &settings = learning::settings{});
 
         [[nodiscard]] auto &environment() {
             return _environment;
