@@ -38,6 +38,9 @@ namespace map_matching_2::learning {
 
     template<typename Environment>
     std::vector<std::pair<std::size_t, std::size_t>> q_learning<Environment>::operator()() {
+        using clock = std::chrono::high_resolution_clock;
+        const auto start = clock::now();
+
         assert(std::is_unsigned_v<state_type>);
         assert(std::is_unsigned_v<action_type>);
 
@@ -57,11 +60,7 @@ namespace map_matching_2::learning {
         double best_score = -std::numeric_limits<double>::infinity();
         double best_policy_score;
         std::size_t no_improvement = 0;
-        std::size_t improvement_stop = 0;
-        std::for_each(_environment.candidates().cbegin(), _environment.candidates().cend(),
-                      [&improvement_stop](const auto &candidate) {
-                          improvement_stop += candidate.edges.size();
-                      });
+        std::size_t improvement_stop = _environment.edges() * _settings.early_stop_factor;
         bool done;
 
         while (episode <= _settings.episodes) {
@@ -153,7 +152,19 @@ namespace map_matching_2::learning {
 
             //            csv << std::vector{std::to_string(score), std::to_string(best_score)};
 
-            if (no_improvement >= improvement_stop) {
+            // early stop when fixed-time mode and max-time reached
+            bool fixed_time_stop = false;
+            if (_settings.fixed_time) {
+                const auto current = clock::now();
+                const std::chrono::duration<double> duration = current - start;
+                const auto seconds = duration.count();
+
+                if (seconds >= _settings.max_time) {
+                    fixed_time_stop = true;
+                }
+            }
+
+            if (no_improvement >= improvement_stop or fixed_time_stop) {
                 best_policy_score = best_score;
 
                 // extract policy
@@ -211,7 +222,7 @@ namespace map_matching_2::learning {
                 if (score > best_policy_score) {
                     best_score = score;
                     no_improvement = 0;
-                } else if (no_improvement >= improvement_stop) {
+                } else if (no_improvement >= improvement_stop or fixed_time_stop) {
                     //                        std::cout << "Stop after episode " << episode << std::endl;
                     break;
                 }

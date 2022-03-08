@@ -24,8 +24,12 @@ namespace map_matching_2::learning {
         double discount = 0.99;
 
         std::size_t episodes = 1000000000;
-        double learning_rate = 0.8;
-        double epsilon = 0.2;
+        double learning_rate = 0.9;
+        double epsilon = 0.5;
+
+        double early_stop_factor = 1.0;
+        bool fixed_time = false;
+        double max_time = 3.0;
 
     };
 

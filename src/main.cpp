@@ -516,12 +516,13 @@ int main(int argc, char *argv[]) {
             mdp_distance_factor, mdp_length_factor, mdp_azimuth_factor, mdp_direction_factor, hmm_distance_factor,
             hmm_length_factor, hmm_azimuth_factor, hmm_direction_factor, compare_simplifying_tolerance,
             compare_simplifying_reverse_tolerance, compare_adoption_distance_tolerance,
-            compare_split_distance_tolerance, compare_split_direction_tolerance;
+            compare_split_distance_tolerance, compare_split_direction_tolerance, early_stop_factor, max_time;
     bool read_line, console, wkt, no_header, no_id, no_parse_time, export_edges, join_merges, compare_only, no_compare,
             compare_edges_list_mode, compare_wkt, compare_no_header, compare_no_id, filter_duplicates,
             filter_defects, simplify_track, median_merge, adaptive_median_merge, adaptive_radius, skip_errors,
             candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
-            simplify_network, simplify_network_complete, remove_unconnected, single_threading, quiet, verbose;
+            simplify_network, simplify_network_complete, remove_unconnected, fixed_time, single_threading, quiet,
+            verbose;
     std::string id_aggregator, compare_id_aggregator, x, y, compare_x, compare_y,
             geometry, compare_geometry, time, time_format, network_output, network_save, network_load,
             export_network_nodes, export_network_edges,
@@ -883,6 +884,24 @@ int main(int argc, char *argv[]) {
                  "epsilon random action selection value for q-learning, only applies if q-learning model is selected, "
                  "epsilon of 0.0 means no random action selection, always choose next best, "
                  "epsilon of 1.0 means always random selection, never select next best")
+                ("early-stop-factor", po::value<double>(&early_stop_factor)->default_value(1.0, "1.0"),
+                 "factor for multiplication with early-stopping counter (equals episodes), "
+                 "early-stopping episodes are calculated from sum of candidates, so depends on candidate search settings, "
+                 "early-stop-factor of 0.0 means immediate stopping after one improvement episode, "
+                 "early-stop-factor of 1.0 means early-stop only after sum of candidates episodes, "
+                 "a smaller factor leads to faster convergence but worse results, "
+                 "a larger factor (even larger than 1.0) leads to better results but needs more time for convergence")
+                ("fixed-time", po::value<bool>(&fixed_time)->default_value(false, "off"),
+                 "enables fixed-time mode during q-learning, in this mode the convergence is stopped after set amount of seconds, "
+                 "this is very useful in real-time or remote call mode when a result is needed after a maximum time, "
+                 "when the algorithm converged before the set time is reached it stops early, "
+                 "when the set time is reached before the algorithm converged the currently best result is exported as fast as possible")
+                ("max-time", po::value<double>(&max_time)->default_value(3.0, "3.0"),
+                 "when fixed-time is enabled max-time sets the maximum time in seconds the q-learning algorithm tries to converge before stopping, "
+                 "in case the algorithm converges before this max-time timeout is reached, it early stops and returns the result, "
+                 "this time is only valid for the matching run duration with q-learning, "
+                 "not for data importing, preparation, candidate search, and exporting of the results, which needs additional time, "
+                 "when the max-time is reached, the algorithm stops at the next possible stable moment and immediately returns the best result so far")
                 ("max-episodes", po::value<std::size_t>(&episodes)->default_value(1000000000),
                  "maximum episodes for definitive stop in q-learning, do not change except you know what you are doing, "
                  "training is generally stopped early before max-episodes is ever reached, "
@@ -1830,6 +1849,9 @@ int main(int argc, char *argv[]) {
         learn_settings.episodes = episodes;
         learn_settings.learning_rate = learning_rate;
         learn_settings.epsilon = epsilon;
+        learn_settings.early_stop_factor = early_stop_factor;
+        learn_settings.fixed_time = fixed_time;
+        learn_settings.max_time = max_time;
 
         map_matching_2::matching::settings match_settings;
         match_settings.state_size = state_size;
