@@ -121,10 +121,14 @@ result_processor(const MultiTrack &track, const MultiTrack &prepared, const Rout
     }
     if (comparison.first) {
         using line_type = typename MultiTrack::rich_line_type::line_type;
-        boost::geometry::model::multi_linestring<line_type> error_adds, error_misses;
+        boost::geometry::model::multi_linestring<line_type> corrects, error_adds, error_misses;
         if (verbose and console or compare_output_csv.is_writable()) {
+            corrects.reserve(comparison.second.corrects.size());
             error_adds.reserve(comparison.second.error_adds.size());
             error_misses.reserve(comparison.second.error_adds.size());
+            for (const auto &correct: comparison.second.corrects) {
+                corrects.emplace_back(correct.line());
+            }
             for (const auto &error_add: comparison.second.error_adds) {
                 error_adds.emplace_back(error_add.line());
             }
@@ -138,6 +142,10 @@ result_processor(const MultiTrack &track, const MultiTrack &prepared, const Rout
                 std::cout << "Ground Truth: " << ground_truth.wkt() << std::endl;
 
                 std::cout << "Comparison:\n";
+                std::cout << "Corrects:\n";
+                for (const auto &error_add: error_adds) {
+                    std::cout << map_matching_2::geometry::to_wkt(corrects) << "\n";
+                }
                 std::cout << "Error Adds:\n";
                 for (const auto &error_add: error_adds) {
                     std::cout << map_matching_2::geometry::to_wkt(error_add) << "\n";
@@ -147,16 +155,26 @@ result_processor(const MultiTrack &track, const MultiTrack &prepared, const Rout
                     std::cout << map_matching_2::geometry::to_wkt(error_miss) << "\n";
                 }
             }
-            std::cout << "Error Fraction: " << comparison.second.error_fraction << ", "
+            std::cout << "Correct Fraction: " << comparison.second.correct_fraction << ", "
+                      << "Error Fraction: " << comparison.second.error_fraction << ", "
+                      << "Correct: " << comparison.second.correct << ", "
                       << "Error Added: " << comparison.second.error_added << ", "
                       << "Error Missed: " << comparison.second.error_missed << std::endl;
         }
         if (compare_output_csv.is_writable()) {
+            using length_type = decltype(track.length);
+            const auto length_zero = map_matching_2::geometry::default_float_type<length_type>::v0;
             compare_output_csv << std::vector{
                     track.id, track.wkt(), prepared.wkt(), route.wkt(), ground_truth.wkt(),
-                    std::to_string(comparison.second.error_fraction), std::to_string(comparison.second.error_added),
-                    std::to_string(comparison.second.error_missed), map_matching_2::geometry::to_wkt(error_adds),
-                    map_matching_2::geometry::to_wkt(error_misses)};
+                    std::to_string(track.has_length ? track.length : length_zero),
+                    std::to_string(prepared.has_length ? prepared.length : length_zero),
+                    std::to_string(route.has_length ? route.length : length_zero),
+                    std::to_string(ground_truth.has_length ? ground_truth.length : length_zero),
+                    std::to_string(comparison.second.correct_fraction),
+                    std::to_string(comparison.second.error_fraction),
+                    std::to_string(comparison.second.correct), std::to_string(comparison.second.error_added),
+                    std::to_string(comparison.second.error_missed), map_matching_2::geometry::to_wkt(corrects),
+                    map_matching_2::geometry::to_wkt(error_adds), map_matching_2::geometry::to_wkt(error_misses)};
             if (verbose) {
                 compare_output_csv.flush();
             }
@@ -185,8 +203,11 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
 
     map_matching_2::io::csv_exporter<',', '"'> compare_output_csv{std::move(compare_output_file)};
     if (compare_output_csv.is_writable()) {
-        compare_output_csv << std::vector{"id", "track", "prepared", "match", "ground_truth", "error_fraction",
-                                          "error_added", "error_missed", "error_adds", "error_misses"};
+        compare_output_csv << std::vector{"id", "track", "prepared", "match", "ground_truth",
+                                          "track_length", "prepared_length", "match_length", "ground_truth_length",
+                                          "correct_fraction", "error_fraction",
+                                          "correct", "error_added", "error_missed",
+                                          "corrects", "error_adds", "error_misses"};
     }
 
     const auto candidate_export = [&](const auto &environments, const auto &learners,

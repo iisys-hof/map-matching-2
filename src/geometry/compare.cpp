@@ -27,7 +27,7 @@ namespace map_matching_2::geometry {
                                        const multi_rich_line_type &compare) const {
         BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Linestring<line_type>));
 
-        std::list<rich_segment_type> error_adds, error_misses;
+        std::list<rich_segment_type> corrects, error_adds, error_misses;
 
         // segments
         std::list<rich_segment_type> a_segments_list;
@@ -41,20 +41,24 @@ namespace map_matching_2::geometry {
 
         // if one of both lines is empty, easy return
         if ((a_segments_list.empty() and b_segments_list.empty())) {
-            return comparison<RichLine>{default_float_type<length_type>::v0, default_float_type<length_type>::v0,
-                                        default_float_type<length_type>::v0, std::move(error_adds),
-                                        std::move(error_misses)};
-        } else if (a_segments_list.empty() and not b_segments_list.empty()) {
-            return comparison<RichLine>{std::numeric_limits<length_type>::infinity(),
-                                        compare.has_length ? compare.length : default_float_type<length_type>::v0,
-                                        default_float_type<length_type>::v0, std::move(b_segments_list),
-                                        std::move(error_misses)};
-        } else if (not a_segments_list.empty() and b_segments_list.empty()) {
-            return comparison<RichLine>{std::numeric_limits<length_type>::infinity(),
+            return comparison<RichLine>{default_float_type<length_type>::v1, default_float_type<length_type>::v0,
+                                        default_float_type<length_type>::v0, default_float_type<length_type>::v0,
                                         default_float_type<length_type>::v0,
+                                        std::move(corrects), std::move(error_adds), std::move(error_misses)};
+        } else if (a_segments_list.empty() and not b_segments_list.empty()) {
+            return comparison<RichLine>{default_float_type<length_type>::v0,
+                                        std::numeric_limits<length_type>::infinity(),
+                                        default_float_type<length_type>::v0,
+                                        compare.has_length ? compare.length : default_float_type<length_type>::v0,
+                                        default_float_type<length_type>::v0,
+                                        std::move(corrects), std::move(b_segments_list), std::move(error_misses)};
+        } else if (not a_segments_list.empty() and b_segments_list.empty()) {
+            return comparison<RichLine>{default_float_type<length_type>::v0,
+                                        std::numeric_limits<length_type>::infinity(),
+                                        default_float_type<length_type>::v0, default_float_type<length_type>::v0,
                                         ground_truth.has_length ? ground_truth.length
                                                                 : default_float_type<length_type>::v0,
-                                        std::move(error_adds), std::move(a_segments_list)};
+                                        std::move(corrects), std::move(error_adds), std::move(a_segments_list)};
         }
 
         if (debug) {
@@ -182,67 +186,56 @@ namespace map_matching_2::geometry {
 
         std::size_t i = 0, j = 0;
         while (i < a_segments.size() and j < b_segments.size()) {
-            const auto a_reverse = _detect_reverse(a_segments, i, a_segments.size());
-            const auto b_reverse = _detect_reverse(b_segments, j, b_segments.size());
-
-            std::size_t i_new_a = i, i_new_b = i;
-            std::size_t j_new_a = j, j_new_b = j;
-
-            // treat reverse movements
-            const auto is_a_reverse = std::get<0>(a_reverse);
-            if (is_a_reverse) {
-                const auto a_reverse_start = std::get<1>(a_reverse);
-                const auto a_reverse_end = std::get<2>(a_reverse);
-                for (std::size_t r = a_reverse_start; r < a_reverse_end; ++r) {
-                    reverse_a_segments.emplace_back(a_segments[r]);
-                }
-                if (geometry::equals_points(a_segments[i].segment.first, b_segments[j].segment.first) and
-                    geometry::equals_points(a_segments[a_reverse_end].segment.first, b_segments[j].segment.second)) {
-                    j_new_a++;
-                }
-                i_new_a = a_reverse_end;
-            }
-            const auto is_b_reverse = std::get<0>(b_reverse);
-            if (is_b_reverse) {
-                const auto b_reverse_start = std::get<1>(b_reverse);
-                const auto b_reverse_end = std::get<2>(b_reverse);
-                for (std::size_t r = b_reverse_start; r < b_reverse_end; ++r) {
-                    reverse_b_segments.emplace_back(b_segments[r]);
-                }
-                if (geometry::equals_points(a_segments[i].segment.first, b_segments[j].segment.first) and
-                    geometry::equals_points(a_segments[i].segment.second, b_segments[b_reverse_end].segment.first)) {
-                    i_new_b++;
-                }
-                j_new_b = b_reverse_end;
-            }
-
-            i = i_new_a > i_new_b ? i_new_a : i_new_b;
-            j = j_new_a > j_new_b ? j_new_a : j_new_b;
-
-            if (i >= a_segments.size() or j >= b_segments.size()) {
-                break;
-            }
-
-            if (not(geometry::equals_points(a_segments[i].segment.first, b_segments[j].segment.first) and
-                    geometry::equals_points(a_segments[i].segment.second, b_segments[j].segment.second))) {
-                // compare point is somewhere outside of ground truth
-                const auto merge = _find_merge(a_segments, b_segments, i, a_segments.size(), j, b_segments.size());
-                const auto i_new = std::get<0>(merge);
-                const auto j_new = std::get<1>(merge);
-
-                for (std::size_t i_c = i; i_c < i_new; ++i_c) {
-                    error_misses.emplace_back(a_segments[i_c]);
-                }
-                for (std::size_t j_c = j; j_c < j_new; ++j_c) {
-                    error_adds.emplace_back(b_segments[j_c]);
-                }
-
-                i = i_new;
-                j = j_new;
-            } else {
-                // equal parts, no error except when we were outside
+            if (geometry::equals_points(a_segments[i].segment.first, b_segments[j].segment.first) and
+                geometry::equals_points(a_segments[i].segment.second, b_segments[j].segment.second)) {
+                // equal parts, no error
+                corrects.emplace_back(a_segments[i]);
                 i++;
                 j++;
+            } else {
+                const auto a_reverse = _detect_reverse(a_segments, i, a_segments.size());
+                const auto b_reverse = _detect_reverse(b_segments, j, b_segments.size());
+
+                // treat reverse movements
+                const auto is_a_reverse = std::get<0>(a_reverse);
+                if (is_a_reverse) {
+                    const auto a_reverse_start = std::get<1>(a_reverse);
+                    const auto a_reverse_end = std::get<2>(a_reverse);
+                    for (std::size_t r = a_reverse_start; r < a_reverse_end; ++r) {
+                        reverse_a_segments.emplace_back(a_segments[r]);
+                    }
+                    i = a_reverse_end;
+                }
+                const auto is_b_reverse = std::get<0>(b_reverse);
+                if (is_b_reverse) {
+                    const auto b_reverse_start = std::get<1>(b_reverse);
+                    const auto b_reverse_end = std::get<2>(b_reverse);
+                    for (std::size_t r = b_reverse_start; r < b_reverse_end; ++r) {
+                        reverse_b_segments.emplace_back(b_segments[r]);
+                    }
+                    j = b_reverse_end;
+                }
+
+                if (i >= a_segments.size() or j >= b_segments.size()) {
+                    break;
+                }
+
+                if (not is_a_reverse and not is_b_reverse) {
+                    // compare point is somewhere outside of ground truth
+                    const auto merge = _find_merge(a_segments, b_segments, i, a_segments.size(), j, b_segments.size());
+
+                    // treat errors
+                    const auto i_merge = std::get<0>(merge);
+                    const auto j_merge = std::get<1>(merge);
+                    for (std::size_t i_c = i; i_c < i_merge; ++i_c) {
+                        error_misses.emplace_back(a_segments[i_c]);
+                    }
+                    for (std::size_t j_c = j; j_c < j_merge; ++j_c) {
+                        error_adds.emplace_back(b_segments[j_c]);
+                    }
+                    i = i_merge;
+                    j = j_merge;
+                }
             }
         }
 
@@ -266,6 +259,7 @@ namespace map_matching_2::geometry {
             while (reverse_a_it != reverse_a_segments.end()) {
                 if (geometry::equals_points((*reverse_a_it).segment.first, (*reverse_b_it).segment.first) and
                     geometry::equals_points((*reverse_a_it).segment.second, (*reverse_b_it).segment.second)) {
+                    corrects.emplace_back(*reverse_a_it);
                     reverse_a_segments.erase(reverse_a_it);
                     reverse_b_segments.erase(reverse_b_it);
                     reverse_b_it = reverse_b_segments.begin();
@@ -287,6 +281,7 @@ namespace map_matching_2::geometry {
             while (reverse_a_it != reverse_a_segments.end()) {
                 if (geometry::equals_points((*reverse_a_it).segment.first, (*error_adds_it).segment.first) and
                     geometry::equals_points((*reverse_a_it).segment.second, (*error_adds_it).segment.second)) {
+                    corrects.emplace_back(*reverse_a_it);
                     reverse_a_segments.erase(reverse_a_it);
                     error_adds.erase(error_adds_it);
                     error_adds_it = error_adds.begin();
@@ -308,6 +303,7 @@ namespace map_matching_2::geometry {
             while (reverse_b_it != reverse_b_segments.end()) {
                 if (geometry::equals_points((*reverse_b_it).segment.first, (*error_misses_it).segment.first) and
                     geometry::equals_points((*reverse_b_it).segment.second, (*error_misses_it).segment.second)) {
+                    corrects.emplace_back(*reverse_b_it);
                     reverse_b_segments.erase(reverse_b_it);
                     error_misses.erase(error_misses_it);
                     error_misses_it = error_misses.begin();
@@ -351,6 +347,7 @@ namespace map_matching_2::geometry {
             while (error_adds_it != error_adds.end()) {
                 if (geometry::equals_points((*error_adds_it).segment.first, (*error_misses_it).segment.first) and
                     geometry::equals_points((*error_adds_it).segment.second, (*error_misses_it).segment.second)) {
+                    corrects.emplace_back(*error_adds_it);
                     error_adds.erase(error_adds_it);
                     error_misses.erase(error_misses_it);
                     error_misses_it = error_misses.begin();
@@ -361,6 +358,23 @@ namespace map_matching_2::geometry {
             }
             if (not restart) {
                 error_misses_it++;
+            }
+        }
+
+        // sum lengths
+        length_type correct = default_float_type<length_type>::v0;
+        auto corrects_it = corrects.begin();
+        while (corrects_it != corrects.end()) {
+            const auto &correct_segment = *corrects_it;
+            length_type length = geometry::default_float_type<length_type>::v0;
+            if (correct_segment.has_length) {
+                length = correct_segment.length;
+            }
+            corrects_it++;
+            if (length == geometry::default_float_type<length_type>::v0) {
+                corrects.erase(std::prev(corrects_it));
+            } else {
+                correct += length;
             }
         }
 
@@ -396,15 +410,38 @@ namespace map_matching_2::geometry {
             }
         }
 
-        length_type error_fraction =
-                ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0
-                ? ((error_added + error_missed) / ground_truth.length)
-                : (compare.has_length and compare.length > default_float_type<length_type>::v0
-                   ? std::numeric_limits<length_type>::infinity()
-                   : (error_added + error_missed));
+        length_type error_fraction = default_float_type<length_type>::v0;
+        if (error_added != default_float_type<length_type>::v0 or
+            error_missed != default_float_type<length_type>::v0) {
+            // in case errors have happened, compute error fraction
+            error_fraction = ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0
+                             ? ((error_added + error_missed) / ground_truth.length)
+                             : (compare.has_length and compare.length > default_float_type<length_type>::v0
+                                ? std::numeric_limits<length_type>::infinity()
+                                : (error_added + error_missed));
+        }
 
-        return comparison<RichLine>{error_fraction, error_added, error_missed,
-                                    std::move(error_adds), std::move(error_misses)};
+        length_type correct_fraction = default_float_type<length_type>::v0;
+        if (error_fraction == default_float_type<length_type>::v0) {
+            // when no error has happened, correct fraction is per definition 1.0
+            correct_fraction = default_float_type<length_type>::v1;
+        } else {
+            // when errors have happened, compute correct fraction
+            correct_fraction =
+                    ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0
+                    ? (compare.has_length and compare.length > default_float_type<length_type>::v0
+                       ? (2.0 * correct) / (ground_truth.length + compare.length)
+                       : correct / ground_truth.length)
+                    : (compare.has_length and compare.length > default_float_type<length_type>::v0
+                       ? correct / compare.length
+                       : default_float_type<length_type>::v0);
+            // in case of rounding errors around 1.0 or 0.0 cut to valid range
+            correct_fraction = std::min(default_float_type<length_type>::v1,
+                                        std::max(default_float_type<length_type>::v0, correct_fraction));
+        }
+
+        return comparison<RichLine>{correct_fraction, error_fraction, correct, error_added, error_missed,
+                                    std::move(corrects), std::move(error_adds), std::move(error_misses)};
     }
 
     template<typename RichLine>
@@ -557,97 +594,28 @@ namespace map_matching_2::geometry {
 
     template<typename RichLine>
     std::tuple<bool, std::size_t, std::size_t>
-    line_comparator<RichLine>::_detect_reverse(std::vector<rich_segment_type> segments, std::size_t start,
-                                               std::size_t end) const {
-        bool start_found = false, turn_found = false, end_found = false;
-        std::size_t r_start, r_turn, r_end;
+    line_comparator<RichLine>::_detect_reverse(std::vector<rich_segment_type> segments,
+                                               std::size_t start, std::size_t end) const {
+        bool start_found = false, end_found = false;
 
-        if (start + 1 < end and
-            geometry::equals_points(segments[start].segment.second, segments[start + 1].segment.first) and
-            geometry::equals_points(segments[start].segment.first, segments[start + 1].segment.second)) {
-            // reverse detected
+        if (start - 1 >= 0 and
+            geometry::equals_points(segments[start - 1].segment.second, segments[start].segment.first) and
+            geometry::equals_points(segments[start - 1].segment.first, segments[start].segment.second)) {
+            // segments are equal in reverse, reverse detected
 
-            if (start == 0) {
-                r_start = 0;
-                start_found = true;
-            } else {
-                r_start = start + 1;
-                start_found = true;
-            }
+            const auto &start_point = segments[start].segment.first;
+            start_found = true;
 
-            const auto &r_start_point = segments[r_start].segment.first;
-
-            for (std::size_t i = r_start; i < end; ++i) {
-                if (not turn_found and i + 1 < end and
-                    geometry::equals_points(segments[i].segment.second, segments[i + 1].segment.first) and
-                    geometry::equals_points(segments[i].segment.first, segments[i + 1].segment.second)) {
-                    // turn detected
-                    r_turn = i + 1;
-                    turn_found = true;
-                }
-
-                if (turn_found and
-                    (geometry::equals_points(segments[i].segment.first, r_start_point) or
-                     geometry::equals_points(segments[i].segment.second, r_start_point))) {
+            for (std::size_t i = start + 1; i < end; ++i) {
+                if (geometry::equals_points(segments[i].segment.first, start_point)) {
                     // end point detected
-                    if (i + 1 < end and
-                        geometry::equals_points(segments[i].segment.second, r_start_point)) {
-                        r_end = i + 1;
-                        end_found = true;
-                    } else if (geometry::equals_points(segments[i].segment.first, r_start_point)) {
-                        r_end = i;
-                        end_found = true;
-                    }
+                    end = i;
+                    end_found = true;
                 }
-
-                // when we found an end, stop reverse tracking
-                if (end_found) {
-                    break;
-                }
-            }
-
-            if (not turn_found) {
-                // if we did not find a turn, end might be wrong, research again without turn
-                for (std::size_t i = r_start; i < end; ++i) {
-                    if (geometry::equals_points(segments[i].segment.first, r_start_point) or
-                        geometry::equals_points(segments[i].segment.second, r_start_point)) {
-                        // end point detected
-                        if (i + 1 < end and
-                            geometry::equals_points(segments[i].segment.second, r_start_point)) {
-                            r_end = i + 1;
-                            end_found = true;
-                        } else if (geometry::equals_points(segments[i].segment.first, r_start_point)) {
-                            r_end = i;
-                            end_found = true;
-                        }
-                    }
-                }
-            } else if (r_start == 0) {
-                // if we did find a turn but it was right after start, then set end to turn, track continues there
-                r_end = r_turn;
-                end_found = true;
-            }
-
-            if (not end_found) {
-                // if we still did not find an end, use given end
-                r_end = end - 1;
-                end_found = true;
-            }
-
-            if (r_start != start and r_end != end - 1 and r_start == r_end) {
-                // if the end is the same as the start within the line, we had a two line forward-back reverse
-                r_start = start;
-                start_found = true;
-                r_end = r_start + 2; // end is next after
-                end_found = true;
-            }
-
-            if (r_end >= end) {
-                r_end = end - 1;
             }
         }
 
-        return std::tuple{start_found and end_found, r_start, r_end};
+        return std::tuple{start_found and end_found, start, end};
     }
 
     template<typename RichLine>

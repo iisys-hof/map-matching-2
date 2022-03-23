@@ -30,9 +30,12 @@ namespace map_matching_2::geometry {
         using rich_segment_type = typename RichLine::rich_segment_type;
         using length_type = typename RichLine::length_type;
 
+        length_type correct_fraction;
         length_type error_fraction;
+        length_type correct;
         length_type error_added;
         length_type error_missed;
+        std::list<rich_segment_type> corrects;
         std::list<rich_segment_type> error_adds;
         std::list<rich_segment_type> error_misses;
 
