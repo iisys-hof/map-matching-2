@@ -91,10 +91,10 @@ namespace map_matching_2::geometry {
                         double distance_tolerance, double direction_tolerance) const;
 
         std::tuple<bool, std::size_t, std::size_t>
-        _detect_reverse(std::vector<rich_segment_type> segments, std::size_t start, std::size_t end) const;
+        _detect_reverse(const std::vector<rich_segment_type> &segments, std::size_t start, std::size_t end) const;
 
         std::tuple<std::size_t, std::size_t>
-        _find_merge(std::vector<rich_segment_type> a_segments, std::vector<rich_segment_type> b_segments,
+        _find_merge(const std::vector<rich_segment_type> &a_segments, const std::vector<rich_segment_type> &b_segments,
                     std::size_t a_start, std::size_t a_end, std::size_t b_start, std::size_t b_end) const;
 
     };

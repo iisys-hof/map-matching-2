@@ -594,7 +594,7 @@ namespace map_matching_2::geometry {
 
     template<typename RichLine>
     std::tuple<bool, std::size_t, std::size_t>
-    line_comparator<RichLine>::_detect_reverse(std::vector<rich_segment_type> segments,
+    line_comparator<RichLine>::_detect_reverse(const std::vector<rich_segment_type> &segments,
                                                std::size_t start, std::size_t end) const {
         bool start_found = false, end_found = false;
 
@@ -620,8 +620,8 @@ namespace map_matching_2::geometry {
 
     template<typename RichLine>
     std::tuple<std::size_t, std::size_t>
-    line_comparator<RichLine>::_find_merge(std::vector<rich_segment_type> a_segments,
-                                           std::vector<rich_segment_type> b_segments,
+    line_comparator<RichLine>::_find_merge(const std::vector<rich_segment_type> &a_segments,
+                                           const std::vector<rich_segment_type> &b_segments,
                                            std::size_t a_start, std::size_t a_end, std::size_t b_start,
                                            std::size_t b_end) const {
         if (geometry::equals_points(a_segments[a_start].segment.first, b_segments[b_start].segment.first) and
