@@ -86,6 +86,20 @@ struct compare_settings {
     double split_direction_tolerance;
 };
 
+template<typename CSV>
+void write_output_header(CSV &csv) {
+    csv << std::vector{"id", "duration", "track", "prepared", "match"};
+}
+
+template<typename CSV>
+void write_compare_output_header(CSV &csv) {
+    csv << std::vector{"id", "track", "prepared", "match", "ground_truth",
+                       "track_length", "prepared_length", "match_length", "ground_truth_length",
+                       "correct_fraction", "error_fraction",
+                       "correct", "error_added", "error_missed",
+                       "corrects", "error_adds", "error_misses"};
+}
+
 template<typename MultiTrack>
 std::pair<bool, map_matching_2::geometry::comparison<typename MultiTrack::rich_line_type>>
 compare_track(const map_matching_2::geometry::line_comparator<typename MultiTrack::rich_line_type> &comparator,
@@ -198,16 +212,12 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
     // Prepare output
     map_matching_2::io::csv_exporter<',', '"'> output_csv{std::move(output_file)};
     if (output_csv.is_writable()) {
-        output_csv << std::vector{"id", "duration", "track", "prepared", "match"};
+        write_output_header(output_csv);
     }
 
     map_matching_2::io::csv_exporter<',', '"'> compare_output_csv{std::move(compare_output_file)};
     if (compare_output_csv.is_writable()) {
-        compare_output_csv << std::vector{"id", "track", "prepared", "match", "ground_truth",
-                                          "track_length", "prepared_length", "match_length", "ground_truth_length",
-                                          "correct_fraction", "error_fraction",
-                                          "correct", "error_added", "error_missed",
-                                          "corrects", "error_adds", "error_misses"};
+        write_compare_output_header(compare_output_csv);
     }
 
     const auto candidate_export = [&](const auto &environments, const auto &learners,
@@ -409,8 +419,7 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
 
     map_matching_2::io::csv_exporter<',', '"'> compare_output_csv{std::move(compare_output_file)};
     if (compare_output_csv.is_writable()) {
-        compare_output_csv << std::vector{"id", "track", "prepared", "match", "ground_truth", "error_fraction",
-                                          "error_added", "error_missed", "error_adds", "error_misses"};
+        write_compare_output_header(compare_output_csv);
     }
 
     using route_type = map_matching_2::geometry::network::route<typename MultiTrack::line_type>;
