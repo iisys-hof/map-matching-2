@@ -54,7 +54,7 @@ namespace map_matching_2::geometry {
                                         std::move(corrects), std::move(b_segments_list), std::move(error_misses)};
         } else if (not a_segments_list.empty() and b_segments_list.empty()) {
             return comparison<RichLine>{default_float_type<length_type>::v0,
-                                        std::numeric_limits<length_type>::infinity(),
+                                        default_float_type<length_type>::v1,
                                         default_float_type<length_type>::v0, default_float_type<length_type>::v0,
                                         ground_truth.has_length ? ground_truth.length
                                                                 : default_float_type<length_type>::v0,
@@ -414,11 +414,13 @@ namespace map_matching_2::geometry {
         if (error_added != default_float_type<length_type>::v0 or
             error_missed != default_float_type<length_type>::v0) {
             // in case errors have happened, compute error fraction
-            error_fraction = ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0
-                             ? ((error_added + error_missed) / ground_truth.length)
-                             : (compare.has_length and compare.length > default_float_type<length_type>::v0
-                                ? std::numeric_limits<length_type>::infinity()
-                                : (error_added + error_missed));
+            if (ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0) {
+                error_fraction = (error_added + error_missed) / ground_truth.length;
+            } else {
+                // when ground truth has no length or a length of zero, the equation is undefined,
+                // error is infinity by definition
+                error_fraction = std::numeric_limits<length_type>::infinity();
+            }
         }
 
         length_type correct_fraction = default_float_type<length_type>::v0;
@@ -427,14 +429,24 @@ namespace map_matching_2::geometry {
             correct_fraction = default_float_type<length_type>::v1;
         } else {
             // when errors have happened, compute correct fraction
-            correct_fraction =
-                    ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0
-                    ? (compare.has_length and compare.length > default_float_type<length_type>::v0
-                       ? (2.0 * correct) / (ground_truth.length + compare.length)
-                       : correct / ground_truth.length)
-                    : (compare.has_length and compare.length > default_float_type<length_type>::v0
-                       ? correct / compare.length
-                       : default_float_type<length_type>::v0);
+            if (ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0 and
+                compare.has_length and compare.length > default_float_type<length_type>::v0) {
+                // (cor / gt) * (1 - (max(ea - em, 0) / mat))
+                // first term is accuracy, second term reduces accuracy
+                // by multiplying with fraction of additional error adds from match
+                // for example when first term has 1.0 but the match continued adding errors after
+                // then the second term reduces the original accuracy
+                // additional error adds exists when there was more error adds than error misses
+                correct_fraction = (correct / ground_truth.length) *
+                                   (default_float_type<length_type>::v1 -
+                                    (std::max(error_added - error_missed, default_float_type<length_type>::v0) /
+                                     compare.length));
+            } else {
+                // when ground truth has no length or a length of zero, the equation is undefined,
+                // accuracy is zero by definition
+                correct_fraction = default_float_type<length_type>::v0;
+            }
+
             // in case of rounding errors around 1.0 or 0.0 cut to valid range
             correct_fraction = std::min(default_float_type<length_type>::v1,
                                         std::max(default_float_type<length_type>::v0, correct_fraction));
