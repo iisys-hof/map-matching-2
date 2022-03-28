@@ -441,9 +441,14 @@ namespace map_matching_2::geometry {
                                    (default_float_type<length_type>::v1 -
                                     (std::max(error_added - error_missed, default_float_type<length_type>::v0) /
                                      compare.length));
+            } else if ((not ground_truth.has_length or ground_truth.length == default_float_type<length_type>::v0) and
+                       (not compare.has_length or compare.length == default_float_type<length_type>::v0)) {
+                // when both lengths are zero and the unlikely event happened that this was not caught
+                // in the beginning of this method, we are actually completely correct
+                correct_fraction = default_float_type<length_type>::v1;
             } else {
-                // when ground truth has no length or a length of zero, the equation is undefined,
-                // accuracy is zero by definition
+                // when one of both lines has no length or a length of zero, the equation is undefined,
+                // accuracy is zero because either the empty ground truth was not found or the match was empty itself
                 correct_fraction = default_float_type<length_type>::v0;
             }
 
