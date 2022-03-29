@@ -543,9 +543,9 @@ int main(int argc, char *argv[]) {
     char delimiter, compare_delimiter;
     double routing_max_distance_factor, radius, radius_upper_limit, radius_lower_limit, learning_rate, epsilon,
             discount, threshold, simplify_track_distance_tolerance, median_merge_distance_tolerance,
-            mdp_distance_factor, mdp_length_factor, mdp_azimuth_factor, mdp_direction_factor, hmm_distance_factor,
-            hmm_length_factor, hmm_azimuth_factor, hmm_direction_factor, compare_simplifying_tolerance,
-            compare_simplifying_reverse_tolerance, compare_adoption_distance_tolerance,
+            mdp_distance_factor, mdp_length_factor, mdp_azimuth_factor, mdp_direction_factor, mdp_turn_factor,
+            hmm_distance_factor, hmm_length_factor, hmm_azimuth_factor, hmm_direction_factor, hmm_turn_factor,
+            compare_simplifying_tolerance, compare_simplifying_reverse_tolerance, compare_adoption_distance_tolerance,
             compare_split_distance_tolerance, compare_split_direction_tolerance, early_stop_factor, max_time;
     bool read_line, console, wkt, no_header, no_id, no_parse_time, export_edges, join_merges, compare_only, no_compare,
             compare_edges_list_mode, compare_wkt, compare_no_header, compare_no_id, filter_duplicates,
@@ -889,7 +889,9 @@ int main(int argc, char *argv[]) {
                 ("mdp-azimuth-factor", po::value<double>(&mdp_azimuth_factor)->default_value(0.3, "0.3"),
                  "azimuth factor for rewarding azimuth differences between track segments and routes in network")
                 ("mdp-direction-factor", po::value<double>(&mdp_direction_factor)->default_value(0.8, "0.8"),
-                 "direction factor for rewarding direction changes of routes in network");
+                 "direction factor for rewarding direction changes of routes in network")
+                ("mdp-turn-factor", po::value<double>(&mdp_turn_factor)->default_value(0.8, "0.8"),
+                 "turn factor for rewarding turn differences between track segments and routes in network");
 
         options_hmm.add_options()
                 ("hmm-distance-factor", po::value<double>(&hmm_distance_factor)->default_value(0.7, "0.7"),
@@ -899,7 +901,9 @@ int main(int argc, char *argv[]) {
                 ("hmm-azimuth-factor", po::value<double>(&hmm_azimuth_factor)->default_value(0.2, "0.2"),
                  "azimuth factor for probability of azimuth differences between track segments and routes in network")
                 ("hmm-direction-factor", po::value<double>(&hmm_direction_factor)->default_value(0.5, "0.5"),
-                 "direction factor for probability of direction changes of routes in network");
+                 "direction factor for probability of direction changes of routes in network")
+                ("hmm-turn-factor", po::value<double>(&hmm_turn_factor)->default_value(0.5, "0.5"),
+                 "turn factor for rewarding turn differences between track segments and routes in network");
 
         options_dp_iteration.add_options()
                 ("threshold", po::value<double>(&threshold)->default_value(1e-3, "1e-3"),
@@ -1904,10 +1908,12 @@ int main(int argc, char *argv[]) {
         match_settings.mdp_length_factor = mdp_length_factor;
         match_settings.mdp_azimuth_factor = mdp_azimuth_factor;
         match_settings.mdp_direction_factor = mdp_direction_factor;
+        match_settings.mdp_turn_factor = mdp_turn_factor;
         match_settings.hmm_distance_factor = hmm_distance_factor;
         match_settings.hmm_length_factor = hmm_length_factor;
         match_settings.hmm_azimuth_factor = hmm_azimuth_factor;
         match_settings.hmm_direction_factor = hmm_direction_factor;
+        match_settings.hmm_turn_factor = hmm_turn_factor;
 
         if (candidate_search == "circle") {
             match_settings.k_nearest_candidate_search = false;

@@ -431,16 +431,11 @@ namespace map_matching_2::geometry {
             // when errors have happened, compute correct fraction
             if (ground_truth.has_length and ground_truth.length > default_float_type<length_type>::v0 and
                 compare.has_length and compare.length > default_float_type<length_type>::v0) {
-                // (cor / gt) * (1 - (max(ea - em, 0) / mat))
-                // first term is accuracy, second term reduces accuracy
-                // by multiplying with fraction of additional error adds from match
-                // for example when first term has 1.0 but the match continued adding errors after
-                // then the second term reduces the original accuracy
-                // additional error adds exists when there was more error adds than error misses
-                correct_fraction = (correct / ground_truth.length) *
-                                   (default_float_type<length_type>::v1 -
-                                    (std::max(error_added - error_missed, default_float_type<length_type>::v0) /
-                                     compare.length));
+                // the accuracy of a match depends on whether the match is shorter or longer than the ground truth
+                // when the match is shorter we must have missed parts, so our accuracy depends on the correctly found
+                // parts from the ground truth; in the other case we added unnecessary parts, so our accuracy depends
+                // on how much correct parts we still found in our match
+                correct_fraction = correct / std::max(ground_truth.length, compare.length);
             } else if ((not ground_truth.has_length or ground_truth.length == default_float_type<length_type>::v0) and
                        (not compare.has_length or compare.length == default_float_type<length_type>::v0)) {
                 // when both lengths are zero and the unlikely event happened that this was not caught

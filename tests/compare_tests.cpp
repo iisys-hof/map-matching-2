@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_9.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_9.error_fraction, 1.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_9.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_9.correct_fraction, 1.0 - (1.0 / 6), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_9.correct_fraction, 5.0 / 6, 1e-6);
 
         // added end
         auto line_10_1 = rich_line_type{create_line({0, 0, 0, 4, 0, 5})};
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_10.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_10.error_fraction, 1.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_10.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_10.correct_fraction, 1.0 - (1.0 / 6), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_10.correct_fraction, 5.0 / 6, 1e-6);
 
         // added missing
         auto line_11_1 = rich_line_type{create_line({0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5})};
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_CLOSE_FRACTION(result_11.error_missed, 1.0, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_11.error_fraction, 4.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_11.correct, 4.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_11.correct_fraction, (4.0 / 5) * (1 - (2.0 / 7)), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_11.correct_fraction, 4.0 / 7, 1e-6);
 
         // outside part
         auto line_12_1 = rich_line_type{create_line({0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5})};
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_CLOSE_FRACTION(result_12.error_missed, 4.0, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_12.error_fraction, 9.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_12.correct, 1.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_12.correct_fraction, (1.0 / 5) * (1 - (1.0 / 6)), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_12.correct_fraction, 1.0 / 6, 1e-6);
 
         // reverse within
         auto line_13_1 = rich_line_type{create_line({0, 0, 0, 5})};
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_13.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_13.error_fraction, 2.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_13.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_13.correct_fraction, 1.0 - (2.0 / 7), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_13.correct_fraction, 5.0 / 7, 1e-6);
 
         // reverse within overlap
         auto line_14_1 = rich_line_type{create_line({0, 0, 0, 5})};
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_14.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_14.error_fraction, 6.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_14.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_14.correct_fraction, 1.0 - (6.0 / 11), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_14.correct_fraction, 5.0 / 11, 1e-6);
 
         // reverse within long
         auto line_15_1 = rich_line_type{create_line({0, 0, 0, 5})};
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_15.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_15.error_fraction, 6.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_15.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_15.correct_fraction, 1.0 - (6.0 / 11), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_15.correct_fraction, 5.0 / 11, 1e-6);
 
         // reverse missing
         auto line_16_1 = rich_line_type{create_line({0, 0, 0, 2, 0, 1, 0, 5})};
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_20.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_20.error_fraction, 2.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_20.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_20.correct_fraction, 1.0 - (2.0 / 7), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_20.correct_fraction, 5.0 / 7, 1e-6);
 
         // reverse added overlap
         auto line_21_1 = rich_line_type{create_line({0, 0, 0, 1, 2, 1, 0, 1, 0, 5})};
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_21.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_21.error_fraction, 2.0 / 9, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_21.correct, 9.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_21.correct_fraction, 1.0 - (2.0 / 11), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_21.correct_fraction, 9.0 / 11, 1e-6);
 
         // reverse start
         auto line_22_1 = rich_line_type{create_line({0, 0, 0, 5})};
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_22.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_22.error_fraction, 1.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_22.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_22.correct_fraction, 1.0 - (1.0 / 6), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_22.correct_fraction, 5.0 / 6, 1e-6);
 
         // reverse end
         auto line_23_1 = rich_line_type{create_line({0, 0, 0, 5})};
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_23.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_23.error_fraction, 1.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_23.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_23.correct_fraction, 1.0 - (1.0 / 6), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_23.correct_fraction, 5.0 / 6, 1e-6);
 
         // reverse both
         auto line_24_1 = rich_line_type{create_line({0, 0, 0, 5})};
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_24.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_24.error_fraction, 2.0 / 5, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_24.correct, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_24.correct_fraction, 1.0 - (2.0 / 7), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_24.correct_fraction, 5.0 / 7, 1e-6);
 
         // correct loop
         auto line_25_1 = rich_line_type{create_line({0, 0, 0, 1, 0, 2, 1, 2, 1, 1, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5})};
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_26.error_missed, 1.0);
         BOOST_CHECK_CLOSE_FRACTION(result_26.error_fraction, 4.0 / 9, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_26.correct, 8.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_26.correct_fraction, (8.0 / 9) * (1 - (2.0 / 11)), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_26.correct_fraction, 8.0 / 11, 1e-6);
 
         // loop outside reverse
         auto line_27_1 = rich_line_type{create_line({0, 0, 0, 2, 1, 2, 1, 1, 0, 1, 0, 5})};
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_CLOSE_FRACTION(result_27.error_missed, 1.0, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_27.error_fraction, 6.0 / 9, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_27.correct, 8.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_27.correct_fraction, (8.0 / 9) * (1 - (4.0 / 13)), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_27.correct_fraction, 8.0 / 13, 1e-6);
 
         // loop reverse
         auto line_28_1 = rich_line_type{create_line({0, 0, 0, 1, 0, 2, 1, 2, 1, 1, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5})};
@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_28.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_28.error_fraction, 4.0 / 9, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_28.correct, 9.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_28.correct_fraction, 1.0 - (4.0 / 13), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_28.correct_fraction, 9.0 / 13, 1e-6);
 
         // missing part
         auto line_29_1 = rich_line_type{create_line({0, 0, 0, 1, 1, 1, 1, 2, 0, 2, 0, 3, 0, 4, 0, 5})};
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_39.error_missed, 0.0);
         BOOST_CHECK_CLOSE_FRACTION(result_39.error_fraction, 1.0 / 6, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_39.correct, 6.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_39.correct_fraction, 1.0 - (1.0 / 7), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_39.correct_fraction, 6.0 / 7, 1e-6);
 
         // early merged loop with late merge
         auto line_40_1 = rich_line_type{
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_40.error_missed, 1.0);
         BOOST_CHECK_CLOSE_FRACTION(result_40.error_fraction, 5.0 / 10, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_40.correct, 9.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_40.correct_fraction, (9.0 / 10) * (1 - (3.0 / 13)), 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_40.correct_fraction, 9.0 / 13, 1e-6);
 
         // almost equal reverse
         auto line_41_1 = rich_line_type{create_line({0, 0, 5, 0, 2, 0, 3, 0})};

@@ -130,7 +130,7 @@ namespace map_matching_2::environment {
                                 transition_probability += std::log(1.0);
                             } else {
                                 // calculate transition probability
-                                typename Matcher::length_type next_distance =
+                                const typename Matcher::length_type next_distance =
                                         to_candidate.track->rich_segments[to_candidate.index - 1].length;
                                 typename Matcher::length_type route_length =
                                         geometry::default_float_type<typename Matcher::length_type>::v1;
@@ -141,7 +141,7 @@ namespace map_matching_2::environment {
 //                                double length_probability = std::max(1e-20L, std::min(next_distance, route_length) /
 //                                                                             std::max(next_distance, route_length));
 
-                                auto route_diff = std::fabs(next_distance - route_length);
+                                const auto route_diff = std::fabs(next_distance - route_length);
 
                                 double length_probability = 1.0 - (route_diff / std::max(next_distance, route_length));
                                 length_probability = std::max(1e-20, length_probability);
@@ -164,9 +164,10 @@ namespace map_matching_2::environment {
                                        length_probability <= 0.0);
                                 transition_probability += length_probability;
 
-                                typename Matcher::coordinate_type next_azimuth;
                                 if (route.has_azimuth) {
-                                    next_azimuth = to_candidate.track->rich_segments[to_candidate.index - 1].azimuth;
+                                    const typename Matcher::coordinate_type next_azimuth =
+                                            to_candidate.track->rich_segments[to_candidate.index - 1].azimuth;
+
                                     const auto diff_azimuth = geometry::angle_diff(next_azimuth, route.azimuth);
                                     double azimuth_probability =
                                             std::max(1e-20, (180.0 - std::fabs(diff_azimuth)) / 180.0);
@@ -176,6 +177,27 @@ namespace map_matching_2::environment {
                                     assert(azimuth_probability > -std::numeric_limits<double>::infinity() and
                                            azimuth_probability <= 0.0);
                                     transition_probability += azimuth_probability;
+
+                                    // calculate turn
+                                    if (from_candidate.index >= 1 and to_candidate.index >= 2) {
+                                        typename Matcher::coordinate_type current_azimuth =
+                                                from_candidate.track->rich_segments[from_candidate.index - 1].azimuth;
+
+                                        const typename Matcher::coordinate_type next_turn =
+                                                to_candidate.track->segments_directions[to_candidate.index - 2];
+
+                                        const auto route_turn = geometry::direction_deg(current_azimuth, route.azimuth);
+                                        const auto turn_diff = geometry::angle_diff(next_turn, route_turn);
+
+                                        double turn_probability =
+                                                std::max(1e-20, (360.0 - std::fabs(turn_diff)) / 360.0);
+
+                                        turn_probability = std::log(
+                                                std::pow(turn_probability, _match_settings.hmm_turn_factor));
+                                        assert(turn_probability > -std::numeric_limits<double>::infinity() and
+                                               turn_probability <= 0.0);
+                                        transition_probability += turn_probability;
+                                    }
                                 }
 
                                 if (route.has_directions) {
@@ -189,19 +211,6 @@ namespace map_matching_2::environment {
                                            -std::numeric_limits<double>::infinity() and
                                            absolute_directions_probability <= 0.0);
                                     transition_probability += absolute_directions_probability;
-
-                                    if (route.has_azimuth) {
-                                        const auto diff_azimuth = geometry::angle_diff(
-                                                next_azimuth, route.azimuth + route.directions);
-                                        double azimuth_probability =
-                                                std::max(1e-20, (180.0 - std::fabs(diff_azimuth)) / 180.0);
-
-                                        azimuth_probability = std::log(
-                                                std::pow(azimuth_probability, _match_settings.hmm_azimuth_factor));
-                                        assert(azimuth_probability > -std::numeric_limits<double>::infinity() and
-                                               azimuth_probability <= 0.0);
-                                        transition_probability += azimuth_probability;
-                                    }
                                 }
                             }
                             transition_probabilities.emplace_back(transition_probability);

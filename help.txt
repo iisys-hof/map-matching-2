@@ -423,6 +423,9 @@ Markov-Decision-Process Options:
                                         routes in network
   --mdp-direction-factor arg (=0.8)     direction factor for rewarding 
                                         direction changes of routes in network
+  --mdp-turn-factor arg (=0.8)          turn factor for rewarding turn 
+                                        differences between track segments and 
+                                        routes in network
 
 Hidden-Markov-Model Options:
   --hmm-distance-factor arg (=0.7)      distance factor for probability of 
@@ -436,6 +439,9 @@ Hidden-Markov-Model Options:
                                         segments and routes in network
   --hmm-direction-factor arg (=0.5)     direction factor for probability of 
                                         direction changes of routes in network
+  --hmm-turn-factor arg (=0.5)          turn factor for rewarding turn 
+                                        differences between track segments and 
+                                        routes in network
 
 Dynamic Programming Options:
   --threshold arg (=1e-3)               threshold for stopping iterations in 

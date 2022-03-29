@@ -254,10 +254,12 @@ namespace map_matching_2::environment {
                                 reward -= _match_settings.mdp_distance_factor * (next_edge.distance * 2);
                             }
 
-                            typename Matcher::length_type next_distance =
-                                    adjacent ? next_candidate.track->rich_segments[
-                                            next_candidate.index - 1].length : geometry::point_distance(
-                                            current_candidate.measurement->point, next_candidate.measurement->point);
+                            const typename Matcher::length_type next_distance =
+                                    adjacent
+                                    ? next_candidate.track->rich_segments[next_candidate.index - 1].length
+                                    : geometry::point_distance(current_candidate.measurement->point,
+                                                               next_candidate.measurement->point);
+
                             typename Matcher::length_type route_length =
                                     geometry::default_float_type<typename Matcher::length_type>::v0;
                             if (route.has_length) {
@@ -281,23 +283,34 @@ namespace map_matching_2::environment {
                                 reward -= _match_settings.mdp_length_factor * route_diff;
                             }
 
-                            typename Matcher::coordinate_type next_azimuth;
                             if (route.has_azimuth) {
-                                next_azimuth = adjacent ? next_candidate.track->rich_segments[
-                                        next_candidate.index - 1].azimuth : geometry::azimuth_deg(
-                                        current_candidate.measurement->point, next_candidate.measurement->point);
+                                const typename Matcher::coordinate_type next_azimuth =
+                                        adjacent
+                                        ? next_candidate.track->rich_segments[next_candidate.index - 1].azimuth
+                                        : geometry::azimuth_deg(current_candidate.measurement->point,
+                                                                next_candidate.measurement->point);
 
                                 const auto azimuth_diff = std::fabs(geometry::angle_diff(next_azimuth, route.azimuth));
                                 reward -= _match_settings.mdp_azimuth_factor * azimuth_diff;
+
+                                // calculate turn
+                                if (current_candidate.index >= 1 and next_candidate.index >= 2) {
+                                    typename Matcher::coordinate_type current_azimuth =
+                                            current_candidate.track->rich_segments[current_candidate.index - 1].azimuth;
+
+                                    const typename Matcher::coordinate_type next_turn =
+                                            adjacent
+                                            ? next_candidate.track->segments_directions[next_candidate.index - 2]
+                                            : geometry::direction_deg(current_azimuth, next_azimuth);
+
+                                    const auto route_turn = geometry::direction_deg(current_azimuth, route.azimuth);
+                                    auto turn_diff = std::fabs(geometry::angle_diff(next_turn, route_turn));
+                                    reward -= _match_settings.mdp_turn_factor * turn_diff;
+                                }
                             }
 
                             if (route.has_directions) {
                                 reward -= _match_settings.mdp_direction_factor * route.absolute_directions;
-
-                                if (route.has_azimuth) {
-                                    reward -= _match_settings.mdp_azimuth_factor * std::fabs(geometry::angle_diff(
-                                            next_azimuth, route.azimuth + route.directions));
-                                }
                             }
                         }
 
@@ -337,7 +350,7 @@ namespace map_matching_2::environment {
                                                                               current_candidate.measurement->point,
                                                                               next_candidate.measurement->point);
 
-                                            reward -= _match_settings.mdp_azimuth_factor * std::fabs(
+                                            reward -= _match_settings.mdp_turn_factor * std::fabs(
                                                     geometry::angle_diff(candidates_direction, route_direction));
                                         }
 
