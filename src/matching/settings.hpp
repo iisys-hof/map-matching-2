@@ -37,17 +37,17 @@ namespace map_matching_2::matching {
         bool export_edges = false;
         bool join_merges = true;
 
-        double mdp_distance_factor = 0.9;
-        double mdp_length_factor = 0.15;
-        double mdp_azimuth_factor = 0.3;
-        double mdp_direction_factor = 0.8;
-        double mdp_turn_factor = 0.8;
+        double mdp_distance_factor = 0.8;
+        double mdp_length_factor = 0.3;
+        double mdp_azimuth_factor = 0.5;
+        double mdp_direction_factor = 0.6;
+        double mdp_turn_factor = 0.5;
 
-        double hmm_distance_factor = 0.7;
-        double hmm_length_factor = 0.05;
+        double hmm_distance_factor = 0.8;
+        double hmm_length_factor = 0.1;
         double hmm_azimuth_factor = 0.2;
-        double hmm_direction_factor = 0.5;
-        double hmm_turn_factor = 0.5;
+        double hmm_direction_factor = 0.8;
+        double hmm_turn_factor = 0.6;
 
         bool k_nearest_candidate_search = false;
         bool k_nearest_reverse = false;
