@@ -412,34 +412,34 @@ Model Options:
                                         that loops eventually unroll
 
 Markov-Decision-Process Options:
-  --mdp-distance-factor arg (=0.9)      distance factor for rewarding distances
+  --mdp-distance-factor arg (=0.8)      distance factor for rewarding distances
                                         between measurement point and candidate
                                         position
-  --mdp-length-factor arg (=0.15)       length factor for rewarding length 
+  --mdp-length-factor arg (=0.3)        length factor for rewarding length 
                                         differences between track segments and 
                                         routes in network
-  --mdp-azimuth-factor arg (=0.3)       azimuth factor for rewarding azimuth 
+  --mdp-azimuth-factor arg (=0.5)       azimuth factor for rewarding azimuth 
                                         differences between track segments and 
                                         routes in network
-  --mdp-direction-factor arg (=0.8)     direction factor for rewarding 
+  --mdp-direction-factor arg (=0.6)     direction factor for rewarding 
                                         direction changes of routes in network
-  --mdp-turn-factor arg (=0.8)          turn factor for rewarding turn 
+  --mdp-turn-factor arg (=0.5)          turn factor for rewarding turn 
                                         differences between track segments and 
                                         routes in network
 
 Hidden-Markov-Model Options:
-  --hmm-distance-factor arg (=0.7)      distance factor for probability of 
+  --hmm-distance-factor arg (=0.8)      distance factor for probability of 
                                         distances between measurement point and
                                         candidate position
-  --hmm-length-factor arg (=0.05)       length factor for probability of length
+  --hmm-length-factor arg (=0.1)        length factor for probability of length
                                         differences between track segments and 
                                         routes in network
   --hmm-azimuth-factor arg (=0.2)       azimuth factor for probability of 
                                         azimuth differences between track 
                                         segments and routes in network
-  --hmm-direction-factor arg (=0.5)     direction factor for probability of 
+  --hmm-direction-factor arg (=0.8)     direction factor for probability of 
                                         direction changes of routes in network
-  --hmm-turn-factor arg (=0.5)          turn factor for rewarding turn 
+  --hmm-turn-factor arg (=0.6)          turn factor for rewarding turn 
                                         differences between track segments and 
                                         routes in network
 
