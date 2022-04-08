@@ -117,7 +117,7 @@ void
 result_processor(const MultiTrack &track, const MultiTrack &prepared, const Route &route,
                  const MultiTrack &ground_truth,
                  const std::pair<bool, map_matching_2::geometry::comparison<typename MultiTrack::rich_line_type>> &comparison,
-                 const double duration, const bool console, const bool verbose,
+                 const double duration, const bool console, const bool verbose, long double (&comparison_sums)[5],
                  CSV &output_csv, CSV &compare_output_csv) {
     if (console) {
         if (verbose) {
@@ -174,6 +174,11 @@ result_processor(const MultiTrack &track, const MultiTrack &prepared, const Rout
                       << "Correct: " << comparison.second.correct << ", "
                       << "Error Added: " << comparison.second.error_added << ", "
                       << "Error Missed: " << comparison.second.error_missed << std::endl;
+            comparison_sums[0] += comparison.second.correct_fraction;
+            comparison_sums[1] += comparison.second.error_fraction;
+            comparison_sums[2] += comparison.second.correct;
+            comparison_sums[3] += comparison.second.error_added;
+            comparison_sums[4] += comparison.second.error_missed;
         }
         if (compare_output_csv.is_writable()) {
             using length_type = decltype(track.length);
@@ -247,8 +252,9 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
         }
     };
 
-    std::size_t original_points = 0;
-    std::size_t filtered_points = 0;
+    std::uint64_t sums[4] = {0, 0, 0, 0};
+    long double comparison_sums[5] = {0, 0, 0, 0, 0};
+    std::size_t compared = 0;
     double duration;
     if (single_threading) {
         duration = map_matching_2::util::benchmark([&]() {
@@ -272,15 +278,20 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
                                 std::cout << "done in " << duration << "s, track points: " << track.sizes()
                                           << ", prepared points: " << prepared.sizes() << ", candidates: " << edges
                                           << ", combinations: " << combinations << std::endl;
-                                original_points += track.sizes();
-                                filtered_points += prepared.sizes();
+                                sums[0] += track.sizes();
+                                sums[1] += prepared.sizes();
+                                sums[2] += edges;
+                                sums[3] += combinations;
                             }
                             candidate_export(environments, learners, policies, track);
                             const auto ground_truth = find_ground_truth(track, compare_tracks);
                             const auto comparison = compare_track(comparator, ground_truth,
                                                                   route.get_multi_rich_line());
+                            if (comparison.first) {
+                                compared++;
+                            }
                             result_processor(track, prepared, route, ground_truth.second, comparison, duration,
-                                             console, verbose, output_csv, compare_output_csv);
+                                             console, verbose, comparison_sums, output_csv, compare_output_csv);
                             i++;
                         });
             }
@@ -297,6 +308,7 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
                         candidate_export(environments, learners, policies, track);
                         const auto ground_truth = find_ground_truth(track, compare_tracks);
                         const auto comparison = compare_track(comparator, ground_truth, route.get_multi_rich_line());
+
                         boost::lock_guard lock{mtx};
                         if (verbose) {
                             std::size_t edges = 0, combinations = 0;
@@ -308,18 +320,32 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
                                       << " done in " << duration << "s, track points: " << track.sizes()
                                       << ", prepared points: " << prepared.sizes() << ", candidates: " << edges
                                       << ", combinations: " << combinations << std::endl;
-                            original_points += track.sizes();
-                            filtered_points += prepared.sizes();
+                            sums[0] += track.sizes();
+                            sums[1] += prepared.sizes();
+                            sums[2] += edges;
+                            sums[3] += combinations;
+                        }
+                        if (comparison.first) {
+                            compared++;
                         }
                         result_processor(track, prepared, route, ground_truth.second, comparison, duration,
-                                         console, verbose, output_csv, compare_output_csv);
+                                         console, verbose, comparison_sums, output_csv, compare_output_csv);
                         i++;
                     });
         });
     }
 
     if (verbose) {
-        std::cout << "Points: Original: " << original_points << ", Filtered: " << filtered_points << std::endl;
+        std::cout << "Track points: " << sums[0] << ", Prepared points: " << sums[1]
+                  << ", Candidates: " << sums[2] << ", Combinations: " << sums[3] << std::endl;
+        if (compared > 0) {
+            std::cout << "Mean correct fraction: " << comparison_sums[0] / compared
+                      << ", Mean error fraction: " << comparison_sums[1] / compared
+                      << ", Correct lengths: " << comparison_sums[2]
+                      << ", Errors added: " << comparison_sums[3]
+                      << ", Errors missed: " << comparison_sums[4]
+                      << std::endl;
+        }
     }
 
     if (not quiet) {
@@ -432,6 +458,8 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
     comparator.split_distance_tolerance = compare_settings.split_distance_tolerance;
     comparator.split_direction_tolerance = compare_settings.split_direction_tolerance;
 
+    long double comparison_sums[5] = {0, 0, 0, 0, 0};
+    std::size_t compared = 0;
     double duration;
     if (single_threading) {
         duration = map_matching_2::util::benchmark([&]() {
@@ -452,9 +480,11 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
                 if (verbose) {
                     std::cout << "done in " << inner_duration << "s" << std::endl;
                 }
-
+                if (comparison.first) {
+                    compared++;
+                }
                 result_processor(track.second, track.second, route_type{}, ground_truth.second, comparison,
-                                 inner_duration, console, verbose, output_csv, compare_output_csv);
+                                 inner_duration, console, verbose, comparison_sums, output_csv, compare_output_csv);
                 i++;
             }
         });
@@ -490,9 +520,11 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
                         std::cout << "Comparison " << (i + 1) << "/" << tracks.size() << " " << track.id
                                   << " done in " << inner_duration << "s" << std::endl;
                     }
-
+                    if (comparison.first) {
+                        compared++;
+                    }
                     result_processor(track, track, route_type{}, ground_truth.second, comparison, inner_duration,
-                                     console, verbose, output_csv, compare_output_csv);
+                                     console, verbose, comparison_sums, output_csv, compare_output_csv);
                     i++;
                 }));
             }
@@ -502,6 +534,17 @@ compare(std::unordered_map<std::string, MultiTrack> tracks,
                 futures.pop_front();
             }
         });
+    }
+
+    if (verbose) {
+        if (compared > 0) {
+            std::cout << "Mean correct fraction: " << comparison_sums[0] / compared
+                      << ", Mean error fraction: " << comparison_sums[1] / compared
+                      << ", Correct lengths: " << comparison_sums[2]
+                      << ", Errors added: " << comparison_sums[3]
+                      << ", Errors missed: " << comparison_sums[4]
+                      << std::endl;
+        }
     }
 
     if (not quiet) {
