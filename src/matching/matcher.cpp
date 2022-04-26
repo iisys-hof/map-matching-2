@@ -34,6 +34,34 @@ namespace map_matching_2::matching {
             : network{network}, _single_threaded{threads == 1}, _matching_thread_pool{threads} {}
 
     template<typename Network, typename Track>
+    std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search_buffer(
+            const Track &track, const std::size_t buffer_points,
+            const double buffer_radius, const double buffer_upper_radius, const double buffer_lower_radius,
+            const bool adaptive_radius, const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
+            const bool candidate_adoption_reverse) {
+        std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
+                track.measurements.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
+                        &candidate_edge_type::distance_comparator}};
+
+        std::vector<double> radii;
+        radii.reserve(track.measurements.size());
+
+        for (std::size_t i = 0; i < track.measurements.size(); ++i) {
+            radii.emplace_back(_candidate_search_buffer_measurement(
+                    candidate_edge_sets[i], 1, track, i, buffer_points, buffer_radius, buffer_upper_radius,
+                    buffer_lower_radius, adaptive_radius));
+        }
+
+        std::vector<candidate_type> candidates;
+        candidates.reserve(candidate_edge_sets.size());
+        _finalize_candidates_buffer(
+                candidates, 1, track, radii, candidate_edge_sets, candidate_adoption_siblings,
+                candidate_adoption_nearby, candidate_adoption_reverse);
+
+        return candidates;
+    }
+
+    template<typename Network, typename Track>
     std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search_nearest(
             const Track &track, const std::size_t number, const bool with_reverse, const bool with_adjacent,
             const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
@@ -60,65 +88,57 @@ namespace map_matching_2::matching {
     }
 
     template<typename Network, typename Track>
-    std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search_buffer(
-            const Track &track, const std::size_t buffer_points,
-            const double buffer_radius, const double buffer_upper_radius, const double buffer_lower_radius,
-            const bool adaptive_radius, const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
-            const bool candidate_adoption_reverse) {
+    std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search_combined(
+            const Track &track, const double buffer_radius, const std::size_t number,
+            const double buffer_upper_radius, const double buffer_lower_radius, const bool adaptive_radius,
+            const bool with_reverse, const bool with_adjacent, const bool candidate_adoption_siblings,
+            const bool candidate_adoption_nearby, const bool candidate_adoption_reverse) {
         std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
                 track.measurements.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
                         &candidate_edge_type::distance_comparator}};
 
-        std::vector<double> radii;
-        radii.reserve(track.measurements.size());
+        std::vector<std::pair<double, std::size_t>> radii_numbers;
+        radii_numbers.reserve(track.measurements.size());
 
         for (std::size_t i = 0; i < track.measurements.size(); ++i) {
-            radii.emplace_back(_candidate_search_buffer_measurement(
-                    candidate_edge_sets[i], 1, track, i, buffer_points, buffer_radius, buffer_upper_radius,
-                    buffer_lower_radius, adaptive_radius));
+            radii_numbers.emplace_back(_candidate_search_combined_measurement(
+                    candidate_edge_sets[i], 1, track, i, buffer_radius, number, buffer_upper_radius,
+                    buffer_lower_radius, adaptive_radius, with_reverse, with_adjacent));
         }
 
         std::vector<candidate_type> candidates;
         candidates.reserve(candidate_edge_sets.size());
-        _finalize_candidates_buffer(
-                candidates, 1, track, radii, candidate_edge_sets, candidate_adoption_siblings,
-                candidate_adoption_nearby,
-                candidate_adoption_reverse);
+        _finalize_candidates_combined(
+                candidates, 1, track, radii_numbers, candidate_edge_sets, candidate_adoption_siblings,
+                candidate_adoption_nearby, candidate_adoption_reverse);
 
         return candidates;
     }
 
     template<typename Network, typename Track>
-    void matcher<Network, Track>::resize_candidates_nearest(
-            const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
-            const std::size_t round, const bool with_reverse, const bool with_adjacent,
-            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
-            const bool candidate_adoption_reverse) {
-        std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
-                candidates.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
-                        &candidate_edge_type::distance_comparator}};
-
-        std::vector<std::size_t> numbers;
-        numbers.reserve(candidates.size());
-
-        for (std::size_t i = 0; i < candidates.size(); ++i) {
-            auto &candidate = candidates[i];
-            numbers.emplace_back(candidate.number);
-            auto &candidate_edges = candidate.edges;
-            auto &candidate_edge_set = candidate_edge_sets[i];
-            for (auto &candidate_edge: candidate_edges) {
-                candidate_edge_set.emplace(std::move(candidate_edge));
-            }
+    std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search(
+            const Track &track, const std::size_t buffer_points, const double buffer_radius, const std::size_t number,
+            const bool buffer_candidate_search, const bool nearest_candidate_search,
+            const double buffer_upper_radius, const double buffer_lower_radius, const bool adaptive_radius,
+            const bool with_reverse, const bool with_adjacent, const bool candidate_adoption_siblings,
+            const bool candidate_adoption_nearby, const bool candidate_adoption_reverse) {
+        if (buffer_candidate_search and not nearest_candidate_search) {
+            return candidate_search_buffer(
+                    track, buffer_points, buffer_radius, buffer_upper_radius, buffer_lower_radius, adaptive_radius,
+                    candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse);
+        } else if (not buffer_candidate_search and nearest_candidate_search) {
+            return candidate_search_nearest(
+                    track, number, with_reverse, with_adjacent,
+                    candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse);
+        } else if (buffer_candidate_search and nearest_candidate_search) {
+            return candidate_search_combined(
+                    track, buffer_radius, number, buffer_upper_radius, buffer_lower_radius,
+                    adaptive_radius, with_reverse, with_adjacent,
+                    candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse);
+        } else {
+            throw std::invalid_argument(
+                    "invalid candidate search arguments, either buffer, nearest or both needs to be enabled");
         }
-
-        for (const auto i: positions) {
-            numbers[i] = _candidate_search_nearest_measurement(
-                    candidate_edge_sets[i], round, track, i, numbers[i] * 2, with_reverse, with_adjacent);
-        }
-
-        _finalize_candidates_nearest(
-                candidates, round, track, numbers, candidate_edge_sets, candidate_adoption_siblings,
-                candidate_adoption_nearby, candidate_adoption_reverse);
     }
 
     template<typename Network, typename Track>
@@ -192,6 +212,113 @@ namespace map_matching_2::matching {
 
         _finalize_candidates_buffer(
                 candidates, round, track, radii, candidate_edge_sets, candidate_adoption_siblings,
+                candidate_adoption_nearby, candidate_adoption_reverse);
+    }
+
+    template<typename Network, typename Track>
+    void matcher<Network, Track>::resize_candidates_nearest(
+            const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
+            const std::size_t round, const bool with_reverse, const bool with_adjacent,
+            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
+            const bool candidate_adoption_reverse) {
+        std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
+                candidates.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
+                        &candidate_edge_type::distance_comparator}};
+
+        std::vector<std::size_t> numbers;
+        numbers.reserve(candidates.size());
+
+        for (std::size_t i = 0; i < candidates.size(); ++i) {
+            auto &candidate = candidates[i];
+            numbers.emplace_back(candidate.number);
+            auto &candidate_edges = candidate.edges;
+            auto &candidate_edge_set = candidate_edge_sets[i];
+            for (auto &candidate_edge: candidate_edges) {
+                candidate_edge_set.emplace(std::move(candidate_edge));
+            }
+        }
+
+        for (const auto i: positions) {
+            numbers[i] = _candidate_search_nearest_measurement(
+                    candidate_edge_sets[i], round, track, i, numbers[i] * 2, with_reverse, with_adjacent);
+        }
+
+        _finalize_candidates_nearest(
+                candidates, round, track, numbers, candidate_edge_sets, candidate_adoption_siblings,
+                candidate_adoption_nearby, candidate_adoption_reverse);
+    }
+
+    template<typename Network, typename Track>
+    void matcher<Network, Track>::resize_candidates_combined(
+            const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
+            const std::size_t round, const double buffer_upper_radius, const double buffer_lower_radius,
+            const bool adaptive_radius, const bool adaptive_resize, const bool with_reverse, const bool with_adjacent,
+            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
+            const bool candidate_adoption_reverse) {
+        std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
+                candidates.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
+                        &candidate_edge_type::distance_comparator}};
+
+        std::vector<std::pair<double, std::size_t>> radii_numbers;
+        radii_numbers.reserve(candidates.size());
+
+        for (std::size_t i = 0; i < candidates.size(); ++i) {
+            auto &candidate = candidates[i];
+            radii_numbers.emplace_back(std::pair{candidate.radius, candidate.number});
+            auto &candidate_edges = candidate.edges;
+            auto &candidate_edge_set = candidate_edge_sets[i];
+            for (auto &candidate_edge: candidate_edges) {
+                candidate_edge_set.emplace(std::move(candidate_edge));
+            }
+        }
+
+        std::map<std::size_t, double> position_map;
+        for (const auto i: positions) {
+            position_map.emplace(i, radii_numbers[i].first * 2);
+        }
+
+        if (adaptive_resize) {
+            using index_value_type = std::pair<point_type, std::size_t>;
+
+            std::vector<index_value_type> measurement_index_values;
+            measurement_index_values.reserve(track.measurements.size());
+            for (std::size_t i = 0; i < track.measurements.size(); ++i) {
+                const auto &measurement = track.measurements[i];
+                measurement_index_values.emplace_back(std::pair{measurement.point, i});
+            }
+
+            boost::geometry::index::rtree<index_value_type, boost::geometry::index::rstar<16>>
+                    measurements_index{std::move(measurement_index_values)};
+
+            for (const auto i: positions) {
+                const auto &measurement = track.measurements[i];
+                auto &edge_set = candidate_edge_sets[i];
+                auto edge_set_it = edge_set.crbegin();
+                const auto longest_distance = edge_set_it->distance;
+
+                const auto buffer = _create_buffer(measurement.point, radii_numbers[i].first * 2);
+
+                std::vector<index_value_type> results;
+                measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
+
+                for (const auto &result: results) {
+                    const auto j = result.second;
+                    position_map.emplace(j, radii_numbers[j].first * 2);
+                }
+            }
+        }
+
+        for (const auto &pos: position_map) {
+            const auto i = pos.first;
+            const auto radius = pos.second;
+            // disable adaptive radius this time as we used it the previous time if it was enabled
+            radii_numbers[i] = _candidate_search_combined_measurement(
+                    candidate_edge_sets[i], round, track, i, radius, radii_numbers[i].second * 2, buffer_upper_radius,
+                    buffer_lower_radius, false, with_reverse, with_adjacent);
+        }
+
+        _finalize_candidates_combined(
+                candidates, round, track, radii_numbers, candidate_edge_sets, candidate_adoption_siblings,
                 candidate_adoption_nearby, candidate_adoption_reverse);
     }
 
@@ -531,55 +658,6 @@ namespace map_matching_2::matching {
     }
 
     template<typename Network, typename Track>
-    std::size_t matcher<Network, Track>::_candidate_search_nearest_measurement(
-            std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
-            const std::size_t round, const Track &track, const std::size_t index, const std::size_t number,
-            const bool with_reverse, const bool with_adjacent) const {
-        assert(index < track.measurements.size());
-        const measurement_type &measurement = track.measurements[index];
-
-        // query rtree
-        auto edge_result = network.query_segments_unique(
-                boost::geometry::index::nearest(measurement.point, number));
-
-        if (with_adjacent) {
-            for (const auto &edge_descriptor: edge_result) {
-                const auto &edge = network.graph[edge_descriptor];
-                const auto edge_distance = geometry::distance(measurement.point, edge.line);
-
-                const auto source = boost::source(edge_descriptor, network.graph);
-                const auto target = boost::target(edge_descriptor, network.graph);
-
-                for (const auto vertex: std::array{source, target}) {
-                    for (const auto out_edge: boost::make_iterator_range(boost::out_edges(vertex, network.graph))) {
-                        const auto &adj_edge = network.graph[out_edge];
-                        const auto adj_distance = geometry::distance(measurement.point, adj_edge.line);
-                        if (adj_distance <= edge_distance) {
-                            edge_result.emplace(out_edge);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (with_reverse) {
-            for (const auto edge_descriptor: edge_result) {
-                const auto source = boost::source(edge_descriptor, network.graph);
-                const auto target = boost::target(edge_descriptor, network.graph);
-                for (const auto out_edge: boost::make_iterator_range(boost::out_edges(target, network.graph))) {
-                    if (boost::target(out_edge, network.graph) == source) {
-                        edge_result.emplace(out_edge);
-                    }
-                }
-            }
-        }
-
-        _process_candidate_query(candidate_edge_set, round, track, index, edge_result);
-
-        return number;
-    }
-
-    template<typename Network, typename Track>
     double matcher<Network, Track>::_candidate_search_buffer_measurement(
             std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
             const std::size_t round, const Track &track, const std::size_t index, const std::size_t buffer_points,
@@ -628,6 +706,150 @@ namespace map_matching_2::matching {
         _process_candidate_query(candidate_edge_set, round, track, index, edge_result);
 
         return current_buffer_radius;
+    }
+
+    template<typename Network, typename Track>
+    std::size_t matcher<Network, Track>::_candidate_search_nearest_measurement(
+            std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
+            const std::size_t round, const Track &track, const std::size_t index, const std::size_t number,
+            const bool with_reverse, const bool with_adjacent) const {
+        assert(index < track.measurements.size());
+        const measurement_type &measurement = track.measurements[index];
+
+        // query rtree
+        std::set<edge_descriptor> edge_result = network.query_segments_unique(
+                boost::geometry::index::nearest(measurement.point, number));
+
+        if (with_adjacent) {
+            for (const auto &edge_descriptor: edge_result) {
+                const auto &edge = network.graph[edge_descriptor];
+                const auto edge_distance = geometry::distance(measurement.point, edge.line);
+
+                const auto source = boost::source(edge_descriptor, network.graph);
+                const auto target = boost::target(edge_descriptor, network.graph);
+
+                for (const auto vertex: std::array{source, target}) {
+                    for (const auto out_edge: boost::make_iterator_range(boost::out_edges(vertex, network.graph))) {
+                        const auto &adj_edge = network.graph[out_edge];
+                        const auto adj_distance = geometry::distance(measurement.point, adj_edge.line);
+                        if (adj_distance <= edge_distance) {
+                            edge_result.emplace(out_edge);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (with_reverse) {
+            for (const auto edge_descriptor: edge_result) {
+                const auto source = boost::source(edge_descriptor, network.graph);
+                const auto target = boost::target(edge_descriptor, network.graph);
+                for (const auto out_edge: boost::make_iterator_range(boost::out_edges(target, network.graph))) {
+                    if (boost::target(out_edge, network.graph) == source) {
+                        edge_result.emplace(out_edge);
+                    }
+                }
+            }
+        }
+
+        _process_candidate_query(candidate_edge_set, round, track, index, edge_result);
+
+        return number;
+    }
+
+    template<typename Network, typename Track>
+    std::pair<double, std::size_t> matcher<Network, Track>::_candidate_search_combined_measurement(
+            std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
+            const std::size_t round, const Track &track, const std::size_t index, const double buffer_radius,
+            const std::size_t number, const double buffer_upper_radius, const double buffer_lower_radius,
+            bool adaptive_radius, const bool with_reverse, const bool with_adjacent) const {
+        assert(index < track.measurements.size());
+        const auto &measurement = track.measurements[index];
+
+        // query rtree
+        std::set<edge_descriptor> edge_result = network.query_segments_unique(
+                boost::geometry::index::nearest(measurement.point, number));
+
+        std::vector<typename decltype(edge_result)::const_iterator> removals;
+        removals.reserve(edge_result.size());
+
+        bool found = false;
+        double current_buffer_radius = buffer_radius;
+        while (not found) {
+            if (adaptive_radius) {
+                if (index > 0) {
+                    current_buffer_radius =
+                            std::min(current_buffer_radius, (double) track.rich_segments[index - 1].length);
+                }
+                if (index < track.measurements.size() - 1) {
+                    current_buffer_radius =
+                            std::min(current_buffer_radius, (double) track.rich_segments[index].length);
+                }
+
+                if (current_buffer_radius < buffer_lower_radius) {
+                    // needs to be at least minimum radius
+                    current_buffer_radius = buffer_lower_radius;
+                }
+            }
+
+            current_buffer_radius = std::min(current_buffer_radius, buffer_upper_radius);
+
+            for (auto it = edge_result.cbegin(); it != edge_result.cend(); it++) {
+                const auto &edge = network.graph[*it];
+                const auto edge_distance = geometry::distance(measurement.point, edge.line);
+
+                if (edge_distance > current_buffer_radius) {
+                    removals.emplace_back(it);
+                }
+            }
+
+            if (removals.size() >= edge_result.size() and current_buffer_radius != buffer_upper_radius) {
+                current_buffer_radius *= 2;
+                adaptive_radius = false;
+                removals.clear();
+            } else {
+                for (const auto remove: removals) {
+                    edge_result.erase(remove);
+                }
+                found = true;
+            }
+        }
+
+        if (with_adjacent) {
+            for (const auto &edge_descriptor: edge_result) {
+                const auto &edge = network.graph[edge_descriptor];
+                const auto edge_distance = geometry::distance(measurement.point, edge.line);
+
+                const auto source = boost::source(edge_descriptor, network.graph);
+                const auto target = boost::target(edge_descriptor, network.graph);
+
+                for (const auto vertex: std::array{source, target}) {
+                    for (const auto out_edge: boost::make_iterator_range(boost::out_edges(vertex, network.graph))) {
+                        const auto &adj_edge = network.graph[out_edge];
+                        const auto adj_distance = geometry::distance(measurement.point, adj_edge.line);
+                        if (adj_distance <= edge_distance) {
+                            edge_result.emplace(out_edge);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (with_reverse) {
+            for (const auto edge_descriptor: edge_result) {
+                const auto source = boost::source(edge_descriptor, network.graph);
+                const auto target = boost::target(edge_descriptor, network.graph);
+                for (const auto out_edge: boost::make_iterator_range(boost::out_edges(target, network.graph))) {
+                    if (boost::target(out_edge, network.graph) == source) {
+                        edge_result.emplace(out_edge);
+                    }
+                }
+            }
+        }
+
+        _process_candidate_query(candidate_edge_set, round, track, index, edge_result);
+
+        return std::pair{current_buffer_radius, number};
     }
 
     template<typename Network, typename Track>
@@ -913,23 +1135,6 @@ namespace map_matching_2::matching {
     }
 
     template<typename Network, typename Track>
-    void matcher<Network, Track>::_finalize_candidates_nearest(
-            std::vector<candidate_type> &candidates, const std::size_t round, const Track &track,
-            const std::vector<std::size_t> &numbers,
-            std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> &candidate_edge_sets,
-            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
-            const bool candidate_adoption_reverse) const {
-        _finalize_candidates(
-                candidates, round, track, candidate_edge_sets, candidate_adoption_siblings, candidate_adoption_nearby,
-                candidate_adoption_reverse);
-        assert(candidates.size() == numbers.size());
-        for (std::size_t i = 0; i < candidates.size(); ++i) {
-            auto &candidate = candidates[i];
-            candidate.number = numbers[i];
-        }
-    }
-
-    template<typename Network, typename Track>
     void matcher<Network, Track>::_finalize_candidates_buffer(
             std::vector<candidate_type> &candidates, const std::size_t round, const Track &track,
             const std::vector<double> &radii,
@@ -941,8 +1146,41 @@ namespace map_matching_2::matching {
                 candidate_adoption_reverse);
         assert(candidates.size() == radii.size());
         for (std::size_t i = 0; i < candidates.size(); ++i) {
-            auto &candidate = candidates[i];
             candidates[i].radius = radii[i];
+        }
+    }
+
+    template<typename Network, typename Track>
+    void matcher<Network, Track>::_finalize_candidates_nearest(
+            std::vector<candidate_type> &candidates, const std::size_t round, const Track &track,
+            const std::vector<std::size_t> &numbers,
+            std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> &candidate_edge_sets,
+            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
+            const bool candidate_adoption_reverse) const {
+        _finalize_candidates(
+                candidates, round, track, candidate_edge_sets, candidate_adoption_siblings, candidate_adoption_nearby,
+                candidate_adoption_reverse);
+        assert(candidates.size() == numbers.size());
+        for (std::size_t i = 0; i < candidates.size(); ++i) {
+            candidates[i].number = numbers[i];
+        }
+    }
+
+    template<typename Network, typename Track>
+    void matcher<Network, Track>::_finalize_candidates_combined(
+            std::vector<candidate_type> &candidates, const std::size_t round, const Track &track,
+            const std::vector<std::pair<double, std::size_t>> &radii_numbers,
+            std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> &candidate_edge_sets,
+            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
+            const bool candidate_adoption_reverse) const {
+        _finalize_candidates(
+                candidates, round, track, candidate_edge_sets, candidate_adoption_siblings, candidate_adoption_nearby,
+                candidate_adoption_reverse);
+        assert(candidates.size() == radii_numbers.size());
+        for (std::size_t i = 0; i < candidates.size(); ++i) {
+            const auto &radius_number = radii_numbers[i];
+            candidates[i].radius = radius_number.first;
+            candidates[i].number = radius_number.second;
         }
     }
 

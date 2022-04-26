@@ -42,18 +42,13 @@ namespace map_matching_2::environment {
                                 &_matcher.network);
         }
 
-        if (_match_settings.k_nearest_candidate_search) {
-            _candidates = _matcher.candidate_search_nearest(
-                    _track, _match_settings.k_nearest, _match_settings.k_nearest_reverse,
-                    _match_settings.k_nearest_adjacent, _match_settings.candidate_adoption_siblings,
-                    _match_settings.candidate_adoption_nearby, _match_settings.candidate_adoption_reverse);
-        } else {
-            _candidates = _matcher.candidate_search_buffer(
-                    _track, _match_settings.buffer_points, _match_settings.buffer_radius,
-                    _match_settings.buffer_upper_radius, _match_settings.buffer_lower_radius,
-                    _match_settings.adaptive_radius, _match_settings.candidate_adoption_siblings,
-                    _match_settings.candidate_adoption_nearby, _match_settings.candidate_adoption_reverse);
-        }
+        _candidates = _matcher.candidate_search(
+                _track, _match_settings.buffer_points, _match_settings.buffer_radius, _match_settings.k_nearest,
+                _match_settings.buffer_candidate_search, _match_settings.k_nearest_candidate_search,
+                _match_settings.buffer_upper_radius, _match_settings.buffer_lower_radius,
+                _match_settings.adaptive_radius, _match_settings.k_nearest_reverse,
+                _match_settings.k_nearest_adjacent, _match_settings.candidate_adoption_siblings,
+                _match_settings.candidate_adoption_nearby, _match_settings.candidate_adoption_reverse);
 
         // observations
         decltype(_observations) observations;

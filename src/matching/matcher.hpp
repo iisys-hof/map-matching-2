@@ -78,16 +78,36 @@ namespace map_matching_2::matching {
 
         explicit matcher(const Network &network, std::uint32_t threads = boost::thread::hardware_concurrency());
 
+        [[nodiscard]] std::vector<candidate_type> candidate_search_buffer(
+                const Track &track, std::size_t buffer_points,
+                double buffer_radius, double buffer_upper_radius = 10000.0, double buffer_lower_radius = 200.0,
+                bool adaptive_radius = true, bool candidate_adoption_siblings = false,
+                bool candidate_adoption_nearby = false, bool candidate_adoption_reverse = false);
+
         [[nodiscard]] std::vector<candidate_type> candidate_search_nearest(
                 const Track &track, std::size_t number, bool with_reverse = false, bool with_adjacent = false,
                 bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
                 bool candidate_adoption_reverse = false);
 
-        [[nodiscard]] std::vector<candidate_type> candidate_search_buffer(
-                const Track &track, std::size_t buffer_points,
-                double buffer_radius, double buffer_upper_radius = 10000.0, double buffer_lower_radius = 50.0,
-                bool adaptive_radius = true, bool candidate_adoption_siblings = false,
+        [[nodiscard]] std::vector<candidate_type> candidate_search_combined(
+                const Track &track, double buffer_radius, std::size_t number, double buffer_upper_radius = 10000.0,
+                double buffer_lower_radius = 200.0, bool adaptive_radius = true, bool with_reverse = false,
+                bool with_adjacent = false, bool candidate_adoption_siblings = false,
                 bool candidate_adoption_nearby = false, bool candidate_adoption_reverse = false);
+
+        [[nodiscard]] std::vector<candidate_type> candidate_search(
+                const Track &track, std::size_t buffer_points, double buffer_radius, std::size_t number,
+                bool buffer_candidate_search = true, bool nearest_candidate_search = false,
+                double buffer_upper_radius = 10000.0, double buffer_lower_radius = 200.0, bool adaptive_radius = true,
+                bool with_reverse = false, bool with_adjacent = false, bool candidate_adoption_siblings = false,
+                bool candidate_adoption_nearby = false, bool candidate_adoption_reverse = false);
+
+        void resize_candidates_buffer(
+                const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
+                std::size_t round, std::size_t buffer_points, double buffer_upper_radius = 10000.0,
+                double buffer_lower_radius = 200.0, bool adaptive_radius = true, bool adaptive_resize = true,
+                bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
+                bool candidate_adoption_reverse = false);
 
         void resize_candidates_nearest(
                 const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
@@ -95,12 +115,12 @@ namespace map_matching_2::matching {
                 bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
                 bool candidate_adoption_reverse = false);
 
-        void resize_candidates_buffer(
+        void resize_candidates_combined(
                 const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
-                std::size_t round, std::size_t buffer_points, double buffer_upper_radius = 10000.0,
-                double buffer_lower_radius = 50.0, bool adaptive_radius = true, bool adaptive_resize = true,
-                bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
-                bool candidate_adoption_reverse = false);
+                std::size_t round, double buffer_upper_radius = 10000.0, double buffer_lower_radius = 200.0,
+                bool adaptive_radius = true, bool adaptive_resize = true, bool with_reverse = false,
+                bool with_adjacent = false, bool candidate_adoption_siblings = false,
+                bool candidate_adoption_nearby = false, bool candidate_adoption_reverse = false);
 
         [[nodiscard]] std::vector<std::list<vertex_descriptor>> shortest_paths(
                 const std::vector<candidate_type> &candidates,
@@ -268,16 +288,22 @@ namespace map_matching_2::matching {
         [[nodiscard]] boost::geometry::model::multi_polygon<boost::geometry::model::polygon<point_type>>
         _create_buffer(const point_type &point, double buffer_radius, std::size_t buffer_points = 0) const;
 
+        [[nodiscard]]  double _candidate_search_buffer_measurement(
+                std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
+                std::size_t round, const Track &track, std::size_t index, std::size_t buffer_points,
+                double buffer_radius, double buffer_upper_radius = 10000.0, double buffer_lower_radius = 200.0,
+                bool adaptive_radius = true) const;
+
         [[nodiscard]] std::size_t _candidate_search_nearest_measurement(
                 std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
                 std::size_t round, const Track &track, std::size_t index, std::size_t number,
                 bool with_reverse = false, bool with_adjacent = false) const;
 
-        [[nodiscard]]  double _candidate_search_buffer_measurement(
+        [[nodiscard]]  std::pair<double, std::size_t> _candidate_search_combined_measurement(
                 std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
-                std::size_t round, const Track &track, std::size_t index, std::size_t buffer_points,
-                double buffer_radius, double buffer_upper_radius = 10000.0, double buffer_lower_radius = 50.0,
-                bool adaptive_radius = true) const;
+                std::size_t round, const Track &track, std::size_t index, double buffer_radius, std::size_t number,
+                double buffer_upper_radius = 10000.0, double buffer_lower_radius = 200.0, bool adaptive_radius = true,
+                bool with_reverse = false, bool with_adjacent = false) const;
 
         void _process_candidate_query(
                 std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
@@ -289,6 +315,13 @@ namespace map_matching_2::matching {
                 bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
                 bool candidate_adoption_reverse = false) const;
 
+        void _finalize_candidates_buffer(
+                std::vector<candidate_type> &candidates, std::size_t round, const Track &track,
+                const std::vector<double> &radii,
+                std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> &candidate_edge_sets,
+                bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
+                bool candidate_adoption_reverse = false) const;
+
         void _finalize_candidates_nearest(
                 std::vector<candidate_type> &candidates, std::size_t round, const Track &track,
                 const std::vector<std::size_t> &numbers,
@@ -296,9 +329,9 @@ namespace map_matching_2::matching {
                 bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
                 bool candidate_adoption_reverse = false) const;
 
-        void _finalize_candidates_buffer(
+        void _finalize_candidates_combined(
                 std::vector<candidate_type> &candidates, std::size_t round, const Track &track,
-                const std::vector<double> &radii,
+                const std::vector<std::pair<double, std::size_t>> &radii_numbers,
                 std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> &candidate_edge_sets,
                 bool candidate_adoption_siblings = false, bool candidate_adoption_nearby = false,
                 bool candidate_adoption_reverse = false) const;

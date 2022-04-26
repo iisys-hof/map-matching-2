@@ -68,8 +68,8 @@ Track Options:
                                         options for processing possibilities; 
                                         can be manually overridden to supported
                                         file types:
-                                        .csv
-                                        .gpx
+                                        ".csv"
+                                        ".gpx"
   --tracks-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
                                         tracks spatial reference system (srs) 
                                         as PROJ string, default is WGS84
@@ -182,8 +182,8 @@ Compare Options:
                                         options for processing possibilities; 
                                         can be manually overridden to supported
                                         file types:
-                                        .csv
-                                        .gpx
+                                        ".csv"
+                                        ".gpx"
   --compare-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
                                         compare spatial reference system (srs) 
                                         as PROJ string, default is WGS84
@@ -271,8 +271,9 @@ Performance Options:
                                         multiple tracks simultaneously
 
 Track Preparation Options:
-  --filter-duplicates arg (=on)         filter duplicate (equal) points in 
-                                        tracks before matching
+  --filter-duplicates arg (=on)         filter duplicate (adjacent spatially 
+                                        equal) points in tracks before 
+                                        matching, is recommended
   --filter-defects arg (=off)           filter defects in tracks before 
                                         matching, currently removes zig-zag 
                                         curves manually, not recommended, 
@@ -328,61 +329,68 @@ Track Preparation Options:
                                         highest calculation speed impact
   --candidate-search arg (=circle)      candidate search algorithm to use, 
                                         possible options:
-                                        circle
+                                        "circle"
                                         searches for all edges around a point 
                                         intersecting a circle with at least 
                                         given radius
-                                        nearest
+                                        "nearest"
                                         searches the k-nearest edges around a 
                                         point
-                                        next
+                                        "combined"
+                                        searches with a combination of 
+                                        k-nearest and circle, so that only the 
+                                        k-nearest points within the circle 
+                                        radius are retained
+                                        "next"
                                         searches only the next nearest edge 
                                         (within the nearest and adjacent as 
-                                        well as reversed edges)
+                                        well as reversed edges), very fast but 
+                                        often inaccurate except for high 
+                                        precision tracks
   --radius arg (=200.0)                 radius in meters for candidate search 
-                                        when circle algorithm is selected, is 
-                                        automatically doubled each time when no
-                                        candidates within given radius are 
-                                        found, radius is starting radius if 
-                                        adaptive-radius is enabled (which is by
-                                        default)
+                                        when circle or combined algorithm is 
+                                        selected, is automatically doubled each
+                                        time when no candidates within given 
+                                        radius are found, radius is starting 
+                                        radius if adaptive-radius is enabled 
+                                        (which is by default)
   --radius-upper-limit arg (=10000.0)   radius upper limit in meters for 
-                                        candidate search when circle algorithm 
-                                        is selected, eventually stops 
-                                        automatically doubling of radius when 
-                                        no candidates are found
+                                        candidate search when adaptive-radius 
+                                        is used, eventually stops automatically
+                                        doubling of radius when no candidates 
+                                        are found
   --radius-lower-limit arg (=200.0)     radius lower limit in meters for 
                                         candidate search when adaptive-radius 
                                         is used, prevents too small search 
                                         radii in areas with dense track 
                                         measurements
   --adaptive-radius arg (=on)           adaptive-radius is only used when 
-                                        circle algorithm is selected, the 
-                                        radius is then reduced to the minimum 
-                                        distance to the next and previous 
-                                        candidate, the radius-lower-limit is 
-                                        never undershot, when no candidate is 
-                                        found, the radius is doubled until 
-                                        radius-upper-limit, this reduces the 
-                                        amount of candidates in dense road 
-                                        network areas, it works best with 
-                                        candidate-adoption enabled
+                                        circle or combined algorithm is 
+                                        selected, the radius is then reduced to
+                                        the minimum distance to the next and 
+                                        previous candidate, the 
+                                        radius-lower-limit is never undershot, 
+                                        when no candidate is found, the radius 
+                                        is doubled until radius-upper-limit, 
+                                        this reduces the amount of candidates 
+                                        in dense road network areas, it works 
+                                        best with candidate-adoption enabled
   --k-nearest arg (=16)                 k-nearest edges to search for in 
-                                        candidate search when nearest algorithm
-                                        is selected
+                                        candidate search when nearest or 
+                                        combined algorithm is selected
 
 Model Options:
   --model arg (=value-iteration)        model to use, possible options:
-                                        policy-iteration
+                                        "policy-iteration"
                                         uses policy iteration algorithm with 
                                         markov decision process
-                                        value-iteration
+                                        "value-iteration"
                                         uses value iteration algorithm with 
                                         markov decision process
-                                        q-learning
+                                        "q-learning"
                                         uses Q-learning algorithm with markov 
                                         decision process
-                                        viterbi
+                                        "viterbi"
                                         uses Viterbi algorithm with hidden 
                                         markov model
   --skip-errors arg (=on)               enable skipping high error situations 

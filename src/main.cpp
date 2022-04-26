@@ -669,8 +669,8 @@ int main(int argc, char *argv[]) {
                  "falls back to .csv automatically if no other supported extension is detected; "
                  "see remaining options for processing possibilities; "
                  "can be manually overridden to supported file types:\n"
-                 ".csv\n"
-                 ".gpx")
+                 "\".csv\"\n"
+                 "\".gpx\"")
                 ("tracks-srs",
                  po::value<std::string>(&tracks_srs)->default_value("+proj=longlat +datum=WGS84 +no_defs"),
                  "tracks spatial reference system (srs) as PROJ string, default is WGS84")
@@ -752,8 +752,8 @@ int main(int argc, char *argv[]) {
                  "falls back to .csv automatically if no other supported extension is detected; "
                  "see remaining options for processing possibilities; "
                  "can be manually overridden to supported file types:\n"
-                 ".csv\n"
-                 ".gpx")
+                 "\".csv\"\n"
+                 "\".gpx\"")
                 ("compare-srs",
                  po::value<std::string>(&compare_srs)->default_value("+proj=longlat +datum=WGS84 +no_defs"),
                  "compare spatial reference system (srs) as PROJ string, default is WGS84")
@@ -837,7 +837,7 @@ int main(int argc, char *argv[]) {
 
         options_preparation.add_options()
                 ("filter-duplicates", po::value<bool>(&filter_duplicates)->default_value(true, "on"),
-                 "filter duplicate (equal) points in tracks before matching")
+                 "filter duplicate (adjacent spatially equal) points in tracks before matching, is recommended")
                 ("filter-defects", po::value<bool>(&filter_defects)->default_value(false, "off"),
                  "filter defects in tracks before matching, currently removes zig-zag curves manually, "
                  "not recommended, better use simplify-track which is on by default")
@@ -874,40 +874,43 @@ int main(int argc, char *argv[]) {
                  "has the highest calculation speed impact")
                 ("candidate-search", po::value<std::string>(&candidate_search)->default_value("circle"),
                  "candidate search algorithm to use, possible options:\n"
-                 "circle\n"
+                 "\"circle\"\n"
                  "searches for all edges around a point intersecting a circle with at least given radius\n"
-                 "nearest\n"
+                 "\"nearest\"\n"
                  "searches the k-nearest edges around a point\n"
-                 "next\n"
-                 "searches only the next nearest edge (within the nearest and adjacent as well as reversed edges)")
+                 "\"combined\"\n"
+                 "searches with a combination of k-nearest and circle, so that only the k-nearest points within the circle radius are retained\n"
+                 "\"next\"\n"
+                 "searches only the next nearest edge (within the nearest and adjacent as well as reversed edges), "
+                 "very fast but often inaccurate except for high precision tracks")
                 ("radius", po::value<double>(&radius)->default_value(200.0, "200.0"),
-                 "radius in meters for candidate search when circle algorithm is selected, "
+                 "radius in meters for candidate search when circle or combined algorithm is selected, "
                  "is automatically doubled each time when no candidates within given radius are found, "
                  "radius is starting radius if adaptive-radius is enabled (which is by default)")
                 ("radius-upper-limit", po::value<double>(&radius_upper_limit)->default_value(10000.0, "10000.0"),
-                 "radius upper limit in meters for candidate search when circle algorithm is selected, "
+                 "radius upper limit in meters for candidate search when adaptive-radius is used, "
                  "eventually stops automatically doubling of radius when no candidates are found")
                 ("radius-lower-limit", po::value<double>(&radius_lower_limit)->default_value(200.0, "200.0"),
                  "radius lower limit in meters for candidate search when adaptive-radius is used, "
                  "prevents too small search radii in areas with dense track measurements")
                 ("adaptive-radius", po::value<bool>(&adaptive_radius)->default_value(true, "on"),
-                 "adaptive-radius is only used when circle algorithm is selected, "
+                 "adaptive-radius is only used when circle or combined algorithm is selected, "
                  "the radius is then reduced to the minimum distance to the next and previous candidate, "
                  "the radius-lower-limit is never undershot, when no candidate is found, the radius is doubled until radius-upper-limit, "
                  "this reduces the amount of candidates in dense road network areas, it works best with candidate-adoption enabled")
                 ("k-nearest", po::value<std::size_t>(&k_nearest)->default_value(16),
-                 "k-nearest edges to search for in candidate search when nearest algorithm is selected");
+                 "k-nearest edges to search for in candidate search when nearest or combined algorithm is selected");
 
         options_model.add_options()
                 ("model", po::value<std::string>(&model)->default_value("value-iteration"),
                  "model to use, possible options:\n"
-                 "policy-iteration\n"
+                 "\"policy-iteration\"\n"
                  "uses policy iteration algorithm with markov decision process\n"
-                 "value-iteration\n"
+                 "\"value-iteration\"\n"
                  "uses value iteration algorithm with markov decision process\n"
-                 "q-learning\n"
+                 "\"q-learning\"\n"
                  "uses Q-learning algorithm with markov decision process\n"
-                 "viterbi\n"
+                 "\"viterbi\"\n"
                  "uses Viterbi algorithm with hidden markov model")
                 ("skip-errors", po::value<bool>(&skip_errors)->default_value(true, "on"),
                  "enable skipping high error situations in markov decision processes, "
@@ -1027,7 +1030,8 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument{"Please specify a tracks file or enable readline mode."};
         }
 
-        if (not(candidate_search == "circle" or candidate_search == "nearest" or candidate_search == "next")) {
+        if (not(candidate_search == "circle" or candidate_search == "nearest" or candidate_search == "combined" or
+                candidate_search == "next")) {
             throw std::invalid_argument{"Candidate search algorithm unknown."};
         }
 
@@ -1093,13 +1097,12 @@ int main(int argc, char *argv[]) {
         }
 
         if (not compare_only) {
-            if (radius < 2.0) {
-                throw std::invalid_argument{
-                        "radius must at least be 2.0 because automatic doubling does not work else."};
+            if (radius > radius_upper_limit) {
+                radius_upper_limit = radius;
             }
 
-            if (radius > radius_upper_limit) {
-                throw std::invalid_argument{"radius cannot be larger than radius-limit."};
+            if (radius < radius_lower_limit) {
+                radius_lower_limit = radius;
             }
 
             if (state_size < 2 or state_size > 3) {
@@ -1958,16 +1961,23 @@ int main(int argc, char *argv[]) {
         match_settings.hmm_direction_factor = hmm_direction_factor;
         match_settings.hmm_turn_factor = hmm_turn_factor;
 
+        match_settings.adaptive_radius = adaptive_radius;
+        match_settings.buffer_radius = radius;
+        match_settings.buffer_upper_radius = radius_upper_limit;
+        match_settings.buffer_lower_radius = radius_lower_limit;
+        match_settings.k_nearest = k_nearest;
+
         if (candidate_search == "circle") {
+            match_settings.buffer_candidate_search = true;
             match_settings.k_nearest_candidate_search = false;
-            match_settings.adaptive_radius = adaptive_radius;
-            match_settings.buffer_radius = radius;
-            match_settings.buffer_upper_radius = radius_upper_limit;
-            match_settings.buffer_lower_radius = radius_lower_limit;
         } else if (candidate_search == "nearest") {
+            match_settings.buffer_candidate_search = false;
             match_settings.k_nearest_candidate_search = true;
-            match_settings.k_nearest = k_nearest;
+        } else if (candidate_search == "combined") {
+            match_settings.buffer_candidate_search = true;
+            match_settings.k_nearest_candidate_search = true;
         } else if (candidate_search == "next") {
+            match_settings.buffer_candidate_search = false;
             match_settings.k_nearest_candidate_search = true;
             match_settings.k_nearest = 1;
             match_settings.k_nearest_adjacent = true;
