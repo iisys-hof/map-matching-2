@@ -91,8 +91,8 @@ set(RPMALLOC_INCLUDE_DIRS "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc
 
 # boost
 FetchContent_Declare(boost
-        URL https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz
-        URL_HASH SHA256=94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7)
+        URL https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz
+        URL_HASH SHA256=273f1be93238a068aba4f9735a4a2b003019af067b9c183ed227780b8f36062c)
 
 FetchContent_GetProperties(boost)
 if (NOT boost_POPULATED)
@@ -142,14 +142,6 @@ endif ()
 
 find_package(Boost QUIET REQUIRED CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
-# geometry develop for closest points feature
-FetchContent_Declare(geometry_develop
-        GIT_REPOSITORY https://github.com/boostorg/geometry.git
-        GIT_TAG develop)
-
-FetchContent_MakeAvailable(geometry_develop)
-set(GEOMETRY_DEVELOP_INCLUDE_DIRS "${geometry_develop_SOURCE_DIR}/include" CACHE PATH "boost geometry develop" FORCE)
-
 # protozero
 FetchContent_Declare(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git
@@ -167,7 +159,7 @@ add_subdirectory("${protozero_SOURCE_DIR}" "${protozero_BINARY_DIR}" EXCLUDE_FRO
 # libosmium
 FetchContent_Declare(libosmium
         GIT_REPOSITORY https://github.com/osmcode/libosmium.git
-        GIT_TAG v2.17.2)
+        GIT_TAG v2.18.0)
 
 FetchContent_GetProperties(libosmium)
 if (NOT libosmium_POPULATED)
