@@ -136,12 +136,13 @@ namespace map_matching_2::matching {
         [[nodiscard]] route_type candidate_route(
                 const std::vector<candidate_type> &candidates,
                 std::size_t from, std::size_t source, std::size_t to, std::size_t target,
-                double max_distance_factor = 10.0);
+                bool within_edge_turns = false, double max_distance_factor = 10.0);
 
         [[nodiscard]] route_type candidates_route(
                 const std::vector<candidate_type> &candidates,
                 const std::vector<std::pair<std::size_t, std::size_t>> &policy,
-                bool export_edges = false, bool join_merges = true);
+                bool within_edge_turns = false, bool export_edges = false, bool join_merges = true,
+                double max_distance_factor = 10.0);
 
         [[nodiscard]] std::vector<candidate_type> candidates_policy(
                 const std::vector<candidate_type> &candidates,

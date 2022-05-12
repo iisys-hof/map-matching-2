@@ -298,6 +298,25 @@ Track Preparation Options:
                                         far from streets, the distance can be 
                                         raised up to half the distance of the 
                                         nearest road edge for merging
+  --within-edge-turns arg (=off)        enables turns within edges, when 
+                                        disabled, turns are only possible at 
+                                        crossroads and junctions (nodes of the 
+                                        graph), when enables, turns within 
+                                        edges (roads of the graph) become 
+                                        possible, this is done by trimming the 
+                                        path from the current position to the 
+                                        next node and back, by default this is 
+                                        disabled, because it reduces 
+                                        correctness of results with 
+                                        candidate-adoption enabled as large 
+                                        detours are needed for making the 
+                                        optimizer collapsing candidates, it is,
+                                        however, enabled by default when all 
+                                        candidate-adoption features are 
+                                        disabled, because then it raises the 
+                                        correctness of the results as no larger
+                                        detours are taken that could not be 
+                                        collapsed without candidate-adoption
   --candidate-adoption-siblings arg (=on)
                                         for each measurement, adopt candidates 
                                         from preceding and succeeding 

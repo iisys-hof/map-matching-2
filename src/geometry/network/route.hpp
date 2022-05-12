@@ -86,7 +86,11 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] bool attaches(const route &other) const;
 
-        [[nodiscard]] rich_line_type extract_return_line(const route &other) const;
+        [[nodiscard]] std::array<std::int64_t, 8> find_return_line(const route &other) const;
+
+        [[nodiscard]] rich_line_type extract_return_line(const route &other, bool from_self = true) const;
+
+        [[nodiscard]] route trim_merge(const route &other) const;
 
         [[nodiscard]] Line get_line() const;
 
@@ -94,7 +98,7 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] multi_rich_line_type get_multi_rich_line() const;
 
-        [[nodiscard]] std::vector<std::reference_wrapper<const edge <Line>>> get_edges() const;
+        [[nodiscard]] std::vector<std::reference_wrapper<const edge<Line>>> get_edges() const;
 
         [[nodiscard]] static route merge(const std::vector<std::reference_wrapper<route>> &routes,
                                          bool connect = false, bool non_connect_except = false);

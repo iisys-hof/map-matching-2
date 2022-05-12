@@ -113,7 +113,8 @@ namespace map_matching_2::environment {
                     transition_probabilities.reserve(from_candidate.edges.size());
                     for (std::size_t source = 0; source < from_candidate.edges.size(); ++source) {
                         const auto route = _matcher.candidate_route(
-                                _candidates, from, source, to, target, _match_settings.routing_max_distance_factor);
+                                _candidates, from, source, to, target, _match_settings.within_edge_turns,
+                                _match_settings.routing_max_distance_factor);
 
                         if (route.is_invalid) {
                             // invalid route, not possible

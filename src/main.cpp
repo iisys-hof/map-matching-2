@@ -593,7 +593,7 @@ int main(int argc, char *argv[]) {
     bool read_line, console, wkt, no_header, no_id, no_parse_time, export_edges, join_merges, compare_only, no_compare,
             compare_edges_list_mode, compare_wkt, compare_no_header, compare_no_id, filter_duplicates,
             filter_defects, simplify_track, median_merge, adaptive_median_merge, adaptive_radius, skip_errors,
-            candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
+            within_edge_turns, candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
             simplify_network, simplify_network_complete, remove_unconnected, fixed_time, single_threading, quiet,
             verbose;
     std::string id_aggregator, compare_id_aggregator, x, y, compare_x, compare_y,
@@ -855,6 +855,17 @@ int main(int argc, char *argv[]) {
                 ("adaptive-median-merge", po::value<bool>(&adaptive_median_merge)->default_value(true, "on"),
                  "adapt median-merge-distance-tolerance automatically for point clouds that are far from streets, "
                  "the distance can be raised up to half the distance of the nearest road edge for merging")
+                ("within-edge-turns",
+                 po::value<bool>(&within_edge_turns)->default_value(false, "off"),
+                 "enables turns within edges, "
+                 "when disabled, turns are only possible at crossroads and junctions (nodes of the graph), "
+                 "when enables, turns within edges (roads of the graph) become possible, "
+                 "this is done by trimming the path from the current position to the next node and back, "
+                 "by default this is disabled, because it reduces correctness of results with candidate-adoption enabled "
+                 "as large detours are needed for making the optimizer collapsing candidates, "
+                 "it is, however, enabled by default when all candidate-adoption features are disabled, "
+                 "because then it raises the correctness of the results as no larger detours are taken "
+                 "that could not be collapsed without candidate-adoption")
                 ("candidate-adoption-siblings",
                  po::value<bool>(&candidate_adoption_siblings)->default_value(true, "on"),
                  "for each measurement, adopt candidates from preceding and succeeding candidate, "
@@ -1035,6 +1046,11 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument{"Candidate search algorithm unknown."};
         }
 
+        if (not candidate_adoption_nearby and not candidate_adoption_siblings and not candidate_adoption_reverse and
+            vm["within-edge-turns"].defaulted()) {
+            within_edge_turns = true;
+        }
+
         if (not quiet) {
             if (compare_only) {
                 if (not no_compare) {
@@ -1051,6 +1067,10 @@ int main(int argc, char *argv[]) {
 
                 if (filter_defects) {
                     std::cout << "Enabled manual defects filtering." << std::endl;
+                }
+
+                if (within_edge_turns) {
+                    std::cout << "Enabled within-edge-turn mode." << std::endl;
                 }
 
                 if (not candidate_adoption_siblings) {
@@ -1943,6 +1963,7 @@ int main(int argc, char *argv[]) {
         match_settings.median_merge = median_merge;
         match_settings.median_merge_distance_tolerance = median_merge_distance_tolerance;
         match_settings.adaptive_median_merge = adaptive_median_merge;
+        match_settings.within_edge_turns = within_edge_turns;
         match_settings.candidate_adoption_siblings = candidate_adoption_siblings;
         match_settings.candidate_adoption_nearby = candidate_adoption_nearby;
         match_settings.candidate_adoption_reverse = candidate_adoption_reverse;

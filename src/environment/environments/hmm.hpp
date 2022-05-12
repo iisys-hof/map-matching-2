@@ -79,7 +79,8 @@ namespace map_matching_2::environment {
         template<typename Result>
         [[nodiscard]] Result result(const std::vector<std::pair<std::size_t, std::size_t>> &policy) const {
             return Result{_matcher.candidates_route(
-                    _candidates, policy, _match_settings.export_edges, _match_settings.join_merges)};
+                    _candidates, policy, _match_settings.within_edge_turns, _match_settings.export_edges,
+                    _match_settings.join_merges, _match_settings.routing_max_distance_factor)};
         }
 
     private:

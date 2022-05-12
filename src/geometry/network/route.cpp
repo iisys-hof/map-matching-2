@@ -308,56 +308,70 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Line>
-    typename route<Line>::rich_line_type route<Line>::extract_return_line(const route &other) const {
+    std::array<std::int64_t, 8> route<Line>::find_return_line(const route &other) const {
+        // self.begin.rich_line, self.begin.rich_line.point, self.end.rich_line, self.end.rich_line.point,
+        // other.begin.rich_line, other.begin.rich_line.point, other.end.rich_line, other.end.rich_line.point
+        std::array<std::int64_t, 8> result{-1, -1, -1, -1, -1, -1, -1, -1};
+
         if (rich_lines.empty() or other.rich_lines.empty() or not attaches(other)) {
-            return rich_line_type{};
+            return std::move(result);
         }
 
-        std::vector<rich_segment_type> new_rich_segments;
-
         std::int64_t i = rich_lines.size() - 1;
-        std::size_t j = 0;
+        std::int64_t j = 0;
         if (i >= 0 and j < other.rich_lines.size()) {
-            std::int64_t k = rich_lines[i].get().line.size() - 1;
+            // find first valid position on both lines
+            std::int64_t k = ((std::int64_t) rich_lines[i].get().line.size()) - 1;
             while (k < 0) {
                 i--;
                 if (i < 0) {
-                    return rich_line_type{};
+                    return std::move(result);
                 }
-                k = rich_lines[i].get().line.size() - 1;
+                k = ((std::int64_t) rich_lines[i].get().line.size()) - 1;
             }
-            std::size_t l = 0;
+            std::int64_t l = 0;
             while (l >= other.rich_lines[j].get().line.size()) {
                 j++;
                 if (j >= other.rich_lines.size()) {
-                    return rich_line_type{};
+                    return std::move(result);
                 }
                 l = 0;
             }
+            result[2] = i;
+            result[3] = k;
+            result[4] = j;
+            result[5] = l;
 
             const auto *point_a = &rich_lines[i].get().line[k];
             const auto *point_b = &other.rich_lines[j].get().line[l];
-            while (geometry::equals_points(*point_a, *point_b)) {
-                if (l >= 1) {
-                    new_rich_segments.emplace_back(other.rich_lines[j].get().rich_segments[l - 1]);
-                }
 
+            // traverse equal part
+            bool start_saved = false;
+            while (geometry::equals_points(*point_a, *point_b)) {
+                result[0] = i;
+                result[1] = k;
+                result[6] = j;
+                result[7] = l;
+
+                // compute new bounds
                 k--;
+                l++;
+
                 while (k < 0) {
                     i--;
                     if (i < 0) {
-                        return {std::move(new_rich_segments)};
+                        return std::move(result);
                     }
-                    k = rich_lines[i].get().line.size() - 2;
+                    k = ((std::int64_t) rich_lines[i].get().line.size()) - 1;
+                    l--;
                 }
-
-                l++;
                 while (l >= other.rich_lines[j].get().line.size()) {
                     j++;
                     if (j >= other.rich_lines.size()) {
-                        return {std::move(new_rich_segments)};
+                        return std::move(result);
                     }
-                    l = 1;
+                    l = 0;
+                    k++;
                 }
 
                 point_a = &rich_lines[i].get().line[k];
@@ -365,7 +379,198 @@ namespace map_matching_2::geometry::network {
             }
         }
 
-        return {std::move(new_rich_segments)};
+        return std::move(result);
+    }
+
+    template<typename Line>
+    typename route<Line>::rich_line_type
+    route<Line>::extract_return_line(const route &other, const bool from_self) const {
+        std::vector<rich_segment_type> new_rich_segments;
+
+        std::array<std::int64_t, 8> search = find_return_line(other);
+        if (search != std::array<std::int64_t, 8>{-1, -1, -1, -1, -1, -1, -1, -1}) {
+            if (from_self) {
+                std::int64_t i = search[0];
+                std::int64_t k = search[1];
+                while (i < search[2] or (i == search[2] and k <= search[3])) {
+                    if ((i == search[0] and k > search[1]) or (i > search[0] and k > 0)) {
+                        new_rich_segments.emplace_back(rich_lines[i].get().rich_segments[k - 1]);
+                    }
+
+                    k++;
+                    while (k >= rich_lines[i].get().line.size()) {
+                        i++;
+                        if (i >= rich_lines.size()) {
+                            return rich_line_type{std::move(new_rich_segments)};
+                        }
+                        k = 1;
+                    }
+                }
+            } else {
+                std::int64_t j = search[4];
+                std::int64_t l = search[5];
+                while (j < search[6] or (j == search[6] and l <= search[7])) {
+                    if ((j == search[4] and l > search[5]) or (j > search[4] and l > 0)) {
+                        new_rich_segments.emplace_back(other.rich_lines[j].get().rich_segments[l - 1]);
+                    }
+
+                    l++;
+                    while (l >= other.rich_lines[j].get().line.size()) {
+                        j++;
+                        if (j >= other.rich_lines.size()) {
+                            return rich_line_type{std::move(new_rich_segments)};
+                        }
+                        l = 1;
+                    }
+                }
+            }
+        }
+
+        return rich_line_type{std::move(new_rich_segments)};
+    }
+
+    template<typename Line>
+    route<Line> route<Line>::trim_merge(const route &other) const {
+        std::array<std::int64_t, 8> search = find_return_line(other);
+        if (search != std::array<std::int64_t, 8>{-1, -1, -1, -1, -1, -1, -1, -1}) {
+            // calculate new size for trim
+            std::size_t new_references_size = 1;
+            if (search[0] >= 0) {
+                new_references_size += search[0];
+            }
+            if (search[6] >= 0) {
+                new_references_size += other.rich_lines.size() - (search[6] + 1);
+            }
+
+            // prepare new storages
+            std::deque<rich_line_type> new_rich_lines;
+            std::vector<std::reference_wrapper<const rich_line_type>> new_references;
+            new_references.reserve(new_references_size);
+
+            // rich line copyer
+            const auto copy_rich_line = [&](const rich_line_type &next, auto &next_rich_it, const auto &end_rich_it) {
+                bool data_moved = false;
+                while (next_rich_it != end_rich_it) {
+                    const rich_line_type &next_rich_line = *next_rich_it;
+                    if (&next_rich_line == &next) {
+                        // reference has local data, move it
+                        const auto &_rich_line = new_rich_lines.emplace_back(next_rich_line);
+                        new_references.emplace_back(_rich_line);
+                        next_rich_it++;
+                        data_moved = true;
+                        break;
+                    }
+                    next_rich_it++;
+                }
+
+                // only reference movement
+                if (not data_moved) {
+                    new_references.emplace_back(next);
+                }
+            };
+
+            // copy complete refs from self up to beginning
+            auto next_self_rich_it = _rich_lines.begin();
+            for (std::int64_t i = 0; i < search[0]; ++i) {
+                copy_rich_line(rich_lines[i].get(), next_self_rich_it, _rich_lines.end());
+            }
+
+            // prepare middle part
+            std::size_t new_segments_size = 1;
+            if (search[1] >= 0) {
+                new_segments_size += search[1];
+            }
+            if (search[6] < other.rich_lines.size() and search[7] >= 0) {
+                new_segments_size += other.rich_lines[search[6]].get().line.size() - (search[7] + 1);
+            }
+
+            std::vector<rich_segment_type> new_rich_segments;
+            new_rich_segments.reserve(new_segments_size);
+
+            // copy remaining segments from self up to beginning
+            if (search[1] > 0) {
+                // first segment is later attached, if there are more, copy them
+                for (std::int64_t k = 1; k < search[1]; ++k) {
+                    new_rich_segments.emplace_back(rich_lines[search[0]].get().rich_segments[k - 1]);
+                }
+            }
+
+            // attach beginning from self to end of other in copy
+            {
+                std::int64_t i = search[0];
+                std::int64_t k = search[1];
+                while (i >= 0 and k <= 0) {
+                    i--;
+                    if (i >= 0) {
+                        k = ((std::int64_t) rich_lines[i].get().line.size()) - 1;
+                    }
+                }
+                const rich_segment_type *a_segment = nullptr;
+                if (i >= 0 and k >= 0) {
+                    a_segment = &rich_lines[i].get().rich_segments[k - 1];
+                }
+
+                std::int64_t j = search[6];
+                std::int64_t l = search[7];
+                while (j < other.rich_lines.size() and l + 1 >= other.rich_lines[j].get().line.size()) {
+                    j++;
+                    if (j < other.rich_lines.size()) {
+                        l = 0;
+                    }
+                }
+                const rich_segment_type *b_segment = nullptr;
+                if (j < other.rich_lines.size() and l + 1 < other.rich_lines[j].get().line.size()) {
+                    b_segment = &other.rich_lines[j].get().rich_segments[l];
+                }
+
+                if (a_segment != nullptr and b_segment != nullptr) {
+                    const auto direction =
+                            std::fabs(geometry::direction_deg(a_segment->azimuth, b_segment->azimuth)) / 180.0;
+                    if (direction > 0.99) {
+                        // reverse detected, attach to second point
+                        new_rich_segments.emplace_back(
+                                rich_segment_type{a_segment->segment.first, b_segment->segment.second});
+                    } else {
+                        if (i >= search[0]) {
+                            new_rich_segments.emplace_back(*a_segment);
+                        }
+                        if (j <= search[6]) {
+                            new_rich_segments.emplace_back(*b_segment);
+                        }
+                    }
+                } else if (a_segment != nullptr and b_segment == nullptr and i >= search[0]) {
+                    new_rich_segments.emplace_back(*a_segment);
+                } else if (a_segment == nullptr and b_segment != nullptr and j <= search[6]) {
+                    new_rich_segments.emplace_back(*b_segment);
+                }
+            }
+
+            // copy remaining segments from other up to remaining complete refs
+            if (search[7] + 1 < other.rich_lines[search[6]].get().line.size()) {
+                // first segment was earlier attached, if there are more, copy them
+                for (std::int64_t l = search[7] + 1; l + 1 < other.rich_lines[search[6]].get().line.size(); ++l) {
+                    new_rich_segments.emplace_back(other.rich_lines[search[6]].get().rich_segments[l]);
+                }
+            }
+
+            if (not new_rich_segments.empty()) {
+                const auto &_rich_line = new_rich_lines.emplace_back(rich_line_type{std::move(new_rich_segments)});
+                new_references.emplace_back(_rich_line);
+            }
+
+            // copy complete rest from other
+            auto next_other_rich_it = other._rich_lines.begin();
+            for (std::int64_t j = search[6] + 1; j < other.rich_lines.size(); ++j) {
+                copy_rich_line(other.rich_lines[j].get(), next_other_rich_it, other._rich_lines.end());
+            }
+
+            assert(new_references_size >= new_references.size());
+            assert(new_segments_size >= new_rich_segments.size());
+
+            return route{std::move(new_rich_lines), std::move(new_references)};
+        }
+
+        return route{true};
     }
 
     template<typename Line>
@@ -635,7 +840,9 @@ namespace map_matching_2::geometry::network {
         std::vector<std::string> row;
         row.reserve(2);
         row.emplace_back(wkt());
-        row.emplace_back(std::to_string(length));
+        if (has_length) {
+            row.emplace_back(std::to_string(length));
+        }
         return row;
     }
 

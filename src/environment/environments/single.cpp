@@ -221,7 +221,7 @@ namespace map_matching_2::environment {
 
                     const auto route = _matcher.candidate_route(
                             _candidates, current_position, current_action, next_position, action,
-                            _match_settings.routing_max_distance_factor);
+                            _match_settings.within_edge_turns, _match_settings.routing_max_distance_factor);
 
                     if (route.is_invalid) {
                         // no route found from current to next position, fail and skip next position
@@ -320,7 +320,7 @@ namespace map_matching_2::environment {
 
                                 const auto prev_route = _matcher.candidate_route(
                                         _candidates, prev_position, prev_action, current_position, current_action,
-                                        _match_settings.routing_max_distance_factor);
+                                        _match_settings.within_edge_turns, _match_settings.routing_max_distance_factor);
 
                                 if (not prev_route.is_invalid) {
                                     // only continue if previous route is valid, should generally be the case

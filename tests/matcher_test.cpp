@@ -75,19 +75,35 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_CLOSE_FRACTION(route_1_1.length, 6.6, 1e-3);
         BOOST_CHECK_CLOSE_FRACTION(route_1_1.directions, 90.0, 1e-2);
 
-        auto route_1_2 = matcher.candidate_route(
+        auto route_1_2_1 = matcher.candidate_route(
+                candidates_1_1,
+                0, get_candidate_position(network_matcher, candidates_1_1, 0, {22, 12}),
+                0, get_candidate_position(network_matcher, candidates_1_1, 0, {32, 22}),
+                true);
+        BOOST_CHECK_EQUAL(route_1_2_1.get_line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(route_1_2_1.length, 0.2, 1e-3);
+
+        auto route_1_2_2 = matcher.candidate_route(
                 candidates_1_1,
                 0, get_candidate_position(network_matcher, candidates_1_1, 0, {22, 12}),
                 0, get_candidate_position(network_matcher, candidates_1_1, 0, {32, 22}));
-        BOOST_CHECK_EQUAL(route_1_2.get_line().size(), 5);
-        BOOST_CHECK_CLOSE_FRACTION(route_1_2.length, 3.8, 1e-3);
+        BOOST_CHECK_EQUAL(route_1_2_2.get_line().size(), 5);
+        BOOST_CHECK_CLOSE_FRACTION(route_1_2_2.length, 3.8, 1e-3);
 
-        auto route_1_3 = matcher.candidate_route(
+        auto route_1_3_1 = matcher.candidate_route(
+                candidates_1_1,
+                0, get_candidate_position(network_matcher, candidates_1_1, 0, {22, 32}),
+                0, get_candidate_position(network_matcher, candidates_1_1, 0, {12, 22}),
+                true);
+        BOOST_CHECK_EQUAL(route_1_3_1.get_line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(route_1_3_1.length, 0.2, 1e-3);
+
+        auto route_1_3_2 = matcher.candidate_route(
                 candidates_1_1,
                 0, get_candidate_position(network_matcher, candidates_1_1, 0, {22, 32}),
                 0, get_candidate_position(network_matcher, candidates_1_1, 0, {12, 22}));
-        BOOST_CHECK_EQUAL(route_1_3.get_line().size(), 5);
-        BOOST_CHECK_CLOSE_FRACTION(route_1_3.length, 3.8, 1e-3);
+        BOOST_CHECK_EQUAL(route_1_3_2.get_line().size(), 5);
+        BOOST_CHECK_CLOSE_FRACTION(route_1_3_2.length, 3.8, 1e-3);
 
         auto route_1_4 = matcher.candidate_route(
                 candidates_1_1,
@@ -121,12 +137,20 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_EQUAL(route_2_3.get_line().size(), 2);
         BOOST_CHECK_CLOSE_FRACTION(route_2_3.length, 0.3, 1e-3);
 
-        auto route_2_4 = matcher.candidate_route(
+        auto route_2_4_1 = matcher.candidate_route(
+                candidates_2,
+                0, get_candidate_position(network_matcher, candidates_2, 0, {23, 22}),
+                1, get_candidate_position(network_matcher, candidates_2, 1, {23, 22}),
+                true);
+        BOOST_CHECK_EQUAL(route_2_4_1.get_line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(route_2_4_1.length, 0.3, 1e-3);
+
+        auto route_2_4_2 = matcher.candidate_route(
                 candidates_2,
                 0, get_candidate_position(network_matcher, candidates_2, 0, {23, 22}),
                 1, get_candidate_position(network_matcher, candidates_2, 1, {23, 22}));
-        BOOST_CHECK_EQUAL(route_2_4.get_line().size(), 4);
-        BOOST_CHECK_CLOSE_FRACTION(route_2_4.length, 1.7, 1e-3);
+        BOOST_CHECK_EQUAL(route_2_4_2.get_line().size(), 4);
+        BOOST_CHECK_CLOSE_FRACTION(route_2_4_2.length, 1.7, 1e-3);
 
         auto route_2_5 = matcher.candidate_route(
                 candidates_2,

@@ -102,7 +102,7 @@ namespace map_matching_2::io::network {
                 const auto &node_a = _network.graph[vertex_a];
                 const auto &node_b = _network.graph[vertex_b];
 
-                const auto[oneway, reverse] = detect_oneway(osm_way);
+                const auto [oneway, reverse] = detect_oneway(osm_way);
 
                 if (oneway) {
                     if (not reverse) {

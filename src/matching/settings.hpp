@@ -30,6 +30,7 @@ namespace map_matching_2::matching {
         double median_merge_distance_tolerance = 10.0;
         bool adaptive_median_merge = true;
         bool adaptive_radius = true;
+        bool within_edge_turns = false;
         bool candidate_adoption_siblings = true;
         bool candidate_adoption_nearby = true;
         bool candidate_adoption_reverse = false;

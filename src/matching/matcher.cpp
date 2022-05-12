@@ -417,7 +417,7 @@ namespace map_matching_2::matching {
     typename matcher<Network, Track>::route_type matcher<Network, Track>::candidate_route(
             const std::vector<candidate_type> &candidates,
             const std::size_t from, const std::size_t source, const std::size_t to, const std::size_t target,
-            const double max_distance_factor) {
+            const bool within_edge_turns, const double max_distance_factor) {
         const auto &candidate_from = candidates[from].edges[source];
         const auto &candidate_to = candidates[to].edges[target];
 
@@ -456,7 +456,34 @@ namespace map_matching_2::matching {
             route_type end_route{std::cref(end)};
 
             try {
-                return route_type::merge({start_route, route, end_route}, false, true);
+                if (within_edge_turns) {
+                    // trim route to allow turns within the edge
+                    route_type start_return = start_route.trim_merge(route);
+                    if (not start_return.is_invalid) {
+                        // start trim worked
+                        route_type end_return = start_return.trim_merge(end_route);
+                        if (not end_return.is_invalid) {
+                            // end trim also worked, return combination
+                            return std::move(end_return);
+                        } else {
+                            // end trim did not work, merge
+                            return route_type::merge({start_return, end_route}, false, true);
+                        }
+                    } else {
+                        // start trim did not work, try end
+                        route_type end_return = route.trim_merge(end_route);
+                        if (not end_return.is_invalid) {
+                            // end trim worked, start did not, merge
+                            return route_type::merge({start_route, end_return}, false, true);
+                        } else {
+                            // end trim also did not work, merge all
+                            return route_type::merge({start_route, route, end_route}, false, true);
+                        }
+                    }
+                } else {
+                    // only turn at graph nodes, never within edges, so regular merge
+                    return route_type::merge({start_route, route, end_route}, false, true);
+                }
             } catch (geometry::network::route_merge_exception &exception) {
                 // could not merge route, return invalid route
                 return route_type{true};
@@ -474,7 +501,8 @@ namespace map_matching_2::matching {
     typename matcher<Network, Track>::route_type matcher<Network, Track>::candidates_route(
             const std::vector<candidate_type> &candidates,
             const std::vector<std::pair<std::size_t, std::size_t>> &policy,
-            const bool export_edges, const bool join_merges) {
+            const bool within_edge_turns, const bool export_edges, const bool join_merges,
+            const double max_distance_factor) {
         std::vector<route_type> routes;
         routes.reserve(not candidates.empty() ? candidates.size() - 1 : 0);
         bool skipped = false;
@@ -496,7 +524,8 @@ namespace map_matching_2::matching {
             const auto source = from_policy_pair.second;
             const auto target = to_policy_pair.second;
 
-            route_type route = candidate_route(candidates, from, source, to, target);
+            route_type route = candidate_route(candidates, from, source, to, target,
+                                               within_edge_turns, max_distance_factor);
 
             if (join_merges and not skipped and
                 not routes.empty() and not route.is_invalid and not route.rich_lines.empty()) {

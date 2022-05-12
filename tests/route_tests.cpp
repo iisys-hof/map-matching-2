@@ -105,10 +105,6 @@ BOOST_AUTO_TEST_SUITE(route_tests)
 
         network_fixture<network_metric> network_fixture;
 
-        network_metric network;
-        auto network_matcher = prepare_network(network);
-        auto matcher = create_matcher(network_matcher);
-
         const auto route_1 = route_type{network_fixture.create_line({0, 0, 1, 0})};
         const auto route_2 = route_type{network_fixture.create_line({1, 0, 1, 1})};
         const auto route_3 = route_type{network_fixture.create_line({1, 0, 2, 0})};
@@ -215,6 +211,277 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_EQUAL(result_11.has_length, false);
         BOOST_CHECK_EQUAL(result_11.has_azimuth, false);
         BOOST_CHECK_EQUAL(result_11.has_directions, false);
+    }
+
+    BOOST_FIXTURE_TEST_CASE(route_return_test, matcher_fixture<matcher_metric>) {
+        using line_type = typename matcher_metric::matcher_static::line_type;
+        using rich_line_type = typename matcher_metric::matcher_static::rich_line_type;
+        using route_type = typename matcher_metric::matcher_static::route_type;
+        using search_type = std::array<std::int64_t, 8>;
+
+        network_fixture<network_metric> network_fixture;
+
+        const auto route_1 = route_type{
+                network_fixture.create_line({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0})};
+        const auto route_2 = route_type{network_fixture.create_line({3, 0, 2, 0, 1, 0, 0, 0})};
+        const auto route_3 = route_type{network_fixture.create_line({9, 0, 8, 0, 7, 0})};
+
+        auto search_1 = route_1.find_return_line(route_2);
+        auto expectation_1 = search_type{-1, -1, -1, -1, -1, -1, -1, -1};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_1.cbegin(), search_1.cend(), expectation_1.cbegin(), expectation_1.cend());
+
+        auto search_2 = route_2.find_return_line(route_1);
+        auto expectation_2 = search_type{0, 0, 0, 3, 0, 0, 0, 3};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_2.cbegin(), search_2.cend(), expectation_2.cbegin(), expectation_2.cend());
+
+        auto search_3 = route_1.find_return_line(route_3);
+        auto expectation_3 = search_type{0, 7, 0, 9, 0, 0, 0, 2};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_3.cbegin(), search_3.cend(), expectation_3.cbegin(), expectation_3.cend());
+
+        auto search_4 = route_3.find_return_line(route_1);
+        auto expectation_4 = search_type{-1, -1, -1, -1, -1, -1, -1, -1};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_4.cbegin(), search_4.cend(), expectation_4.cbegin(), expectation_4.cend());
+
+        auto return_1 = route_2.extract_return_line(route_1);
+        BOOST_CHECK_EQUAL(return_1.has_length, true);
+        BOOST_CHECK_EQUAL(return_1.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_1.length, route_2.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_1.azimuth, route_2.azimuth, 1e-6);
+
+        auto return_2 = route_2.extract_return_line(route_1, false);
+        BOOST_CHECK_EQUAL(return_2.has_length, true);
+        BOOST_CHECK_EQUAL(return_2.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_2.length, route_2.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_2.azimuth, route_1.azimuth, 1e-6);
+
+        auto return_3 = route_1.extract_return_line(route_3);
+        BOOST_CHECK_EQUAL(return_3.has_length, true);
+        BOOST_CHECK_EQUAL(return_3.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_3.length, route_3.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_3.azimuth, route_1.azimuth, 1e-6);
+
+        auto return_4 = route_1.extract_return_line(route_3, false);
+        BOOST_CHECK_EQUAL(return_4.has_length, true);
+        BOOST_CHECK_EQUAL(return_4.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_4.length, route_3.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_4.azimuth, route_3.azimuth, 1e-6);
+
+        auto trim_1 = route_2.trim_merge(route_1);
+        BOOST_CHECK_EQUAL(trim_1.has_length, true);
+        BOOST_CHECK_EQUAL(trim_1.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_1.length, route_1.length - route_2.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_1.azimuth, route_1.azimuth, 1e-6);
+
+        auto trim_2 = route_1.trim_merge(route_3);
+        BOOST_CHECK_EQUAL(trim_2.has_length, true);
+        BOOST_CHECK_EQUAL(trim_2.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_2.length, route_1.length - route_3.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_2.azimuth, route_1.azimuth, 1e-6);
+
+        auto trim_3 = route_2.trim_merge(route_3);
+        BOOST_CHECK_EQUAL(trim_3.is_invalid, true);
+
+        const auto route_4 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({0, 0, 1, 0}),
+                network_fixture.create_line({1, 0, 2, 0}),
+                network_fixture.create_line({2, 0, 3, 0}),
+                network_fixture.create_line({3, 0, 4, 0}),
+                network_fixture.create_line({4, 0, 5, 0}),
+                network_fixture.create_line({5, 0, 6, 0}),
+                network_fixture.create_line({6, 0, 7, 0}),
+                network_fixture.create_line({7, 0, 8, 0}),
+                network_fixture.create_line({8, 0, 9, 0})}};
+        const auto route_5 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({4, 0, 3, 0}),
+                network_fixture.create_line({3, 0, 2, 0}),
+                network_fixture.create_line({2, 0, 1, 0}),
+                network_fixture.create_line({1, 0, 0, 0})}};
+        const auto route_6 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({9, 0, 8, 0}),
+                network_fixture.create_line({8, 0, 7, 0}),
+                network_fixture.create_line({7, 0, 6, 0})}};
+
+        auto search_5 = route_4.find_return_line(route_5);
+        auto expectation_5 = search_type{-1, -1, -1, -1, -1, -1, -1, -1};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_5.cbegin(), search_5.cend(), expectation_5.cbegin(), expectation_5.cend());
+
+        auto search_6 = route_5.find_return_line(route_4);
+        auto expectation_6 = search_type{0, 0, 3, 1, 0, 0, 3, 1};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_6.cbegin(), search_6.cend(), expectation_6.cbegin(), expectation_6.cend());
+
+        auto search_7 = route_4.find_return_line(route_6);
+        auto expectation_7 = search_type{5, 1, 8, 1, 0, 0, 2, 1};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_7.cbegin(), search_7.cend(), expectation_7.cbegin(), expectation_7.cend());
+
+        auto search_8 = route_6.find_return_line(route_4);
+        auto expectation_8 = search_type{-1, -1, -1, -1, -1, -1, -1, -1};
+        BOOST_CHECK_EQUAL_COLLECTIONS(search_8.cbegin(), search_8.cend(), expectation_8.cbegin(), expectation_8.cend());
+
+        auto return_5 = route_5.extract_return_line(route_4);
+        BOOST_CHECK_EQUAL(return_5.has_length, true);
+        BOOST_CHECK_EQUAL(return_5.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_5.length, route_5.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_5.azimuth, route_5.azimuth, 1e-6);
+
+        auto return_6 = route_5.extract_return_line(route_4, false);
+        BOOST_CHECK_EQUAL(return_6.has_length, true);
+        BOOST_CHECK_EQUAL(return_6.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_6.length, route_5.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_6.azimuth, route_4.azimuth, 1e-6);
+
+        auto return_7 = route_4.extract_return_line(route_6);
+        BOOST_CHECK_EQUAL(return_7.has_length, true);
+        BOOST_CHECK_EQUAL(return_7.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_7.length, route_6.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_7.azimuth, route_4.azimuth, 1e-6);
+
+        auto return_8 = route_4.extract_return_line(route_6, false);
+        BOOST_CHECK_EQUAL(return_8.has_length, true);
+        BOOST_CHECK_EQUAL(return_8.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_8.length, route_6.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(return_8.azimuth, route_6.azimuth, 1e-6);
+
+        auto trim_4 = route_5.trim_merge(route_4);
+        BOOST_CHECK_EQUAL(trim_4.has_length, true);
+        BOOST_CHECK_EQUAL(trim_4.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_4.length, route_4.length - route_5.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_4.azimuth, route_4.azimuth, 1e-6);
+
+        auto trim_5 = route_4.trim_merge(route_6);
+        BOOST_CHECK_EQUAL(trim_5.has_length, true);
+        BOOST_CHECK_EQUAL(trim_5.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_5.length, route_4.length - route_6.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_5.azimuth, route_4.azimuth, 1e-6);
+
+        auto trim_6 = route_5.trim_merge(route_6);
+        BOOST_CHECK_EQUAL(trim_6.is_invalid, true);
+
+        const auto route_7 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({0, 0, 2, 0}),
+                network_fixture.create_line({2, 0, 4, 0, 6, 0}),
+                network_fixture.create_line({6, 0, 9, 0})}};
+        const auto route_8 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({4, 3, 4, 1, 4, 0}),
+                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+
+        auto trim_7 = route_8.trim_merge(route_7);
+        BOOST_CHECK_EQUAL(trim_7.has_length, true);
+        BOOST_CHECK_EQUAL(trim_7.has_azimuth, true);
+        BOOST_CHECK_EQUAL(trim_7.has_directions, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_7.length, 8.0, 1e-6);
+        BOOST_CHECK(trim_7.azimuth > 90 and trim_7.azimuth < 180);
+        BOOST_CHECK_CLOSE_FRACTION(trim_7.directions, 90.0, 1e-6);
+
+        const auto route_9 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({5, 3, 5, 1, 5, 0}),
+                network_fixture.create_line({5, 0, 4, 0}),
+                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+
+        auto trim_8 = route_9.trim_merge(route_7);
+        BOOST_CHECK_EQUAL(trim_8.has_length, true);
+        BOOST_CHECK_EQUAL(trim_8.has_azimuth, true);
+        BOOST_CHECK_EQUAL(trim_8.has_directions, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_8.length, 7.0, 1e-6);
+        BOOST_CHECK(trim_8.azimuth > 90 and trim_8.azimuth < 180);
+        BOOST_CHECK_CLOSE_FRACTION(trim_8.directions, 90.0, 1e-6);
+
+        const auto route_10 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({5, 4, 5, 3}),
+                network_fixture.create_line({5, 3, 5, 1, 5, 0, 4, 0}),
+                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+
+        auto trim_9 = route_10.trim_merge(route_7);
+        BOOST_CHECK_EQUAL(trim_9.has_length, true);
+        BOOST_CHECK_EQUAL(trim_9.has_azimuth, true);
+        BOOST_CHECK_EQUAL(trim_9.has_directions, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_9.length, 8.0, 1e-6);
+        BOOST_CHECK(trim_9.azimuth > 90 and trim_9.azimuth < 180);
+        BOOST_CHECK_CLOSE_FRACTION(trim_9.directions, 90.0, 1e-6);
+
+        auto return_9 = route_10.extract_return_line(route_7);
+        BOOST_CHECK_EQUAL(return_9.has_length, true);
+        BOOST_CHECK_EQUAL(return_9.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(return_9.length, 4.0, 1e-6);
+
+        const auto route_11 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({4, 4, 4, 3}),
+                network_fixture.create_line({4, 3, 4, 1}),
+                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+
+        auto trim_10 = route_11.trim_merge(route_7);
+        BOOST_CHECK_EQUAL(trim_10.is_connected, false);
+        BOOST_CHECK_EQUAL(trim_10.has_length, true);
+        BOOST_CHECK_EQUAL(trim_10.has_azimuth, true);
+        BOOST_CHECK_EQUAL(trim_10.has_directions, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_10.length, 8.0, 1e-6);
+        BOOST_CHECK(trim_10.azimuth > 90 and trim_10.azimuth < 180);
+        BOOST_CHECK_LE(trim_10.directions, 1e-6);
+
+        const auto route_12 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({5, 0, 4, 0, 2, 0, 0, 0})}};
+
+        auto trim_11 = route_12.trim_merge(route_7);
+        BOOST_CHECK_EQUAL(trim_11.has_length, true);
+        BOOST_CHECK_EQUAL(trim_11.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_11.length, 4.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_11.azimuth, route_7.azimuth, 1e-6);
+
+        auto trim_12 = route_5.trim_merge(route_4);
+        trim_12 = trim_12.trim_merge(route_6);
+        BOOST_CHECK_EQUAL(trim_12.has_length, true);
+        BOOST_CHECK_EQUAL(trim_12.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_12.length, 2.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_12.azimuth, route_4.azimuth, 1e-6);
+
+        const auto route_13 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({0, 3, 0, 1, 0, 0})}};
+
+        auto trim_13 = route_13.trim_merge(route_7);
+        BOOST_CHECK_EQUAL(trim_13.has_length, true);
+        BOOST_CHECK_EQUAL(trim_13.has_azimuth, true);
+        BOOST_CHECK_EQUAL(trim_13.has_directions, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_13.length, 12.0, 1e-6);
+        BOOST_CHECK(trim_13.azimuth > 90 and trim_13.azimuth < 180);
+        BOOST_CHECK_CLOSE_FRACTION(trim_13.directions, 90.0, 1e-6);
+
+        auto return_10 = route_13.extract_return_line(route_7);
+        BOOST_CHECK_EQUAL(return_10.has_length, false);
+
+        const auto route_14 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({1, 2, 2, 2}),
+                network_fixture.create_line({2, 2, 3, 2})}};
+
+        const auto route_15 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({2, 2, 1, 2})}};
+
+        const auto route_16 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({3, 2, 2, 2})}};
+
+        auto trim_14 = route_15.trim_merge(route_14);
+        BOOST_CHECK_EQUAL(trim_14.has_length, true);
+        BOOST_CHECK_EQUAL(trim_14.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_14.length, 1.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_14.azimuth, route_14.azimuth, 1e-6);
+
+        auto trim_15 = route_14.trim_merge(route_16);
+        BOOST_CHECK_EQUAL(trim_15.has_length, true);
+        BOOST_CHECK_EQUAL(trim_15.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_15.length, 1.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_15.azimuth, route_14.azimuth, 1e-6);
+
+        auto trim_16 = trim_14.trim_merge(route_16);
+        BOOST_CHECK_EQUAL(trim_16.is_invalid, false);
+        BOOST_CHECK_EQUAL(trim_16.has_length, false);
+        BOOST_CHECK_EQUAL(trim_16.has_azimuth, false);
+
+        const auto route_17 = route_type{std::deque<rich_line_type>{
+                network_fixture.create_line({2, 2, 2.2, 2})}};
+
+        auto trim_17 = route_16.trim_merge(route_17);
+        BOOST_CHECK_EQUAL(trim_17.has_length, true);
+        BOOST_CHECK_EQUAL(trim_17.has_azimuth, true);
+        BOOST_CHECK_CLOSE_FRACTION(trim_17.length, 0.8, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(trim_17.azimuth, route_16.azimuth, 1e-6);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
