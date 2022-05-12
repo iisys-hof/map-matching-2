@@ -51,6 +51,7 @@ Various advanced map matching algorithms are implemented, for example:
 * Median merging of point clouds, with adaptive distance when the next road is far away
 * Candidate search based on adaptive circle radius or k-nearest neighbor
 * Candidate adoption of siblings and/or nearby candidates
+* Within edge turn functionality for disabled candidate adoption
 * Matching of tracks with gaps with MDP and skip-errors option (default)
 * Tunable weights for HMM and MDP models
 * Index mapping for MDP model and algorithms for rewards, V and Q tables (so rewards are also cached)
