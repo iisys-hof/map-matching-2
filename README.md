@@ -11,7 +11,7 @@ Currently the following algorithms are implemented:
 
 * for Markov Decision Processes
     * Value Iteration. Highest accuracy and high speed. **Default.**
-    * Policy Iteration. Equivalent to Value Iteration.
+    * Policy Iteration. Performance equivalent to Value Iteration.
     * Q-learning. Reinforcement Learning algorithm, slightly slower and less accurate.
 * for Hidden Markov Models
     * Viterbi algorithm. Classical approach.
