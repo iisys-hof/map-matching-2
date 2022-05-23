@@ -86,12 +86,59 @@ Results that you output to `/app/data` will become available under your user in 
 View Map Matching Help (or view [help.txt](help.txt)): \
 `./map_matching_2 --help`
 
-Example (be aware, uses as much CPU cores as available, even scales with 128 cores, and in this example needs at least
-64 GB of available system memory):
+### Use
+
+We recommend preparing the network graph as binary file for (approximately ten times) faster reimport in succeeding
+runs:
 
 ```
 ./map_matching_2 \
   --network "/app/data/oberfranken-latest.osm.pbf" \
+  --network-save "/app/data/oberfranken-latest.dat" \
+  --verbose
+```
+
+| Mode            | Time    | CPU resources | Max RAM | `.osm.pbf` size | `.dat` size |
+|-----------------|---------|---------------|---------|-----------------|-------------|
+| Prepare Network | 25.31 s | 27.68 s       | 3607 MB | 75 MB           | 440 MB      |
+
+The times are measured with `/usr/bin/time -v` prepended to the command above. The file sized were read from the data
+folder via `ls -la` command.
+
+For using the exported network graph instead of original input file, simply replace `--network` with `--network-load`
+and the previously exported file from `--network-save` (see above):
+
+```
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  [... remaining options ...]
+  --verbose
+```
+
+| Mode                  | Time   | CPU resources | Max RAM |
+|-----------------------|--------|---------------|---------|
+| Read Prepared Network | 3.01 s | 3.01 s        | 769 MB  |
+
+We can see that reading the prepared graph is a lot faster and needs less resources.
+
+The command that was used for reading this time is the following. The software normally requires tracks supplied, but
+it can be tricked by supplying an empty track in readline mode in shell pipeline syntax:
+
+```
+echo "" | ./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --readline --no-compare --verbose
+```
+
+When you want to measure this via `/usr/bin/time -v` you need to put the command in `/bin/bash -c '<cmd>'` so that it is
+measured completely, else only the echo is measured.
+
+Now we can use the prepared network graph in real use-cases, for example with the provided floating car data, here it
+takes up to 64 GB of RAM on 256 CPU threads:
+
+```
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
   --tracks "/app/data/points_anonymized.csv" \
   --delimiter ";" \
   --id "device" --id "subid" \
@@ -101,14 +148,48 @@ Example (be aware, uses as much CPU cores as available, even scales with 128 cor
   --verbose
 ```
 
-If you don't have that much RAM, disable candidate adoption with \
+Instead of using the prepared network file with `--network-load`, the original `.osm.pbf` file can also be used with
+`--network` directly, but then it is parsed from scratch on every run.
+
+If you don't have that much RAM, disable candidate adoption (CA) with \
 `--candidate-adoption-siblings off --candidate-adoption-nearby off` \
-but be aware that this reduces the map matching accuracy drastically. \
-Works with about 16 GB of available system memory then, maybe less, depending on the amount of CPU cores available.
+but this reduces the matching accuracy slightly.
+
+Instead of regular adaptive circle based candidate search, also k-nearest neighbors (by default 16, but can be changed)
+with `--candidate-search nearest` and a combined method of both by `--candidate-search combined` is possible. The
+combined search first uses the adaptive circle, then only retains the k-nearest candidates. This reduces the amount of
+candidates and combinations drastically, especially in dense areas. The accuracy is slightly reduced.
 
 If you don't want to use multi-threading for map matching enable \
 `--single-threading`. \
-This also reduces global memory usage as parallel matching does not occur.
+Without parallel matching, less max memory is needed.
+
+The follwing examples were run on a dedicated server with 2x AMD EPYC 7742 64-Core Processor with 2x 128 Threads and
+1024 MB DDR4 RAM on a local NVMe SSD. The default settings are the command above. The sanitized track points are after
+track simplification and median-merge, which is on by default. The candidates are the amount of road positions for all
+sanitized track points. Each sanitized track point has one set of candidates assigned. Candidate adoption merges
+adjacent and nearby sets. A combination is a pair of adjacent candidates, for every two adjacent track points, all
+candidates are evaluated in a cross-product table, so for every combination, a route is calculated and metrics are
+computed and compared. This data is outputted by `--verbose` mode.
+
+All times are measured with `Read Prepared Network` time above included. We can see that especially for the fast
+variants, the preparation is highly recommended. This is just an example for the `1300` tracks from the
+provided `points_anonymized.csv` file. Other data and hardware leads to other results.
+
+| Mode                                | Track points | Sanitized track points | Candidates |  Combinations |   Time | CPU resources |   Max RAM |
+|:------------------------------------|-------------:|-----------------------:|-----------:|--------------:|-------:|--------------:|----------:|
+| Default settings                    |       88,825 |                 32,624 |  7,718,128 | 2,530,630,400 |  243 s |      13,401 s | 41,286 MB |
+| Disabled candidate adoption (no CA) |       88,825 |                 32,624 |  2,319,466 |   201,671,783 | 36,1 s |        4044 s | 13,594 MB |
+| Combined candidate search (with CA) |       88,825 |                 32,624 |    794,997 |    27,726,139 | 10,1 s |         861 s |  5,936 MB |
+| Combined (no CA)                    |       88,825 |                 32,624 |    255,434 |     2,646,243 | 5,98 s |         433 s |  3,943 MB |
+| Combined single threading (no CA)   |       88,825 |                 32,624 |    255,434 |     2,646,243 | 62,4 s |        62,4 s |    846 MB |
+
+We can see how reducing the amount of candidates and thus combinations reduces the CPU and memory load. The software
+benefits a lot from multiple CPU cores, but needs more memory in its peak when multiple tracks are matched in parallel.
+With single-threading and the complex candidate settings disabled, the software runs also well on a notebook. The major
+RAM usage comes from the prepared graph then. Still, itscales well with desktop computers, workstations and
+evendedicated servers. Concerning the accuracy, we are currently preparing another benchmark. At this moment, we can
+tell that even with combined candidate search with candidate adoption disabled, the results are still good.
 
 ### Build
 
@@ -129,31 +210,13 @@ cmake -DCMAKE_BUILD_TYPE=Release -B build
 cmake --build build --parallel $(nproc) --target install
 ```
 
-Then the built software can be found in the newly created `run/bin` directory.
+Then the built software can be found in the newly created `run/bin` directory. There is nothing installed outside of
+this directory (so nothing is installed system-wide), uninstalling is simply deleting the directory.
 
 For building under Windows you need Ubuntu 20.04 LTS for the Windows Subsystem for Linux (WSL). Building is the same as
 under Linux then. Native build currently is unsupported due to several dependencies not building natively under Windows.
 
 ### Examples
-
-Exporting the network graph as binary file for (approximately ten times) faster reimport:
-
-```
-./map_matching_2 \
-  --network "/app/data/oberfranken-latest.osm.pbf" \
-  --network-save "/app/data/oberfranken-latest.dat" \
-  --verbose
-```
-
-Using exported network graph instead of original input file, simply replace `--network` with `--network-load` and the
-previously exported file from `--network-save` (see above):
-
-```
-./map_matching_2 \
-  --network-load "/app/data/oberfranken-latest.dat" \
-  [... remaining options ...]
-  --verbose
-```
 
 Using `.gpx` files is as simple as `.csv` files. As the GPX scheme is well-defined, no additional configuration is
 needed, see here an example with multiple `.gpx` files and previously exported network:
