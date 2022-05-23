@@ -98,12 +98,18 @@ runs:
   --verbose
 ```
 
-| Mode            | Time (s) | CPU resources (s) | Max RAM (MB) | `.osm.pbf` size (MB) | `.dat` size (MB) |
-|-----------------|----------|-------------------|--------------|----------------------|------------------|
-| Prepare Network | 25.31    | 27.68             | 3607         | 75                   | 440              |
+The network can also be transformed into a cartesian coordinate system, for
+example [WGS-84 Pseudo-Mercator](https://epsg.io/3857) by setting
+`--network-transform-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs"`
+. The PROJ.4 string comes from the provided link.
+
+| Mode                                     | Time (s) | CPU resources (s) | Max RAM (MB) | `.osm.pbf` size (MB) | `.dat` size (MB) |
+|------------------------------------------|----------|-------------------|--------------|----------------------|------------------|
+| Prepare Network                          | 25.31    | 27.68             | 3607         | 75                   | 440              |
+| Prepare Network (Cartesian Reprojection) | 29.59    | 31.93             | 3919         | 75                   | 440              |
 
 The times are measured with `/usr/bin/time -v` prepended to the command above. The file sized were read from the data
-folder via `ls -la` command.
+folder via `ls -lah` command.
 
 For using the exported network graph instead of original input file, simply replace `--network` with `--network-load`
 and the previously exported file from `--network-save` (see above):
@@ -115,9 +121,15 @@ and the previously exported file from `--network-save` (see above):
   --verbose
 ```
 
-| Mode                  | Time (s) | CPU resources (s) | Max RAM (MB) |
-|-----------------------|----------|-------------------|--------------|
-| Read Prepared Network | 3.01     | 3.01              | 769          |
+When you want to read the cartesian reprojected network, you need to set the network
+`--network-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs"`
+. And maybe you also need to set the tracks via `--tracks-srs` or transform them via `--tracks-transform-srs`.
+
+The reading time is the same in both cases.
+
+| Mode                              | Time (s) | CPU resources (s) | Max RAM (MB) |
+|-----------------------------------|----------|-------------------|--------------|
+| Read Prepared Network             | 3.01     | 3.01              | 769          |
 
 We can see that reading the prepared graph is a lot faster and needs less resources.
 
@@ -151,6 +163,10 @@ takes up to 64 GB of RAM on 256 CPU threads:
 Instead of using the prepared network file with `--network-load`, the original `.osm.pbf` file can also be used with
 `--network` directly, but then it is parsed from scratch on every run.
 
+Concerning the cartesian use-case, after preparing the network, we load the corresponding file with `--network-srs` set
+to the cartesian PROJ.4 string and we transform the tracks by setting `--tracks-transform-srs` to the same PROJ.4
+string.
+
 If you don't have that much RAM, disable candidate adoption (CA) with \
 `--candidate-adoption-siblings off --candidate-adoption-nearby off` \
 but this reduces the matching accuracy slightly.
@@ -176,13 +192,15 @@ All times are measured with `Read Prepared Network` time above included. We can 
 variants, the preparation is highly recommended. This is just an example for the `1300` tracks from the
 provided `points_anonymized.csv` file. Other data and hardware leads to other results.
 
-| Mode                                | Track points | Sanitized track points | Candidates |  Combinations |  Time (s) | CPU resources (s) | Max RAM (MB) |
-|:------------------------------------|-------------:|-----------------------:|-----------:|--------------:|----------:|------------------:|-------------:|
-| Default settings                    |       88,825 |                 32,624 |  7,718,128 | 2,530,630,400 |       243 |            13,401 |       41,286 |
-| Disabled candidate adoption (no CA) |       88,825 |                 32,624 |  2,319,466 |   201,671,783 |      36,1 |              4044 |       13,594 |
-| Combined candidate search (with CA) |       88,825 |                 32,624 |    794,997 |    27,726,139 |      10,1 |               861 |        5,936 |
-| Combined (no CA)                    |       88,825 |                 32,624 |    255,434 |     2,646,243 |      5,98 |               433 |        3,943 |
-| Combined single threading (no CA)   |       88,825 |                 32,624 |    255,434 |     2,646,243 |      62,4 |              62,4 |          846 |
+| Mode                                        | Track points | Sanitized track points | Candidates |  Combinations | Time (s) | CPU resources (s) | Max RAM (MB) |
+|:--------------------------------------------|-------------:|-----------------------:|-----------:|--------------:|---------:|------------------:|-------------:|
+| Default settings                            |       88,825 |                 32,624 |  7,718,128 | 2,530,630,400 |      243 |            13,401 |       41,286 |
+| Default settings cartesian                  |       88,825 |                 37,920 |  4,616,189 |   884,453,279 |      108 |             3,000 |       22,106 |
+| Disabled candidate adoption (no CA)         |       88,825 |                 32,624 |  2,319,466 |   201,671,783 |     36,1 |              4044 |       13,594 |
+| Combined candidate search (with CA)         |       88,825 |                 32,624 |    794,997 |    27,726,139 |     10,1 |               861 |        5,936 |
+| Combined (no CA)                            |       88,825 |                 32,624 |    255,434 |     2,646,243 |     5,98 |               433 |        3,943 |
+| Combined single threading (no CA)           |       88,825 |                 32,624 |    255,434 |     2,646,243 |     62,4 |              62,4 |          846 |
+| Combined single threading cartesian (no CA) |       88,825 |                 37,920 |    298,243 |     3,141,385 |     21,2 |              21,2 |          872 |
 
 We can see how reducing the amount of candidates and thus combinations reduces the CPU and memory load. The software
 benefits a lot from multiple CPU cores, but needs more memory in its peak when multiple tracks are matched in parallel.
@@ -190,6 +208,14 @@ With single-threading and the complex candidate settings disabled, the software 
 RAM usage comes from the prepared graph then. Still, itscales well with desktop computers, workstations and
 evendedicated servers. Concerning the accuracy, we are currently preparing another benchmark. At this moment, we can
 tell that even with combined candidate search with candidate adoption disabled, the results are still good.
+
+The cartesian variants are faster but slightly less accurate, the sanitation is also slightly different because the
+distances are not calculated on the earth geodesic but on a cartesian coordinate system. Moreover, the adaptive circular
+search has a smaller radius, because `200 m` flight direction is shorter than `200 m` distance on a cartographic map,
+see: [Why Are Great Circles the Shortest Flight Path?](https://gisgeography.com/great-circle-geodesic-line-shortest-flight-path/)
+. As such, `200 m` in a cartesian coordinate system are less than `200 m` in a geographic coordinate system, or `200 m`
+in a geographic coordinate system are more than `200 m` in a cartesian coordinate system, depending on the location of
+the world. For k-nearest neighbors, there is no difference.
 
 ### Build
 
