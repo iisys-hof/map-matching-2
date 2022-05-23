@@ -1197,6 +1197,8 @@ int main(int argc, char *argv[]) {
         tracks_transform_proj = new boost::geometry::srs::proj4{tracks_transform_srs};
         set_srs_type(tracks_transform_srs_type, *tracks_transform_proj);
         tracks_transform = true;
+    } else if (not(network_output.empty() and network_save.empty()) and tracks_file.empty() and not read_line) {
+        tracks_final_srs = network_final_srs;
     }
 
     auto compare_final_srs = tracks_final_srs;
