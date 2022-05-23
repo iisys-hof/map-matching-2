@@ -1,4 +1,4 @@
-# Map Matching 2 [Work-in-progress]
+# Map Matching 2
 
 **Map Matching based on Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs).**
 
