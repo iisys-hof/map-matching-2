@@ -33,7 +33,7 @@ namespace map_matching_2::learning {
 
         const std::string name = "viterbi";
 
-        viterbi(Environment &environment, const learning::settings &settings = learning::settings{});
+        explicit viterbi(Environment &environment, const learning::settings &settings = learning::settings{});
 
         [[nodiscard]] auto &environment() {
             return _environment;

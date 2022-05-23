@@ -282,24 +282,24 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_EQUAL(trim_3.is_invalid, true);
 
         const auto route_4 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({0, 0, 1, 0}),
-                network_fixture.create_line({1, 0, 2, 0}),
-                network_fixture.create_line({2, 0, 3, 0}),
-                network_fixture.create_line({3, 0, 4, 0}),
-                network_fixture.create_line({4, 0, 5, 0}),
-                network_fixture.create_line({5, 0, 6, 0}),
-                network_fixture.create_line({6, 0, 7, 0}),
-                network_fixture.create_line({7, 0, 8, 0}),
-                network_fixture.create_line({8, 0, 9, 0})}};
+                rich_line_type{network_fixture.create_line({0, 0, 1, 0})},
+                rich_line_type{network_fixture.create_line({1, 0, 2, 0})},
+                rich_line_type{network_fixture.create_line({2, 0, 3, 0})},
+                rich_line_type{network_fixture.create_line({3, 0, 4, 0})},
+                rich_line_type{network_fixture.create_line({4, 0, 5, 0})},
+                rich_line_type{network_fixture.create_line({5, 0, 6, 0})},
+                rich_line_type{network_fixture.create_line({6, 0, 7, 0})},
+                rich_line_type{network_fixture.create_line({7, 0, 8, 0})},
+                rich_line_type{network_fixture.create_line({8, 0, 9, 0})}}};
         const auto route_5 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({4, 0, 3, 0}),
-                network_fixture.create_line({3, 0, 2, 0}),
-                network_fixture.create_line({2, 0, 1, 0}),
-                network_fixture.create_line({1, 0, 0, 0})}};
+                rich_line_type{network_fixture.create_line({4, 0, 3, 0})},
+                rich_line_type{network_fixture.create_line({3, 0, 2, 0})},
+                rich_line_type{network_fixture.create_line({2, 0, 1, 0})},
+                rich_line_type{network_fixture.create_line({1, 0, 0, 0})}}};
         const auto route_6 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({9, 0, 8, 0}),
-                network_fixture.create_line({8, 0, 7, 0}),
-                network_fixture.create_line({7, 0, 6, 0})}};
+                rich_line_type{network_fixture.create_line({9, 0, 8, 0})},
+                rich_line_type{network_fixture.create_line({8, 0, 7, 0})},
+                rich_line_type{network_fixture.create_line({7, 0, 6, 0})}}};
 
         auto search_5 = route_4.find_return_line(route_5);
         auto expectation_5 = search_type{-1, -1, -1, -1, -1, -1, -1, -1};
@@ -357,12 +357,12 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_EQUAL(trim_6.is_invalid, true);
 
         const auto route_7 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({0, 0, 2, 0}),
-                network_fixture.create_line({2, 0, 4, 0, 6, 0}),
-                network_fixture.create_line({6, 0, 9, 0})}};
+                rich_line_type{network_fixture.create_line({0, 0, 2, 0})},
+                rich_line_type{network_fixture.create_line({2, 0, 4, 0, 6, 0})},
+                rich_line_type{network_fixture.create_line({6, 0, 9, 0})}}};
         const auto route_8 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({4, 3, 4, 1, 4, 0}),
-                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+                rich_line_type{network_fixture.create_line({4, 3, 4, 1, 4, 0})},
+                rich_line_type{network_fixture.create_line({4, 0, 2, 0, 0, 0})}}};
 
         auto trim_7 = route_8.trim_merge(route_7);
         BOOST_CHECK_EQUAL(trim_7.has_length, true);
@@ -373,9 +373,9 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_CLOSE_FRACTION(trim_7.directions, 90.0, 1e-6);
 
         const auto route_9 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({5, 3, 5, 1, 5, 0}),
-                network_fixture.create_line({5, 0, 4, 0}),
-                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+                rich_line_type{network_fixture.create_line({5, 3, 5, 1, 5, 0})},
+                rich_line_type{network_fixture.create_line({5, 0, 4, 0})},
+                rich_line_type{network_fixture.create_line({4, 0, 2, 0, 0, 0})}}};
 
         auto trim_8 = route_9.trim_merge(route_7);
         BOOST_CHECK_EQUAL(trim_8.has_length, true);
@@ -386,9 +386,9 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_CLOSE_FRACTION(trim_8.directions, 90.0, 1e-6);
 
         const auto route_10 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({5, 4, 5, 3}),
-                network_fixture.create_line({5, 3, 5, 1, 5, 0, 4, 0}),
-                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+                rich_line_type{network_fixture.create_line({5, 4, 5, 3})},
+                rich_line_type{network_fixture.create_line({5, 3, 5, 1, 5, 0, 4, 0})},
+                rich_line_type{network_fixture.create_line({4, 0, 2, 0, 0, 0})}}};
 
         auto trim_9 = route_10.trim_merge(route_7);
         BOOST_CHECK_EQUAL(trim_9.has_length, true);
@@ -404,9 +404,9 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_CLOSE_FRACTION(return_9.length, 4.0, 1e-6);
 
         const auto route_11 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({4, 4, 4, 3}),
-                network_fixture.create_line({4, 3, 4, 1}),
-                network_fixture.create_line({4, 0, 2, 0, 0, 0})}};
+                rich_line_type{network_fixture.create_line({4, 4, 4, 3})},
+                rich_line_type{network_fixture.create_line({4, 3, 4, 1})},
+                rich_line_type{network_fixture.create_line({4, 0, 2, 0, 0, 0})}}};
 
         auto trim_10 = route_11.trim_merge(route_7);
         BOOST_CHECK_EQUAL(trim_10.is_connected, false);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_LE(trim_10.directions, 1e-6);
 
         const auto route_12 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({5, 0, 4, 0, 2, 0, 0, 0})}};
+                rich_line_type{network_fixture.create_line({5, 0, 4, 0, 2, 0, 0, 0})}}};
 
         auto trim_11 = route_12.trim_merge(route_7);
         BOOST_CHECK_EQUAL(trim_11.has_length, true);
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_CLOSE_FRACTION(trim_12.azimuth, route_4.azimuth, 1e-6);
 
         const auto route_13 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({0, 3, 0, 1, 0, 0})}};
+                rich_line_type{network_fixture.create_line({0, 3, 0, 1, 0, 0})}}};
 
         auto trim_13 = route_13.trim_merge(route_7);
         BOOST_CHECK_EQUAL(trim_13.has_length, true);
@@ -448,14 +448,14 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_EQUAL(return_10.has_length, false);
 
         const auto route_14 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({1, 2, 2, 2}),
-                network_fixture.create_line({2, 2, 3, 2})}};
+                rich_line_type{network_fixture.create_line({1, 2, 2, 2})},
+                rich_line_type{network_fixture.create_line({2, 2, 3, 2})}}};
 
         const auto route_15 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({2, 2, 1, 2})}};
+                rich_line_type{network_fixture.create_line({2, 2, 1, 2})}}};
 
         const auto route_16 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({3, 2, 2, 2})}};
+                rich_line_type{network_fixture.create_line({3, 2, 2, 2})}}};
 
         auto trim_14 = route_15.trim_merge(route_14);
         BOOST_CHECK_EQUAL(trim_14.has_length, true);
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_SUITE(route_tests)
         BOOST_CHECK_EQUAL(trim_16.has_azimuth, false);
 
         const auto route_17 = route_type{std::deque<rich_line_type>{
-                network_fixture.create_line({2, 2, 2.2, 2})}};
+                rich_line_type{network_fixture.create_line({2, 2, 2.2, 2})}}};
 
         auto trim_17 = route_16.trim_merge(route_17);
         BOOST_CHECK_EQUAL(trim_17.has_length, true);

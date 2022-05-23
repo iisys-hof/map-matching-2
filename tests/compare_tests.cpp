@@ -466,8 +466,8 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
 
         // loop reverse
         auto line_28_1 = rich_line_type{create_line({0, 0, 0, 1, 0, 2, 1, 2, 1, 1, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5})};
-        auto line_28_2 = create_line(
-                {0, 0, 0, 1, 0, 2, 1, 2, 1, 1, 1, 2, 0, 2, 1, 2, 1, 1, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5});
+        auto line_28_2 = rich_line_type{create_line(
+                {0, 0, 0, 1, 0, 2, 1, 2, 1, 1, 1, 2, 0, 2, 1, 2, 1, 1, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5})};
         auto result_28 = line_comparator.compare(line_28_1, line_28_2);
         BOOST_CHECK_CLOSE_FRACTION(result_28.error_added, 4.0, 1e-6);
         BOOST_CHECK_EQUAL(result_28.error_missed, 0.0);
@@ -516,8 +516,8 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_CLOSE_FRACTION(result_32.correct_fraction, 0.0 / 5, 1e-6);
 
         // ab zero
-        auto line_33_1 = typename network_metric::line_type{};
-        auto line_33_2 = typename network_metric::line_type{};
+        auto line_33_1 = rich_line_type{typename network_metric::line_type{}};
+        auto line_33_2 = rich_line_type{typename network_metric::line_type{}};
         auto result_33 = line_comparator.compare(line_33_1, line_33_2);
         BOOST_CHECK_EQUAL(result_33.error_added, 0.0);
         BOOST_CHECK_EQUAL(result_33.error_missed, 0.0);

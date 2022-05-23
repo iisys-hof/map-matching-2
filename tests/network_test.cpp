@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_SUITE(network_tests)
         BOOST_CHECK_EQUAL(tag_helper.tag(node.tags.at(0)).first, "key");
         BOOST_CHECK_EQUAL(tag_helper.tag(node.tags.at(0)).second, "value");
 
-        const auto node_copy = node;
+        auto node_copy = node;
         BOOST_CHECK_EQUAL(node_copy.id, 1);
 
-        const auto node_move = std::move(node_copy);
+        auto node_move = std::move(node_copy);
         BOOST_CHECK_EQUAL(node_move.id, 1);
     }
 

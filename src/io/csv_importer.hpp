@@ -32,7 +32,7 @@ namespace map_matching_2::io {
     protected:
         virtual void configure_format(csv::CSVFormat &format);
 
-        virtual void process_row(const std::size_t n, const csv::CSVRow &row) = 0;
+        virtual void process_row(std::size_t n, const csv::CSVRow &row) = 0;
 
         virtual void finish_import();
 

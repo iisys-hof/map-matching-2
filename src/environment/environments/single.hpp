@@ -100,9 +100,9 @@ namespace map_matching_2::environment {
         void resize_candidates(const std::vector<std::size_t> &positions, std::size_t round,
                                bool adaptive_resize = true);
 
-        [[nodiscard]] const state_internal &state2internal(const state_type state) const;
+        [[nodiscard]] const state_internal &state2internal(state_type state) const;
 
-        [[nodiscard]] action_internal action2internal(const action_type action) const;
+        [[nodiscard]] action_internal action2internal(action_type action) const;
 
     private:
         void _intelligent_actions(std::vector<action_type> &actions);

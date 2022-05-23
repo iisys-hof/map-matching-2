@@ -45,13 +45,13 @@ namespace map_matching_2::geometry {
 
         multi_rich_line();
 
-        multi_rich_line(multi_line_type multi_line);
+        explicit multi_rich_line(multi_line_type multi_line);
 
-        multi_rich_line(rich_line_type rich_line);
+        explicit multi_rich_line(rich_line_type rich_line);
 
-        multi_rich_line(std::vector<line_type> lines);
+        explicit multi_rich_line(std::vector<line_type> lines);
 
-        multi_rich_line(std::vector<rich_line_type> rich_lines);
+        explicit multi_rich_line(std::vector<rich_line_type> rich_lines);
 
         multi_rich_line(multi_line_type multi_line, std::vector<rich_line_type> rich_lines);
 

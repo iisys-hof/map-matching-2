@@ -36,7 +36,7 @@ namespace map_matching_2::learning {
 
         const std::string name = "q_learning";
 
-        q_learning(Environment &environment, const learning::settings &settings = learning::settings{});
+        explicit q_learning(Environment &environment, const learning::settings &settings = learning::settings{});
 
         [[nodiscard]] auto &environment() {
             return _environment;

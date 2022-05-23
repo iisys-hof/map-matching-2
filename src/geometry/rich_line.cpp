@@ -53,12 +53,13 @@ namespace map_matching_2::geometry {
 
     template<typename Line>
     void rich_line<Line>::_complete() {
-        assert((line.size() < 2 and rich_segments.empty()) or
-               (rich_segments.size() == line.size() - 1));
-
         has_length = false;
         has_azimuth = false;
         has_directions = false;
+
+        assert((line.size() < 2 and rich_segments.empty()) or
+               (rich_segments.size() == line.size() - 1));
+
         if (line.size() >= 2) {
             length = default_float_type<length_type>::v0;
             for (const auto &rich_segment: rich_segments) {
@@ -236,7 +237,7 @@ namespace map_matching_2::geometry {
             }
         }
 
-        return {std::move(new_rich_segments)};
+        return rich_line<Line>{std::move(new_rich_segments)};
     }
 
     template<typename Line>

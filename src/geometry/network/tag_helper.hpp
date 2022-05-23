@@ -51,7 +51,7 @@ namespace map_matching_2::geometry::network {
     public:
         std::uint64_t id(const std::string &key, const std::string &value);
 
-        std::pair<std::string, std::string> tag(std::uint64_t tag_id) const;
+        [[nodiscard]] std::pair<std::string, std::string> tag(std::uint64_t tag_id) const;
 
     };
 

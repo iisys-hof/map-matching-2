@@ -73,7 +73,7 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Line>
-    route<Line>::route(route &&other)
+    route<Line>::route(route &&other) noexcept
             : is_invalid{other.is_invalid}, is_connected{other.is_connected}, has_length{other.has_length},
               has_azimuth{other.has_azimuth}, has_directions{other.has_directions}, length{other.length},
               azimuth{other.azimuth}, directions{other.directions}, absolute_directions{other.absolute_directions} {
@@ -96,7 +96,7 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Line>
-    route<Line> &route<Line>::operator=(route &&other) {
+    route<Line> &route<Line>::operator=(route &&other) noexcept {
         is_invalid = other.is_invalid;
         is_connected = other.is_connected;
         has_length = other.has_length;

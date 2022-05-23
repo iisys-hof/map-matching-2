@@ -35,7 +35,7 @@ namespace map_matching_2::learning {
 
         const std::string name = "value_iteration";
 
-        value_iteration(
+        explicit value_iteration(
                 Environment &environment, const learning::settings &settings = learning::settings{});
 
         [[nodiscard]] auto &environment() {

@@ -40,7 +40,7 @@ namespace map_matching_2::io::network {
     public:
         osm_importer(std::string filename, Network &network);
 
-        void read();
+        void read() override;
 
     };
 

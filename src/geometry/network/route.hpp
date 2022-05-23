@@ -53,17 +53,17 @@ namespace map_matching_2::geometry::network {
 
         route();
 
-        route(bool is_invalid);
+        explicit route(bool is_invalid);
 
-        route(line_type line);
+        explicit route(line_type line);
 
-        route(rich_line_type rich_line);
+        explicit route(rich_line_type rich_line);
 
-        route(std::deque<rich_line_type> rich_lines);
+        explicit route(std::deque<rich_line_type> rich_lines);
 
-        route(std::reference_wrapper<const rich_line_type> rich_line_reference);
+        explicit route(std::reference_wrapper<const rich_line_type> rich_line_reference);
 
-        route(std::vector<std::reference_wrapper<const rich_line_type>> rich_lines_references);
+        explicit route(std::vector<std::reference_wrapper<const rich_line_type>> rich_lines_references);
 
         route(std::deque<rich_line_type> rich_lines,
               std::vector<std::reference_wrapper<const rich_line_type>> rich_lines_references);
@@ -72,11 +72,11 @@ namespace map_matching_2::geometry::network {
 
         route(const route &other);
 
-        route(route &&other);
+        route(route &&other) noexcept;
 
         route &operator=(const route &other);
 
-        route &operator=(route &&other);
+        route &operator=(route &&other) noexcept;
 
         void _copy(const route &other);
 
@@ -97,8 +97,6 @@ namespace map_matching_2::geometry::network {
         [[nodiscard]] rich_line_type get_rich_line() const;
 
         [[nodiscard]] multi_rich_line_type get_multi_rich_line() const;
-
-        [[nodiscard]] std::vector<std::reference_wrapper<const edge<Line>>> get_edges() const;
 
         [[nodiscard]] static route merge(const std::vector<std::reference_wrapper<route>> &routes,
                                          bool connect = false, bool non_connect_except = false);

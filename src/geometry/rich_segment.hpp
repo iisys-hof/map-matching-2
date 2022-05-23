@@ -44,7 +44,7 @@ namespace map_matching_2::geometry {
 
         rich_segment();
 
-        rich_segment(Segment segment);
+        explicit rich_segment(Segment segment);
 
         rich_segment(point_type first, point_type second);
 

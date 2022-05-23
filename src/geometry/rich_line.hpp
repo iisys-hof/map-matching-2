@@ -56,9 +56,9 @@ namespace map_matching_2::geometry {
 
         rich_line();
 
-        rich_line(Line line);
+        explicit rich_line(Line line);
 
-        rich_line(std::vector<rich_segment_type> rich_segments);
+        explicit rich_line(std::vector<rich_segment_type> rich_segments);
 
         rich_line(Line line, std::vector<rich_segment_type> rich_segments);
 

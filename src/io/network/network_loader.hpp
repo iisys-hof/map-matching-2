@@ -29,7 +29,7 @@ namespace map_matching_2::io::network {
     public:
         network_loader(std::string filename, Network &network);
 
-        void read();
+        void read() override;
 
     };
 

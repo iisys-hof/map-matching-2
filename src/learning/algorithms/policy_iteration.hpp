@@ -35,7 +35,7 @@ namespace map_matching_2::learning {
 
         const std::string name = "policy_iteration";
 
-        policy_iteration(
+        explicit policy_iteration(
                 Environment &environment, const learning::settings &settings = learning::settings{});
 
         [[nodiscard]] auto &environment() {

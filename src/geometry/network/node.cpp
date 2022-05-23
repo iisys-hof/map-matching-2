@@ -21,8 +21,7 @@
 namespace map_matching_2::geometry::network {
 
     template<typename Point>
-    node<Point>::node() : node({}, {}) {
-    }
+    node<Point>::node() : node({}, {}) {}
 
     template<typename Point>
     node<Point>::node(osmium::object_id_type id, Point point, std::vector<std::uint64_t> tags)

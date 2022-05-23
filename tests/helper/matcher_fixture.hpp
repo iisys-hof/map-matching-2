@@ -61,7 +61,7 @@ struct matcher_fixture {
                                         std::vector<typename Types::matcher_static::candidate_type> &candidates,
                                         std::size_t candidate_index,
                                         std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
-        for (std::size_t i = 0; i < candidates.at(candidate_index).edges.size(); ++i) {
+        for (std::int64_t i = 0; i < candidates.at(candidate_index).edges.size(); ++i) {
             const auto &candidate_edge = candidates.at(candidate_index).edges.at(i);
             const auto source = boost::source(candidate_edge.edge_descriptor, network.graph);
             const auto target = boost::target(candidate_edge.edge_descriptor, network.graph);

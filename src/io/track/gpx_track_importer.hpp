@@ -36,7 +36,7 @@ namespace map_matching_2::io::track {
 
         explicit gpx_track_importer(std::string filename, std::unordered_map<std::string, MultiTrack> &tracks);
 
-        void read();
+        void read() override;
 
     };
 

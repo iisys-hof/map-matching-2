@@ -642,7 +642,7 @@ namespace map_matching_2::matching {
     matcher<Network, Track>::remove_defects(const Track &track, const std::vector<std::set<defect>> &defects) const {
         std::set<std::size_t> indices_to_remove;
         for (std::size_t i = 0; i < defects.size(); ++i) {
-            std::set<defect> defect_set = defects[i];
+            const std::set<defect> &defect_set = defects[i];
             if (not defect_set.contains(defect::none)) {
                 indices_to_remove.emplace(i);
             }

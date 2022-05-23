@@ -36,7 +36,7 @@ namespace map_matching_2::io::network {
     public:
         arc_node_importer(std::string arcs, std::string nodes, Network &network);
 
-        void read();
+        void read() override;
 
         [[nodiscard]] const std::string &arcs() const;
 
