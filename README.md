@@ -1,20 +1,20 @@
 # Map Matching 2
 
-**Map Matching based on Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs).**
+**High Performance Map Matching with Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs).**
 
 Currently the following models are implemented:
 
-* Markov Decision Process (MDP) for single tracks.
-* Hidden Markov Model (HMM) for single tracks.
+* Markov Decision Process (MDP) for single tracks. Highest accuracy and very high speed. **Default.**
+* Hidden Markov Model (HMM) for single tracks. Slightly higher speed, but less accurate.
 
 Currently the following algorithms are implemented:
 
-* for Hidden Markov Models
-    * Viterbi algorithm
 * for Markov Decision Processes
-    * Policy Iteration
-    * Value Iteration
-    * Q-learning
+    * Value Iteration. Highest accuracy and high speed. **Default.**
+    * Policy Iteration. Equivalent to Value Iteration.
+    * Q-learning. Reinforcement Learning algorithm, slightly slower and less accurate.
+* for Hidden Markov Models
+    * Viterbi algorithm. Classical approach.
 
 Various advanced map matching algorithms are implemented, for example:
 
