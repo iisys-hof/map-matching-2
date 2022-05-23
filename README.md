@@ -98,9 +98,9 @@ runs:
   --verbose
 ```
 
-| Mode            | Time    | CPU resources | Max RAM | `.osm.pbf` size | `.dat` size |
-|-----------------|---------|---------------|---------|-----------------|-------------|
-| Prepare Network | 25.31 s | 27.68 s       | 3607 MB | 75 MB           | 440 MB      |
+| Mode            | Time (s) | CPU resources (s) | Max RAM (MB) | `.osm.pbf` size (MB) | `.dat` size (MB) |
+|-----------------|----------|-------------------|--------------|----------------------|------------------|
+| Prepare Network | 25.31    | 27.68             | 3607         | 75                   | 440              |
 
 The times are measured with `/usr/bin/time -v` prepended to the command above. The file sized were read from the data
 folder via `ls -la` command.
@@ -115,9 +115,9 @@ and the previously exported file from `--network-save` (see above):
   --verbose
 ```
 
-| Mode                  | Time   | CPU resources | Max RAM |
-|-----------------------|--------|---------------|---------|
-| Read Prepared Network | 3.01 s | 3.01 s        | 769 MB  |
+| Mode                  | Time (s) | CPU resources (s) | Max RAM (MB) |
+|-----------------------|----------|-------------------|--------------|
+| Read Prepared Network | 3.01     | 3.01              | 769          |
 
 We can see that reading the prepared graph is a lot faster and needs less resources.
 
@@ -176,13 +176,13 @@ All times are measured with `Read Prepared Network` time above included. We can 
 variants, the preparation is highly recommended. This is just an example for the `1300` tracks from the
 provided `points_anonymized.csv` file. Other data and hardware leads to other results.
 
-| Mode                                | Track points | Sanitized track points | Candidates |  Combinations |   Time | CPU resources |   Max RAM |
-|:------------------------------------|-------------:|-----------------------:|-----------:|--------------:|-------:|--------------:|----------:|
-| Default settings                    |       88,825 |                 32,624 |  7,718,128 | 2,530,630,400 |  243 s |      13,401 s | 41,286 MB |
-| Disabled candidate adoption (no CA) |       88,825 |                 32,624 |  2,319,466 |   201,671,783 | 36,1 s |        4044 s | 13,594 MB |
-| Combined candidate search (with CA) |       88,825 |                 32,624 |    794,997 |    27,726,139 | 10,1 s |         861 s |  5,936 MB |
-| Combined (no CA)                    |       88,825 |                 32,624 |    255,434 |     2,646,243 | 5,98 s |         433 s |  3,943 MB |
-| Combined single threading (no CA)   |       88,825 |                 32,624 |    255,434 |     2,646,243 | 62,4 s |        62,4 s |    846 MB |
+| Mode                                | Track points | Sanitized track points | Candidates |  Combinations |  Time (s) | CPU resources (s) | Max RAM (MB) |
+|:------------------------------------|-------------:|-----------------------:|-----------:|--------------:|----------:|------------------:|-------------:|
+| Default settings                    |       88,825 |                 32,624 |  7,718,128 | 2,530,630,400 |       243 |            13,401 |       41,286 |
+| Disabled candidate adoption (no CA) |       88,825 |                 32,624 |  2,319,466 |   201,671,783 |      36,1 |              4044 |       13,594 |
+| Combined candidate search (with CA) |       88,825 |                 32,624 |    794,997 |    27,726,139 |      10,1 |               861 |        5,936 |
+| Combined (no CA)                    |       88,825 |                 32,624 |    255,434 |     2,646,243 |      5,98 |               433 |        3,943 |
+| Combined single threading (no CA)   |       88,825 |                 32,624 |    255,434 |     2,646,243 |      62,4 |              62,4 |          846 |
 
 We can see how reducing the amount of candidates and thus combinations reduces the CPU and memory load. The software
 benefits a lot from multiple CPU cores, but needs more memory in its peak when multiple tracks are matched in parallel.
