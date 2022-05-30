@@ -18,6 +18,7 @@
 
 #include <osmium/osm.hpp>
 #include <osmium/handler.hpp>
+#include <osmium/index/map/flex_mem.hpp>
 #include <osmium/tags/tags_filter.hpp>
 
 namespace map_matching_2::io::network {
@@ -26,10 +27,22 @@ namespace map_matching_2::io::network {
     class osm_handler : public osmium::handler::Handler {
 
     private:
+        using node_type = typename Network::node_type;
+        using vertex_descriptor = typename Network::graph_traits::vertex_descriptor;
+        using index_type = osmium::index::map::FlexMem<osmium::unsigned_object_id_type, std::size_t>;
+
+        static constexpr std::size_t empty_value = osmium::index::empty_value<std::size_t>();
+
+        struct vertex_type {
+            node_type node;
+            vertex_descriptor vertex;
+            bool added = false;
+        };
+
         Network &_network;
 
-        std::unordered_map<osmium::object_id_type, typename Network::node_type> _node_map;
-        std::unordered_map<osmium::object_id_type, typename Network::graph_traits::vertex_descriptor> _vertex_map;
+        index_type _node_index;
+        std::vector<vertex_type> _vertices;
 
         osmium::TagsFilter _query, _filter, _oneway, _oneway_reverse;
 

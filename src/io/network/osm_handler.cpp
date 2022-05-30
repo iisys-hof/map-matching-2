@@ -71,9 +71,14 @@ namespace map_matching_2::io::network {
     template<typename Network>
     void osm_handler<Network>::node(const osmium::Node &osm_node) noexcept {
         if (osm_node.visible()) {
-            _node_map.emplace(osm_node.id(), typename Network::node_type{
-                    osm_node.id(), {osm_node.location().lon(), osm_node.location().lat()},
-                    this->tags(osm_node.tags())});
+            const auto node_id = osm_node.id();
+            if (_node_index.get_noexcept(static_cast<osmium::unsigned_object_id_type>(node_id)) == empty_value) {
+                const auto &node_location = osm_node.location();
+                std::size_t index = _vertices.size();
+                _vertices.emplace_back(vertex_type{node_type{node_id, {node_location.lon(), node_location.lat()},
+                                                             this->tags(osm_node.tags())}});
+                _node_index.set(static_cast<osmium::unsigned_object_id_type>(node_id), index);
+            }
         }
     }
 
@@ -83,24 +88,31 @@ namespace map_matching_2::io::network {
             const auto &osm_nodes = osm_way.nodes();
             for (const auto &osm_node: osm_nodes) {
                 const auto osm_node_id = osm_node.ref();
-                if (not _vertex_map.contains(osm_node_id)) {
-                    auto &node = _node_map[osm_node_id];
-                    const auto vertex_descriptor = _network.add_vertex(node);
-                    _vertex_map.emplace(osm_node_id, vertex_descriptor);
+                const auto index = _node_index.get(
+                        static_cast<osmium::unsigned_object_id_type>(osm_node_id));
+                auto &vertex = _vertices[index];
+                if (not vertex.added) {
+                    vertex.vertex = _network.add_vertex(vertex.node);
+                    vertex.added = true;
                 }
             }
 
             const auto tags = this->tags(osm_way.tags());
 
             for (std::size_t i = 0; i < osm_nodes.size() - 1; ++i) {
-                const auto &node_ref_a = osm_nodes[i].ref();
-                const auto &node_ref_b = osm_nodes[i + 1].ref();
+                const auto node_ref_a = osm_nodes[i].ref();
+                const auto node_ref_b = osm_nodes[i + 1].ref();
 
-                const auto &vertex_a = _vertex_map[node_ref_a];
-                const auto &vertex_b = _vertex_map[node_ref_b];
+                const auto index_a = _node_index.get(
+                        static_cast<osmium::unsigned_object_id_type>(node_ref_a));
+                const auto index_b = _node_index.get(
+                        static_cast<osmium::unsigned_object_id_type>(node_ref_b));
 
-                const auto &node_a = _network.graph[vertex_a];
-                const auto &node_b = _network.graph[vertex_b];
+                const auto &vertex_a = _vertices[index_a];
+                const auto &vertex_b = _vertices[index_b];
+
+                const auto &node_a = vertex_a.node;
+                const auto &node_b = vertex_b.node;
 
                 const auto [oneway, reverse] = detect_oneway(osm_way);
 
@@ -108,20 +120,20 @@ namespace map_matching_2::io::network {
                     if (not reverse) {
                         typename Network::edge_type edge_a{
                                 osm_way.id(), {node_a.id, node_b.id}, {node_a.point, node_b.point}, tags};
-                        _network.add_edge(vertex_a, vertex_b, edge_a);
+                        _network.add_edge(vertex_a.vertex, vertex_b.vertex, edge_a);
                     } else {
                         typename Network::edge_type edge_b{
                                 osm_way.id(), {node_b.id, node_a.id}, {node_b.point, node_a.point}, tags};
-                        _network.add_edge(vertex_b, vertex_a, edge_b);
+                        _network.add_edge(vertex_b.vertex, vertex_a.vertex, edge_b);
                     }
                 } else {
                     typename Network::edge_type edge_a{
                             osm_way.id(), {node_a.id, node_b.id}, {node_a.point, node_b.point}, tags};
-                    _network.add_edge(vertex_a, vertex_b, edge_a);
+                    _network.add_edge(vertex_a.vertex, vertex_b.vertex, edge_a);
 
                     typename Network::edge_type edge_b{
                             osm_way.id(), {node_b.id, node_a.id}, {node_b.point, node_a.point}, tags};
-                    _network.add_edge(vertex_b, vertex_a, edge_b);
+                    _network.add_edge(vertex_b.vertex, vertex_a.vertex, edge_b);
                 }
             }
         }
