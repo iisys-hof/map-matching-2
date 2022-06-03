@@ -32,8 +32,9 @@ namespace map_matching_2::geometry {
     };
 
     template<typename Line>
-    struct rich_line {
+    class rich_line {
 
+    public:
         using point_type = typename boost::geometry::point_type<Line>::type;
         using line_type = Line;
         using segment_type = boost::geometry::model::segment<point_type>;
@@ -42,37 +43,41 @@ namespace map_matching_2::geometry {
         using length_type = typename boost::geometry::default_length_result<Line>::type;
         using angle_type = typename boost::geometry::coordinate_type<Line>::type;
 
-        bool has_length;
-        bool has_azimuth;
-        bool has_directions;
-        length_type length;
-        angle_type azimuth;
-        angle_type directions;
-        angle_type absolute_directions;
-        std::vector<angle_type> segments_directions;
-        std::vector<angle_type> segments_absolute_directions;
-        Line line;
-        std::vector<rich_segment_type> rich_segments;
-
         rich_line();
 
         explicit rich_line(Line line);
 
         explicit rich_line(std::vector<rich_segment_type> rich_segments);
 
-        rich_line(Line line, std::vector<rich_segment_type> rich_segments);
-
         ~rich_line() = default;
 
-        rich_line(const rich_line &other) = default;
+        rich_line(const rich_line &other);
 
-        rich_line(rich_line &&other) noexcept = default;
+        rich_line(rich_line &&other) noexcept;
 
-        rich_line &operator=(const rich_line &other) = default;
+        rich_line &operator=(const rich_line &other);
 
-        rich_line &operator=(rich_line &&other) noexcept = default;
+        rich_line &operator=(rich_line &&other) noexcept;
 
-        void _complete();
+        [[nodiscard]] bool has_length() const;
+
+        [[nodiscard]] length_type length() const;
+
+        [[nodiscard]] bool has_azimuth() const;
+
+        [[nodiscard]] angle_type azimuth() const;
+
+        [[nodiscard]] bool has_directions() const;
+
+        [[nodiscard]] angle_type directions() const;
+
+        [[nodiscard]] angle_type absolute_directions() const;
+
+        [[nodiscard]] const std::vector<rich_segment_type> &rich_segments() const;
+
+        [[nodiscard]] const line_type &line() const;
+
+        [[nodiscard]] angle_type segments_direction(std::size_t index) const;
 
         void simplify(bool retain_reversals = true, double tolerance = 1e-3, double reverse_tolerance = 1e-3);
 
@@ -97,38 +102,32 @@ namespace map_matching_2::geometry {
         friend class boost::serialization::access;
 
         template<typename Archive>
-        void save(Archive &ar, const unsigned int version) const {
-            ar << has_length;
-            ar << has_azimuth;
-            ar << has_directions;
-            ar << length;
-            ar << azimuth;
-            ar << directions;
-            ar << absolute_directions;
-            ar << segments_directions;
-            ar << rich_segments;
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & _line;
         }
 
-        template<typename Archive>
-        void load(Archive &ar, const unsigned int version) {
-            ar >> has_length;
-            ar >> has_azimuth;
-            ar >> has_directions;
-            ar >> length;
-            ar >> azimuth;
-            ar >> directions;
-            ar >> absolute_directions;
-            ar >> segments_directions;
-            ar >> rich_segments;
+    private:
+        mutable std::mutex _mutex_length, _mutex_azimuth, _mutex_directions, _mutex_rich_segments;
+        mutable std::atomic<bool> _computed_length, _computed_azimuth, _computed_directions, _computed_rich_segments;
+        mutable bool _has_length, _has_azimuth, _has_directions;
+        mutable length_type _length;
+        mutable angle_type _azimuth, _directions, _absolute_directions;
+        mutable std::vector<rich_segment_type> _rich_segments;
+        line_type _line;
 
-            line = rich_segment_type::template rich_segments2line<std::vector>(this->rich_segments);
-            segments_absolute_directions.reserve(segments_directions.size());
-            for (const auto segments_direction: segments_directions) {
-                segments_absolute_directions.emplace_back(std::fabs(segments_direction));
-            }
-        }
+        void _transfer(const rich_line &other);
 
-        BOOST_SERIALIZATION_SPLIT_MEMBER()
+        void _copy(const rich_line &other);
+
+        void _move(rich_line &&other) noexcept;
+
+        void _compute_length() const;
+
+        void _compute_azimuth() const;
+
+        void _compute_directions() const;
+
+        void _compute_rich_segments() const;
 
     };
 

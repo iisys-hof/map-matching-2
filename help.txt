@@ -318,15 +318,15 @@ Track Preparation Options:
                                         detours are taken that could not be 
                                         collapsed without candidate-adoption
   --candidate-adoption-siblings arg (=on)
-                                        for each measurement, adopt candidates 
+                                        for each point, adopt candidates
                                         from preceding and succeeding 
                                         candidate, in other words, each 
-                                        measurement can choose from at least 
+                                        point can choose from at least
                                         three road positions and each road 
                                         position is referenced by three 
                                         candidates, gives much better results 
                                         but has a huge calculation speed impact
-  --candidate-adoption-nearby arg (=on) for each measurement, adopt candidates 
+  --candidate-adoption-nearby arg (=on) for each point, adopt candidates
                                         from searching nearby candidates 
                                         intersecting a search circle with 
                                         distance of the farthest current 
@@ -440,7 +440,7 @@ Model Options:
 
 Markov-Decision-Process Options:
   --mdp-distance-factor arg (=0.8)      distance factor for rewarding distances
-                                        between measurement point and candidate
+                                        between point point and candidate
                                         position
   --mdp-length-factor arg (=0.3)        length factor for rewarding length 
                                         differences between track segments and 
@@ -456,7 +456,7 @@ Markov-Decision-Process Options:
 
 Hidden-Markov-Model Options:
   --hmm-distance-factor arg (=0.8)      distance factor for probability of 
-                                        distances between measurement point and
+                                        distances between point point and
                                         candidate position
   --hmm-length-factor arg (=0.1)        length factor for probability of length
                                         differences between track segments and 

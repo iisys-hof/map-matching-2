@@ -25,8 +25,12 @@ namespace map_matching_2::matching {
     candidate<Network, Track>::candidate(const Track &track, std::size_t index, bool next_equal,
                                          std::vector<candidate_node_type> nodes, std::vector<candidate_edge_type> edges)
             : track{&track}, index{index}, next_equal{next_equal}, nodes{std::move(nodes)}, edges{std::move(edges)} {
-        assert(index < track.measurements.size());
-        measurement = &track.measurements[index];
+        assert(index < track.line().size());
+    }
+
+    template<typename Network, typename Track>
+    const typename candidate<Network, Track>::point_type &candidate<Network, Track>::point() const {
+        return track->line()[index];
     }
 
     template<typename Network, typename Track>
@@ -43,7 +47,7 @@ namespace map_matching_2::matching {
             std::vector<std::string> row;
             row.reserve(6);
             row.emplace_back(std::to_string(i));
-            typename Network::edge_type::segment_type projection{measurement->point, edge.projection_point};
+            typename Network::edge_type::segment_type projection{point(), edge.projection_point};
             row.emplace_back(geometry::to_wkt(projection));
             std::vector<std::string> row_edge = edge.row();
             row.insert(row.end(), row_edge.begin(), row_edge.end());

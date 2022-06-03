@@ -23,19 +23,13 @@ namespace map_matching_2::geometry {
 
     template<typename Line>
     multi_rich_line<Line>::multi_rich_line()
-            : multi_line{}, rich_lines{} {
-        _complete();
-    }
+            : _computed_length{false}, _computed_azimuth{false}, _computed_directions{false},
+              _computed_rich_lines{false}, _multi_line{} {}
 
     template<typename Line>
     multi_rich_line<Line>::multi_rich_line(multi_line_type multi_line)
-            : multi_line{std::move(multi_line)} {
-        rich_lines.reserve(this->multi_line.size());
-        for (const Line &line: this->multi_line) {
-            rich_lines.emplace_back(rich_line_type{line});
-        }
-        _complete();
-    }
+            : _computed_length{false}, _computed_azimuth{false}, _computed_directions{false},
+              _computed_rich_lines{false}, _multi_line{std::move(multi_line)} {}
 
     template<typename Line>
     multi_rich_line<Line>::multi_rich_line(rich_line_type rich_line)
@@ -43,68 +37,71 @@ namespace map_matching_2::geometry {
 
     template<typename Line>
     multi_rich_line<Line>::multi_rich_line(std::vector<line_type> lines)
-            : multi_rich_line{lines2multi_lines(lines)} {}
+            : multi_rich_line{lines2multi_line(lines)} {}
 
     template<typename Line>
     multi_rich_line<Line>::multi_rich_line(std::vector<rich_line_type> rich_lines)
-            : rich_lines{std::move(rich_lines)} {
-        multi_line.reserve(this->rich_lines.size());
-        for (const rich_line_type &rich_line: this->rich_lines) {
-            multi_line.emplace_back(rich_line.line);
-        }
-        _complete();
+            : _computed_length{false}, _computed_azimuth{false}, _computed_directions{false},
+              _computed_rich_lines{true}, _rich_lines{std::move(rich_lines)},
+              _multi_line{rich_lines2multi_line(this->_rich_lines)} {}
+
+    template<typename Line>
+    bool multi_rich_line<Line>::has_length() const {
+        _compute_length();
+        return _has_length;
     }
 
     template<typename Line>
-    multi_rich_line<Line>::multi_rich_line(multi_line_type multi_line, std::vector<rich_line_type> rich_lines)
-            : multi_line{std::move(multi_line)}, rich_lines{std::move(rich_lines)} {
-        _complete();
+    typename multi_rich_line<Line>::length_type multi_rich_line<Line>::length() const {
+        _compute_length();
+        return _length;
     }
 
     template<typename Line>
-    void multi_rich_line<Line>::_complete() {
-        assert(multi_line.size() == rich_lines.size());
+    bool multi_rich_line<Line>::has_azimuth() const {
+        _compute_azimuth();
+        return _has_azimuth;
+    }
 
-        has_length = false;
-        has_azimuth = false;
-        has_directions = false;
-        if (not rich_lines.empty()) {
-            length = default_float_type<length_type>::v0;
-            for (const auto &rich_line: rich_lines) {
-                if (rich_line.has_length) {
-                    has_length = true;
-                    length += rich_line.length;
-                }
-            }
-            if (rich_lines.size() == 1) {
-                if (rich_lines.front().has_azimuth) {
-                    azimuth = rich_lines.front().azimuth;
-                    has_azimuth = true;
-                }
-            } else {
-                if (not geometry::equals_points(multi_line.front().front(), multi_line.back().back())) {
-                    azimuth = geometry::azimuth_deg(multi_line.front().front(), multi_line.back().back());
-                    has_azimuth = true;
-                }
-            }
-        }
-        if (not rich_lines.empty()) {
-            directions = default_float_type<angle_type>::v0;
-            absolute_directions = default_float_type<angle_type>::v0;
-            for (const auto &rich_line: rich_lines) {
-                if (rich_line.has_directions) {
-                    has_directions = true;
-                    directions += rich_line.directions;
-                    absolute_directions += rich_line.absolute_directions;
-                }
-            }
-        }
+    template<typename Line>
+    typename multi_rich_line<Line>::angle_type multi_rich_line<Line>::azimuth() const {
+        _compute_azimuth();
+        return _azimuth;
+    }
+
+    template<typename Line>
+    bool multi_rich_line<Line>::has_directions() const {
+        _compute_directions();
+        return _has_directions;
+    }
+
+    template<typename Line>
+    typename multi_rich_line<Line>::angle_type multi_rich_line<Line>::directions() const {
+        _compute_directions();
+        return _directions;
+    }
+
+    template<typename Line>
+    typename multi_rich_line<Line>::angle_type multi_rich_line<Line>::absolute_directions() const {
+        _compute_directions();
+        return _absolute_directions;
+    }
+
+    template<typename Line>
+    const std::vector<typename multi_rich_line<Line>::rich_line_type> &multi_rich_line<Line>::rich_lines() const {
+        _compute_rich_lines();
+        return _rich_lines;
+    }
+
+    template<typename Line>
+    const typename multi_rich_line<Line>::multi_line_type &multi_rich_line<Line>::multi_line() const {
+        return _multi_line;
     }
 
     template<typename Line>
     std::size_t multi_rich_line<Line>::sizes() const {
         std::size_t size = 0;
-        for (const line_type &line: multi_line) {
+        for (const line_type &line: _multi_line) {
             size += line.size();
         }
         return size;
@@ -113,33 +110,36 @@ namespace map_matching_2::geometry {
     template<typename Line>
     void multi_rich_line<Line>::simplify(const bool retain_reversals, const double tolerance,
                                          const double reverse_tolerance) {
-        for (auto &rich_line: rich_lines) {
+        _compute_rich_lines();
+
+        for (auto &rich_line: _rich_lines) {
             rich_line.simplify(retain_reversals, tolerance, reverse_tolerance);
         }
 
-        multi_line.clear();
-        multi_line.reserve(rich_lines.size());
-        for (const rich_line_type &rich_line: rich_lines) {
-            multi_line.emplace_back(rich_line.line);
+        _multi_line.clear();
+        _multi_line.reserve(_rich_lines.size());
+        for (const rich_line_type &rich_line: _rich_lines) {
+            _multi_line.emplace_back(rich_line.line());
         }
 
-        _complete();
+        _computed_length = false;
+        _computed_azimuth = false;
+        _computed_directions = false;
     }
 
     template<typename Line>
     template<typename Network>
     void multi_rich_line<Line>::median_merge(const double tolerance, const bool adaptive, const Network *network) {
-        for (auto &rich_line: rich_lines) {
+        _compute_rich_lines();
+
+        for (auto &rich_line: _rich_lines) {
             rich_line.median_merge(tolerance, adaptive, network);
         }
 
-        multi_line.clear();
-        multi_line.reserve(rich_lines.size());
-        for (const rich_line_type &rich_line: rich_lines) {
-            multi_line.emplace_back(rich_line.line);
-        }
-
-        _complete();
+        _multi_line = rich_lines2multi_line(_rich_lines);
+        _computed_length = false;
+        _computed_azimuth = false;
+        _computed_directions = false;
     }
 
     template<typename Line>
@@ -153,10 +153,10 @@ namespace map_matching_2::geometry {
             if (it != rich_lines.cbegin()) {
                 const rich_line_type &prev_rich_line = *std::prev(it);
                 const rich_line_type &next_rich_line = *it;
-                if (not next_rich_line.rich_segments.empty()) {
-                    if (not prev_rich_line.rich_segments.empty()) {
-                        const auto &prev_point = prev_rich_line.rich_segments.back().segment.second;
-                        const auto &next_point = next_rich_line.rich_segments.front().segment.first;
+                if (not next_rich_line.line().empty()) {
+                    if (not prev_rich_line.line().empty()) {
+                        const auto &prev_point = prev_rich_line.line().back();
+                        const auto &next_point = next_rich_line.line().front();
                         if (not geometry::equals_points(prev_point, next_point)) {
                             new_rich_lines.emplace_back(rich_line_type::merge({start_it, it}));
                             start_it = it;
@@ -174,7 +174,7 @@ namespace map_matching_2::geometry {
 
     template<typename Line>
     typename multi_rich_line<Line>::multi_line_type
-    multi_rich_line<Line>::lines2multi_lines(const std::vector<line_type> &lines) {
+    multi_rich_line<Line>::lines2multi_line(const std::vector<line_type> &lines) {
         multi_line_type multi_line;
         multi_line.reserve(lines.size());
         for (const auto &line: lines) {
@@ -184,13 +184,24 @@ namespace map_matching_2::geometry {
     }
 
     template<typename Line>
+    typename multi_rich_line<Line>::multi_line_type
+    multi_rich_line<Line>::rich_lines2multi_line(const std::vector<rich_line_type> &rich_lines) {
+        multi_line_type multi_line;
+        multi_line.reserve(rich_lines.size());
+        for (const auto &rich_line: rich_lines) {
+            multi_line.emplace_back(rich_line.line());
+        }
+        return multi_line;
+    }
+
+    template<typename Line>
     std::string multi_rich_line<Line>::wkt() const {
-        if (rich_lines.empty()) {
+        if (_multi_line.empty()) {
             return geometry::to_wkt(line_type{});
-        } else if (rich_lines.size() <= 1) {
-            return rich_lines.front().wkt();
+        } else if (_multi_line.size() <= 1) {
+            return geometry::to_wkt(_multi_line.front());
         } else {
-            return geometry::to_wkt(multi_line);
+            return geometry::to_wkt(_multi_line);
         }
     }
 
@@ -198,9 +209,9 @@ namespace map_matching_2::geometry {
     std::string multi_rich_line<Line>::str() const {
         std::string str = "MultiRichLine(";
         str.append(wkt());
-        if (has_length) {
+        if (has_length()) {
             str.append(",");
-            str.append(std::to_string(length));
+            str.append(std::to_string(length()));
         }
         str.append(")");
         return str;
@@ -209,7 +220,7 @@ namespace map_matching_2::geometry {
     template<typename Line>
     bool operator==(const multi_rich_line<Line> &left, const multi_rich_line<Line> &right) {
         // if lines are equal, everything is equal
-        return geometry::equals(left.multi_line, right.multi_line);
+        return geometry::equals(left._multi_line, right._multi_line);
     }
 
     template<typename Line>
@@ -221,6 +232,80 @@ namespace map_matching_2::geometry {
     std::ostream &operator<<(std::ostream &out, const multi_rich_line<Line> &multi_rich_line) {
         out << multi_rich_line.str();
         return out;
+    }
+
+    template<typename Line>
+    void multi_rich_line<Line>::_compute_length() const {
+        if (not _computed_length) {
+            _has_length = false;
+            _compute_rich_lines();
+            if (not _rich_lines.empty()) {
+                _length = default_float_type<length_type>::v0;
+                for (const auto &rich_line: _rich_lines) {
+                    if (rich_line.has_length()) {
+                        _length += rich_line.length();
+                        _has_length = true;
+                    }
+                }
+            }
+            _computed_length = true;
+        }
+    }
+
+    template<typename Line>
+    void multi_rich_line<Line>::_compute_azimuth() const {
+        if (not _computed_azimuth) {
+            _has_azimuth = false;
+            _compute_rich_lines();
+            if (not _rich_lines.empty()) {
+                if (_rich_lines.size() == 1) {
+                    const auto &rich_line = _rich_lines.front();
+                    if (rich_line.has_azimuth()) {
+                        _azimuth = rich_line.azimuth();
+                        _has_azimuth = true;
+                    }
+                } else {
+                    const auto &a = _multi_line.front().front();
+                    const auto &b = _multi_line.back().back();
+                    if (not geometry::equals_points(a, b)) {
+                        _azimuth = geometry::azimuth_deg(a, b);
+                        _has_azimuth = true;
+                    }
+                }
+            }
+            _computed_azimuth = true;
+        }
+    }
+
+    template<typename Line>
+    void multi_rich_line<Line>::_compute_directions() const {
+        if (not _computed_directions) {
+            _has_directions = false;
+            _compute_rich_lines();
+            if (not _rich_lines.empty()) {
+                _directions = default_float_type<angle_type>::v0;
+                _absolute_directions = default_float_type<angle_type>::v0;
+                for (const auto &rich_line: _rich_lines) {
+                    if (rich_line.has_directions()) {
+                        _directions += rich_line.directions();
+                        _absolute_directions += rich_line.absolute_directions();
+                        _has_directions = true;
+                    }
+                }
+            }
+            _computed_directions = true;
+        }
+    }
+
+    template<typename Line>
+    void multi_rich_line<Line>::_compute_rich_lines() const {
+        if (not _computed_rich_lines) {
+            _rich_lines.reserve(_multi_line.size());
+            for (const line_type &line: _multi_line) {
+                _rich_lines.emplace_back(rich_line_type{line});
+            }
+            _computed_rich_lines = true;
+        }
     }
 
     template

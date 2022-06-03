@@ -181,14 +181,14 @@ result_processor(const MultiTrack &track, const MultiTrack &prepared, const Rout
             comparison_sums[4] += comparison.second.error_missed;
         }
         if (compare_output_csv.is_writable()) {
-            using length_type = decltype(track.length);
+            using length_type = typename MultiTrack::track_type::length_type;
             const auto length_zero = map_matching_2::geometry::default_float_type<length_type>::v0;
             compare_output_csv << std::vector{
                     track.id, track.wkt(), prepared.wkt(), route.wkt(), ground_truth.wkt(),
-                    std::to_string(track.has_length ? track.length : length_zero),
-                    std::to_string(prepared.has_length ? prepared.length : length_zero),
-                    std::to_string(route.has_length ? route.length : length_zero),
-                    std::to_string(ground_truth.has_length ? ground_truth.length : length_zero),
+                    std::to_string(track.has_length() ? track.length() : length_zero),
+                    std::to_string(prepared.has_length() ? prepared.length() : length_zero),
+                    std::to_string(route.has_length() ? route.length() : length_zero),
+                    std::to_string(ground_truth.has_length() ? ground_truth.length() : length_zero),
                     std::to_string(comparison.second.correct_fraction),
                     std::to_string(comparison.second.error_fraction),
                     std::to_string(comparison.second.correct), std::to_string(comparison.second.error_added),

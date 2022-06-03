@@ -30,6 +30,7 @@ namespace map_matching_2::geometry::track {
         using rich_line_type = rich_line<line_type>;
         using distance_type = typename rich_line_type::distance_type;
         using track_type = track<Measurement>;
+        using multi_line_type = typename multi_rich_line<line_type>::multi_line_type;
         using multi_rich_line_type = multi_rich_line<line_type>;
 
         std::string id;
@@ -67,6 +68,8 @@ namespace map_matching_2::geometry::track {
 
         template<typename Network>
         void median_merge(double tolerance = 1e-3, bool adaptive = true, const Network *network = nullptr);
+
+        [[nodiscard]] static multi_line_type tracks2multi_line(const std::vector<track_type> &tracks);
 
         template<typename TrackReprojected, typename SRSOriginal, typename SRSProjected>
         TrackReprojected reproject(SRSOriginal from, SRSProjected to) const {

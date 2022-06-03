@@ -38,10 +38,7 @@ struct matcher_fixture {
             line.emplace_back(measurement.point);
         }
 
-        return typename Types::matcher_static::track_type
-                {std::move(id), std::move(line),
-                 std::vector<typename Types::matcher_static::track_type::measurement_type>
-                         {measurements.begin(), measurements.end()}};
+        return typename Types::matcher_static::track_type{std::move(id), std::move(line)};
     }
 
     template<typename Network>

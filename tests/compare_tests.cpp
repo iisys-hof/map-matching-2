@@ -29,164 +29,164 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         using point_type = typename rich_line_type::point_type;
 
         auto line_1 = rich_line_type{create_line({0, 0, 5, 0, 5, 5})};
-        BOOST_CHECK_EQUAL(line_1.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(line_1.length, 10.0, 1e-6);
+        BOOST_CHECK_EQUAL(line_1.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(line_1.length(), 10.0, 1e-6);
 
         auto substring_points_1_1 = map_matching_2::geometry::substring_points(
                 line_1, point_type{0, 0}, point_type{5, 0});
-        BOOST_CHECK_EQUAL(substring_points_1_1.line.size(), 2);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1.length, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1.azimuth, 90.0, 1e-6);
-        BOOST_CHECK_EQUAL(substring_points_1_1.has_directions, false);
+        BOOST_CHECK_EQUAL(substring_points_1_1.line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1.length(), 5.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1.azimuth(), 90.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_1.has_directions(), false);
 
         auto substring_points_1_2 = map_matching_2::geometry::substring_points(
                 line_1, point_type{-1, 0}, point_type{5, 0});
-        BOOST_CHECK_EQUAL(substring_points_1_2.line.size(), 2);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2.length, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2.azimuth, 90.0, 1e-6);
-        BOOST_CHECK_EQUAL(substring_points_1_2.has_directions, false);
+        BOOST_CHECK_EQUAL(substring_points_1_2.line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2.length(), 5.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2.azimuth(), 90.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_2.has_directions(), false);
 
         auto substring_points_1_3 = map_matching_2::geometry::substring_points(
                 line_1, point_type{-1, 0}, point_type{6, 0});
-        BOOST_CHECK_EQUAL(substring_points_1_3.line.size(), 2);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3.length, 5.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3.azimuth, 90.0, 1e-6);
-        BOOST_CHECK_EQUAL(substring_points_1_3.has_directions, false);
+        BOOST_CHECK_EQUAL(substring_points_1_3.line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3.length(), 5.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3.azimuth(), 90.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_3.has_directions(), false);
 
         auto substring_points_1_4 = map_matching_2::geometry::substring_points(
                 line_1, point_type{-1, 0}, point_type{5, 6});
-        BOOST_CHECK_EQUAL(substring_points_1_4.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.length, 10.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.azimuth, 45.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.directions, 90.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.absolute_directions, 90.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_4.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.length(), 10.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.azimuth(), 45.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.directions(), 90.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4.absolute_directions(), 90.0, 1e-6);
 
         auto substring_points_1_5 = map_matching_2::geometry::substring_points(
                 line_1, point_type{2, 0}, point_type{3, 0});
-        BOOST_CHECK_EQUAL(substring_points_1_5.line.size(), 2);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_5.length, 1.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_5.azimuth, 90.0, 1e-6);
-        BOOST_CHECK_EQUAL(substring_points_1_5.has_directions, false);
+        BOOST_CHECK_EQUAL(substring_points_1_5.line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_5.length(), 1.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_5.azimuth(), 90.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_5.has_directions(), false);
 
         auto substring_points_1_6 = map_matching_2::geometry::substring_points(
                 line_1, point_type{3, 0}, point_type{2, 0});
-        BOOST_CHECK_EQUAL(substring_points_1_6.line.size(), 0);
-        BOOST_CHECK_EQUAL(substring_points_1_6.has_length, false);
+        BOOST_CHECK_EQUAL(substring_points_1_6.line().size(), 0);
+        BOOST_CHECK_EQUAL(substring_points_1_6.has_length(), false);
 
         auto substring_points_1_7 = map_matching_2::geometry::substring_points(
                 line_1, point_type{5, 4}, point_type{1, 0});
-        BOOST_CHECK_EQUAL(substring_points_1_7.line.size(), 0);
-        BOOST_CHECK_EQUAL(substring_points_1_7.has_length, false);
+        BOOST_CHECK_EQUAL(substring_points_1_7.line().size(), 0);
+        BOOST_CHECK_EQUAL(substring_points_1_7.has_length(), false);
 
         auto substring_points_1_8 = map_matching_2::geometry::substring_points(
                 line_1, point_type{2, 1}, point_type{6, 4});
-        BOOST_CHECK_EQUAL(substring_points_1_8.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_8.length, 7.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_8.directions, 90.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_8.absolute_directions, 90.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_8.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_8.length(), 7.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_8.directions(), 90.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_8.absolute_directions(), 90.0, 1e-6);
 
         auto substring_points_1_9 = map_matching_2::geometry::substring_points(
                 line_1, point_type{2, 1}, point_type{2.00000000000001, 1}, true, true);
-        BOOST_CHECK_EQUAL(substring_points_1_9.line.size(), 2);
-        BOOST_CHECK_LE(substring_points_1_9.length, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_9.line().size(), 2);
+        BOOST_CHECK_LE(substring_points_1_9.length(), 1e-6);
 
         auto substring_points_1_1_ni = map_matching_2::geometry::substring_points(
                 line_1, point_type{3, 0}, point_type{5, 3}, true, true);
-        BOOST_CHECK_EQUAL(substring_points_1_1_ni.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1_ni.length, 5.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_1_ni.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1_ni.length(), 5.0, 1e-6);
 
         auto substring_points_1_2_ni = map_matching_2::geometry::substring_points(
                 line_1, point_type{3, 0}, point_type{5, 3}, false, true);
-        BOOST_CHECK_EQUAL(substring_points_1_2_ni.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2_ni.length, 5.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_2_ni.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2_ni.length(), 5.0, 1e-6);
 
         auto substring_points_1_3_ni = map_matching_2::geometry::substring_points(
                 line_1, point_type{3, 0}, point_type{5, 3}, true, false);
-        BOOST_CHECK_EQUAL(substring_points_1_3_ni.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3_ni.length, 5.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_3_ni.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3_ni.length(), 5.0, 1e-6);
 
         auto substring_points_1_4_ni = map_matching_2::geometry::substring_points(
                 line_1, point_type{3, 0}, point_type{5, 3}, false, false);
-        BOOST_CHECK_EQUAL(substring_points_1_4_ni.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4_ni.length, 5.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_4_ni.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4_ni.length(), 5.0, 1e-6);
 
         auto substring_points_1_1_d = map_matching_2::geometry::substring(line_1, 0.0L, 10.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_1_d.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1_d.length, 10.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_1_d.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_1_d.length(), 10.0, 1e-6);
 
         auto substring_points_1_2_d = map_matching_2::geometry::substring(line_1, 0.0L, 11.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_2_d.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2_d.length, 10.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_2_d.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_2_d.length(), 10.0, 1e-6);
 
         auto substring_points_1_3_d = map_matching_2::geometry::substring(line_1, -1.0L, 10.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_3_d.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3_d.length, 10.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_3_d.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_3_d.length(), 10.0, 1e-6);
 
         auto substring_points_1_4_d = map_matching_2::geometry::substring(line_1, -1.0L, 11.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_4_d.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4_d.length, 10.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_4_d.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_4_d.length(), 10.0, 1e-6);
 
         auto substring_points_1_5_d = map_matching_2::geometry::substring(line_1, 1.0L, 9.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_5_d.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_5_d.length, 8.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_5_d.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_5_d.length(), 8.0, 1e-6);
 
         auto substring_points_1_6_d = map_matching_2::geometry::substring(line_1, 9.0L, 1.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_6_d.line.size(), 0);
-        BOOST_CHECK_EQUAL(substring_points_1_6_d.has_length, false);
+        BOOST_CHECK_EQUAL(substring_points_1_6_d.line().size(), 0);
+        BOOST_CHECK_EQUAL(substring_points_1_6_d.has_length(), false);
 
         auto substring_points_1_7_d = map_matching_2::geometry::substring(line_1, 7.0L, 9.0L);
-        BOOST_CHECK_EQUAL(substring_points_1_7_d.line.size(), 2);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_7_d.length, 2.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_1_7_d.line().size(), 2);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_1_7_d.length(), 2.0, 1e-6);
 
         auto line_2 = rich_line_type{create_line({0, 0, 2, 0, 2, 1, 1, 1, 1, 0, 3, 0})};
-        BOOST_CHECK_EQUAL(line_2.line.size(), 6);
-        BOOST_CHECK_CLOSE_FRACTION(line_2.length, 7.0, 1e-6);
+        BOOST_CHECK_EQUAL(line_2.line().size(), 6);
+        BOOST_CHECK_CLOSE_FRACTION(line_2.length(), 7.0, 1e-6);
 
         auto substring_points_2_1 = map_matching_2::geometry::substring_points(
                 line_2, point_type{-1, -1}, point_type{3, 1});
-        BOOST_CHECK_EQUAL(substring_points_2_1.line.size(), 6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.length, 7.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.azimuth, 90.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.directions, 360.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.absolute_directions, 360, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_2_1.line().size(), 6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.length(), 7.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.azimuth(), 90.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.directions(), 360.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_1.absolute_directions(), 360, 1e-6);
 
         auto substring_points_2_2 = map_matching_2::geometry::substring_points(
                 line_2, point_type{2, -1}, point_type{1, -1});
-        BOOST_CHECK_EQUAL(substring_points_2_2.line.size(), 4);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.length, 3.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.azimuth, -90.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.directions, 180.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.absolute_directions, 180, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_2_2.line().size(), 4);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.length(), 3.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.azimuth(), -90.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.directions(), 180.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_2.absolute_directions(), 180, 1e-6);
 
         auto substring_points_2_3 = map_matching_2::geometry::substring_points(
                 line_2, point_type{1, -1}, point_type{3, 4});
-        BOOST_CHECK_EQUAL(substring_points_2_3.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_3.length, 2.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_3.azimuth, 45.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_2_3.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_3.length(), 2.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_3.azimuth(), 45.0, 1e-6);
 
         auto substring_points_2_4 = map_matching_2::geometry::substring_points(
                 line_2, point_type{4, 5}, point_type{1, -3});
-        BOOST_CHECK_EQUAL(substring_points_2_4.line.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_4.length, 2.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_4.azimuth, -135.0, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_2_4.line().size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_4.length(), 2.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_4.azimuth(), -135.0, 1e-6);
 
         auto substring_points_2_5 = map_matching_2::geometry::substring_points(
                 line_2, point_type{3, 4}, point_type{0, -3});
-        BOOST_CHECK_EQUAL(substring_points_2_5.line.size(), 0);
-        BOOST_CHECK_EQUAL(substring_points_2_5.has_length, false);
+        BOOST_CHECK_EQUAL(substring_points_2_5.line().size(), 0);
+        BOOST_CHECK_EQUAL(substring_points_2_5.has_length(), false);
 
         auto substring_points_2_6 = map_matching_2::geometry::substring_points(
                 line_2, point_type{3, 4}, point_type{3, 5});
-        BOOST_CHECK_EQUAL(substring_points_2_6.line.size(), 0);
-        BOOST_CHECK_EQUAL(substring_points_2_6.has_length, false);
+        BOOST_CHECK_EQUAL(substring_points_2_6.line().size(), 0);
+        BOOST_CHECK_EQUAL(substring_points_2_6.has_length(), false);
 
         auto substring_points_2_7 = map_matching_2::geometry::substring_points(
                 line_2, point_type{1.9, 0.0}, point_type{1.1, 0.0});
-        BOOST_CHECK_EQUAL(substring_points_2_7.line.size(), 6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.length, 3.2, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.azimuth, -90.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.directions, 360.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.absolute_directions, 360, 1e-6);
+        BOOST_CHECK_EQUAL(substring_points_2_7.line().size(), 6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.length(), 3.2, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.azimuth(), -90.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.directions(), 360.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(substring_points_2_7.absolute_directions(), 360, 1e-6);
     }
 
     BOOST_FIXTURE_TEST_CASE(compare_test, network_fixture<network_metric>) {
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_36.error_added, 0.0);
         BOOST_CHECK_EQUAL(result_36.error_missed, 0.0);
         BOOST_CHECK_EQUAL(result_36.error_fraction, 0.0);
-        BOOST_CHECK_CLOSE_FRACTION(result_36.correct, line_36_1.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_36.correct, line_36_1.length(), 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_36.correct_fraction, 1.0, 1e-6);
 
         // almost equal
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_EQUAL(result_38.error_added, 0.0);
         BOOST_CHECK_EQUAL(result_38.error_missed, 0.0);
         BOOST_CHECK_EQUAL(result_38.error_fraction, 0.0);
-        BOOST_CHECK_CLOSE_FRACTION(result_38.correct, line_38_1.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_38.correct, line_38_1.length(), 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_38.correct_fraction, 1.0, 1e-6);
 
         // reverse end turn
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_LE(result_41.error_added, 1e-6);
         BOOST_CHECK_LE(result_41.error_missed, 1e-6);
         BOOST_CHECK_LE(result_41.error_fraction, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(result_41.correct, line_41_1.length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_41.correct, line_41_1.length(), 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_41.correct_fraction, 1.0, 1e-6);
     }
 

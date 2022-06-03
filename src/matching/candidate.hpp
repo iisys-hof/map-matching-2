@@ -23,13 +23,12 @@ namespace map_matching_2::matching {
 
     template<typename Network, typename Track>
     struct candidate {
-        using measurement_type = typename Track::measurement_type;
+        using point_type = typename Track::point_type;
         using candidate_node_type = candidate_node<Network>;
         using candidate_edge_type = candidate_edge<Network>;
 
         const Track *track;
         std::size_t index;
-        const measurement_type *measurement;
         double radius;
         std::size_t number;
         bool next_equal;
@@ -48,6 +47,8 @@ namespace map_matching_2::matching {
         candidate &operator=(const candidate &other) = default;
 
         candidate &operator=(candidate &&other) noexcept = default;
+
+        [[nodiscard]] const point_type &point() const;
 
         [[nodiscard]] std::vector<std::string> header() const;
 

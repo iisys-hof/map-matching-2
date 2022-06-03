@@ -28,8 +28,9 @@ namespace map_matching_2::geometry::network {
     };
 
     template<typename Line>
-    struct route {
+    class route {
 
+    public:
         using line_type = Line;
         using rich_line_type = rich_line<Line>;
         using multi_rich_line_type = multi_rich_line<Line>;
@@ -38,18 +39,6 @@ namespace map_matching_2::geometry::network {
         using rich_segment_type = typename rich_line_type::rich_segment_type;
         using length_type = typename boost::geometry::default_length_result<line_type>::type;
         using angle_type = typename boost::geometry::coordinate_type<line_type>::type;
-
-        bool is_invalid;
-        bool is_connected;
-        bool has_length;
-        bool has_azimuth;
-        bool has_directions;
-        length_type length;
-        angle_type azimuth;
-        angle_type directions;
-        angle_type absolute_directions;
-        std::deque<rich_line_type> _rich_lines;
-        std::vector<std::reference_wrapper<const rich_line_type>> rich_lines;
 
         route();
 
@@ -78,11 +67,25 @@ namespace map_matching_2::geometry::network {
 
         route &operator=(route &&other) noexcept;
 
-        void _copy(const route &other);
+        [[nodiscard]] bool is_invalid() const;
 
-        void _move(route &&other);
+        [[nodiscard]] bool is_connected() const;
 
-        void _complete();
+        [[nodiscard]] bool has_length() const;
+
+        [[nodiscard]] length_type length() const;
+
+        [[nodiscard]] bool has_azimuth() const;
+
+        [[nodiscard]] angle_type azimuth() const;
+
+        [[nodiscard]] bool has_directions() const;
+
+        [[nodiscard]] angle_type directions() const;
+
+        [[nodiscard]] angle_type absolute_directions() const;
+
+        [[nodiscard]] const std::vector<std::reference_wrapper<const rich_line_type>> &rich_lines() const;
 
         [[nodiscard]] bool attaches(const route &other) const;
 
@@ -92,7 +95,7 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] route trim_merge(const route &other) const;
 
-        [[nodiscard]] Line get_line() const;
+        [[nodiscard]] line_type get_line() const;
 
         [[nodiscard]] rich_line_type get_rich_line() const;
 
@@ -112,7 +115,29 @@ namespace map_matching_2::geometry::network {
         [[nodiscard]] std::string str() const;
 
         template<typename LineT>
-        friend std::ostream &operator<<(std::ostream &out, const route<LineT> &route);
+        friend std::ostream &operator<<(std::ostream &out, const route <LineT> &route);
+
+    private:
+        mutable bool _computed_length, _computed_azimuth, _computed_directions;
+        mutable bool _is_invalid, _is_connected, _has_length, _has_azimuth, _has_directions;
+        mutable length_type _length;
+        mutable angle_type _azimuth, _directions, _absolute_directions;
+        std::deque<rich_line_type> _own_rich_lines;
+        std::vector<std::reference_wrapper<const rich_line_type>> _rich_lines;
+
+        void _transfer(const route &other);
+
+        void _copy(const route &other);
+
+        void _move(route &&other) noexcept;
+
+        void _check_references() const;
+
+        void _compute_length() const;
+
+        void _compute_azimuth() const;
+
+        void _compute_directions() const;
 
     };
 

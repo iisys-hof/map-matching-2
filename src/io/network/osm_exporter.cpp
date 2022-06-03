@@ -34,7 +34,7 @@ namespace map_matching_2::io::network {
         osmium::object_id_type index = 0;
         for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(_network.graph))) {
             const auto &edge = _network.graph[edge_descriptor];
-            for (const auto &point: edge.line) {
+            for (const auto &point: edge.line()) {
                 const auto x = boost::geometry::get<0>(point);
                 const auto y = boost::geometry::get<1>(point);
                 point_map_key_type point_map_key{x, y};
@@ -69,7 +69,7 @@ namespace map_matching_2::io::network {
                 const auto target = boost::target(edge_descriptor, _network.graph);
                 for (const auto &out_descriptor: boost::make_iterator_range(boost::out_edges(target, _network.graph))) {
                     const auto &out_edge = _network.graph[out_descriptor];
-                    if (geometry::lines_are_reversed(edge.line, out_edge.line)) {
+                    if (geometry::lines_are_reversed(edge.line(), out_edge.line())) {
                         edges_reversed.emplace(out_edge.index);
                         is_oneway = false;
                     }
@@ -109,7 +109,7 @@ namespace map_matching_2::io::network {
 
         {
             osmium::builder::TagListBuilder node_tag_builder{node_builder};
-            for (const auto tag: node.tags) {
+            for (const auto &tag: node.tags) {
                 const auto tags = _network.tag_helper.tag(tag);
                 node_tag_builder.add_tag(tags.first, tags.second);
             }
@@ -139,7 +139,7 @@ namespace map_matching_2::io::network {
 
         {
             osmium::builder::WayNodeListBuilder way_node_list_builder{way_builder};
-            for (const auto point: edge.line) {
+            for (const auto &point: edge.line()) {
                 const auto x = boost::geometry::get<0>(point);
                 const auto y = boost::geometry::get<1>(point);
                 point_map_key_type point_map_key{x, y};
@@ -154,7 +154,7 @@ namespace map_matching_2::io::network {
         {
             osmium::builder::TagListBuilder way_tag_builder{way_builder};
             bool has_oneway = false;
-            for (const auto tag: edge.tags) {
+            for (const auto &tag: edge.tags) {
                 const auto tags = _network.tag_helper.tag(tag);
                 if (tags.first == "oneway") {
                     if (tags.second == "yes") {

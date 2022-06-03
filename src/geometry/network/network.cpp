@@ -21,6 +21,8 @@
 
 #include <boost/thread.hpp>
 
+#include <boost/property_map/transform_value_property_map.hpp>
+
 #include <geometry/util.hpp>
 #include <io/csv_exporter.hpp>
 
@@ -46,8 +48,8 @@ namespace map_matching_2::geometry::network {
         length_type length = geometry::default_float_type<length_type>::v0;
         for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(graph))) {
             const auto &edge = graph[edge_descriptor];
-            if (edge.has_length) {
-                length += edge.length;
+            if (edge.has_length()) {
+                length += edge.length();
             }
         }
         return length;
@@ -173,9 +175,9 @@ namespace map_matching_2::geometry::network {
             segments.reserve(boost::num_edges(graph));
             for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(graph))) {
                 const auto &edge = graph[edge_descriptor];
-                for (std::size_t i = 0; i < edge.rich_segments.size(); ++i) {
-                    const auto &rich_segment = edge.rich_segments[i];
-                    segments.emplace_back(std::pair{rich_segment.segment, std::pair{edge.index, i}});
+                for (std::size_t i = 0; i < edge.rich_segments().size(); ++i) {
+                    const auto &rich_segment = edge.rich_segments()[i];
+                    segments.emplace_back(std::pair{rich_segment.segment(), std::pair{edge.index, i}});
                 }
             }
 
@@ -355,7 +357,8 @@ namespace map_matching_2::geometry::network {
                                             std::vector<std::size_t> &heap_index,
                                             std::vector<vertex_descriptor> &queue) const {
         auto index_map = boost::get(&node_type::index, graph);
-        auto weight_map = boost::get(&edge_type::length, graph);
+        auto weight_map = boost::make_transform_value_property_map(
+                [](const edge_type &edge) { return edge.length(); }, boost::get(boost::edge_bundle, graph));
 
         auto predecessor_map = boost::make_iterator_property_map(predecessors.begin(), index_map);
         auto distance_map = boost::make_iterator_property_map(distances.begin(), index_map);
@@ -429,9 +432,9 @@ namespace map_matching_2::geometry::network {
                 for (const auto out_edge: boost::make_iterator_range(boost::out_edges(*vertex_it, graph))) {
                     if (boost::target(out_edge, graph) == *next_vertex_it) {
                         const auto &edge = graph[out_edge];
-                        if (not edge.has_length or edge.length < shortest_length) {
-                            if (edge.has_length) {
-                                shortest_length = edge.length;
+                        if (not edge.has_length() or edge.length() < shortest_length) {
+                            if (edge.has_length()) {
+                                shortest_length = edge.length();
                             }
                             edge_ptr = &edge;
                         }
@@ -450,7 +453,7 @@ namespace map_matching_2::geometry::network {
         }
 
         if (std::all_of(edges.cbegin(), edges.cend(), [](const rich_line_type &edge) {
-            return edge.line.empty();
+            return edge.line().empty();
         })) {
             // still no line, empty route for staying here
             return route_type{false};
@@ -552,7 +555,7 @@ namespace map_matching_2::geometry::network {
                     (source_edge.id == target_edge.id and source_edge.tags == target_edge.tags)) {
                     // only merge edges when they fit together concerning their id and tag_helper_ref
                     // this means we split when the tag_helper_ref change, for example maxspeed change within road
-                    if (not source_edge.line.empty() and not target_edge.line.empty()) {
+                    if (not source_edge.line().empty() and not target_edge.line().empty()) {
                         // only continue if there is something to merge
                         edge_type new_edge = edge_type::merge(source_edge, target_edge);
 
@@ -716,8 +719,9 @@ namespace map_matching_2::geometry::network {
                 boost::detail::add_reverse_edge_descriptor<original_edge_descriptor, graph_type>::convert(
                         edge_descriptor_original));
 
-        const original_line_type &line_original = edge_original.line;
+        const original_line_type &line_original = edge_original.line();
         reprojected_line_type line_reprojected;
+        line_reprojected.reserve(line_original.size());
 
         transformation.forward(line_original, line_reprojected);
 

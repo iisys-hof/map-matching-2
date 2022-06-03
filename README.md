@@ -306,7 +306,7 @@ underlying road network in gray because it is slightly off the OpenStreetMap bac
 
 ![Example 2](docs/example-2.png "Example 2")
 In this example a noise in the red track was correctly removed when taking a turn to the left. The noise might have come
-from GPS measurement errors but clearly the red track does not exactly behave as expected at such a T-junction. With our
+from GPS point errors but clearly the red track does not exactly behave as expected at such a T-junction. With our
 candidate-adoption approach, the algorithm was able to match multiple adjacent candidates to the same network edges,
 which removed the noisy part in the green matched result.
 
@@ -388,7 +388,7 @@ solutions as we described, we did not implement it in our Hidden Markov Model.
 ![Example 10](docs/example-10.png "Example 10")
 This is the same example as above but the closed bridge is zoomed in. We can see that the green match result was split a
 bit earlier than only around the closed part of the bridge. This is a result that can be discussed. We can see that the
-orange candidate policy projections lie in a difficult situation. With the measurement points (at the red track arrows)
+orange candidate policy projections lie in a difficult situation. With the point points (at the red track arrows)
 it is definitely difficult to choose optimal candidates in this situation. Though this result is not perfect, it is
 quite good compared to a result that would make a large detour in this situation.
 

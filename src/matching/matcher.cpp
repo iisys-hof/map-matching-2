@@ -40,13 +40,13 @@ namespace map_matching_2::matching {
             const bool adaptive_radius, const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
             const bool candidate_adoption_reverse) {
         std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
-                track.measurements.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
+                track.line().size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
                         &candidate_edge_type::distance_comparator}};
 
         std::vector<double> radii;
-        radii.reserve(track.measurements.size());
+        radii.reserve(track.line().size());
 
-        for (std::size_t i = 0; i < track.measurements.size(); ++i) {
+        for (std::size_t i = 0; i < track.line().size(); ++i) {
             radii.emplace_back(_candidate_search_buffer_measurement(
                     candidate_edge_sets[i], 1, track, i, buffer_points, buffer_radius, buffer_upper_radius,
                     buffer_lower_radius, adaptive_radius));
@@ -67,13 +67,13 @@ namespace map_matching_2::matching {
             const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
             const bool candidate_adoption_reverse) {
         std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
-                track.measurements.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
+                track.line().size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
                         &candidate_edge_type::distance_comparator}};
 
         std::vector<std::size_t> numbers;
-        numbers.reserve(track.measurements.size());
+        numbers.reserve(track.line().size());
 
-        for (std::size_t i = 0; i < track.measurements.size(); ++i) {
+        for (std::size_t i = 0; i < track.line().size(); ++i) {
             numbers.emplace_back(_candidate_search_nearest_measurement(
                     candidate_edge_sets[i], 1, track, i, number, with_reverse, with_adjacent));
         }
@@ -94,13 +94,13 @@ namespace map_matching_2::matching {
             const bool with_reverse, const bool with_adjacent, const bool candidate_adoption_siblings,
             const bool candidate_adoption_nearby, const bool candidate_adoption_reverse) {
         std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
-                track.measurements.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
+                track.line().size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
                         &candidate_edge_type::distance_comparator}};
 
         std::vector<std::pair<double, std::size_t>> radii_numbers;
-        radii_numbers.reserve(track.measurements.size());
+        radii_numbers.reserve(track.line().size());
 
-        for (std::size_t i = 0; i < track.measurements.size(); ++i) {
+        for (std::size_t i = 0; i < track.line().size(); ++i) {
             radii_numbers.emplace_back(_candidate_search_combined_measurement(
                     candidate_edge_sets[i], 1, track, i, buffer_radius, number, buffer_upper_radius,
                     buffer_lower_radius, adaptive_radius, with_reverse, with_adjacent));
@@ -174,22 +174,22 @@ namespace map_matching_2::matching {
             using index_value_type = std::pair<point_type, std::size_t>;
 
             std::vector<index_value_type> measurement_index_values;
-            measurement_index_values.reserve(track.measurements.size());
-            for (std::size_t i = 0; i < track.measurements.size(); ++i) {
-                const auto &measurement = track.measurements[i];
-                measurement_index_values.emplace_back(std::pair{measurement.point, i});
+            measurement_index_values.reserve(track.line().size());
+            for (std::size_t i = 0; i < track.line().size(); ++i) {
+                const point_type &point = track.line()[i];
+                measurement_index_values.emplace_back(std::pair{point, i});
             }
 
             boost::geometry::index::rtree<index_value_type, boost::geometry::index::rstar<16>>
                     measurements_index{std::move(measurement_index_values)};
 
             for (const auto i: positions) {
-                const auto &measurement = track.measurements[i];
+                const point_type &point = track.line()[i];
                 auto &edge_set = candidate_edge_sets[i];
                 auto edge_set_it = edge_set.crbegin();
                 const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = _create_buffer(measurement.point, radii[i] * 2);
+                const auto buffer = _create_buffer(point, radii[i] * 2);
 
                 std::vector<index_value_type> results;
                 measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
@@ -281,22 +281,22 @@ namespace map_matching_2::matching {
             using index_value_type = std::pair<point_type, std::size_t>;
 
             std::vector<index_value_type> measurement_index_values;
-            measurement_index_values.reserve(track.measurements.size());
-            for (std::size_t i = 0; i < track.measurements.size(); ++i) {
-                const auto &measurement = track.measurements[i];
-                measurement_index_values.emplace_back(std::pair{measurement.point, i});
+            measurement_index_values.reserve(track.line().size());
+            for (std::size_t i = 0; i < track.line().size(); ++i) {
+                const point_type &point = track.line()[i];
+                measurement_index_values.emplace_back(std::pair{point, i});
             }
 
             boost::geometry::index::rtree<index_value_type, boost::geometry::index::rstar<16>>
                     measurements_index{std::move(measurement_index_values)};
 
             for (const auto i: positions) {
-                const auto &measurement = track.measurements[i];
+                const point_type &point = track.line()[i];
                 auto &edge_set = candidate_edge_sets[i];
                 auto edge_set_it = edge_set.crbegin();
                 const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = _create_buffer(measurement.point, radii_numbers[i].first * 2);
+                const auto buffer = _create_buffer(point, radii_numbers[i].first * 2);
 
                 std::vector<index_value_type> results;
                 measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
@@ -431,17 +431,17 @@ namespace map_matching_2::matching {
 
         if (candidate_from.edge_descriptor == candidate_to.edge_descriptor) {
             // when both measurements point to the same edge
-            if (start.has_length and end.has_length) {
+            if (start.has_length() and end.has_length()) {
                 // when both partial routes exist on the same edge
                 const auto &edge = network.graph[candidate_from.edge_descriptor];
-                if (edge.has_length and start.length + end.length >= edge.length) {
+                if (edge.has_length() and start.length() + end.length() >= edge.length()) {
                     // if both lines overlap (which is only possible when sum of lengths is larger or equal than edge length)
-                    if (candidate_from.from.has_length and candidate_to.from.has_length and
-                        candidate_from.from.length <= candidate_to.from.length) {
+                    if (candidate_from.from.has_length() and candidate_to.from.has_length() and
+                        candidate_from.from.length() <= candidate_to.from.length()) {
                         // only continue if substring is possible, else routing is needed
 //                            std::cout << edge << "\n" << candidate_from << "\n" << candidate_to << std::endl;
                         return route_type{geometry::substring<rich_line_type>(
-                                edge, candidate_from.from.length, candidate_to.from.length,
+                                edge, candidate_from.from.length(), candidate_to.from.length(),
                                 candidate_from.projection_point, candidate_to.projection_point,
                                 true, true)};
                     }
@@ -451,7 +451,7 @@ namespace map_matching_2::matching {
 
         route_type route = this->route(candidates, from, source, to, target, max_distance_factor);
 
-        if (not route.is_invalid) {
+        if (not route.is_invalid()) {
             route_type start_route{std::cref(start)};
             route_type end_route{std::cref(end)};
 
@@ -459,10 +459,10 @@ namespace map_matching_2::matching {
                 if (within_edge_turns) {
                     // trim route to allow turns within the edge
                     route_type start_return = start_route.trim_merge(route);
-                    if (not start_return.is_invalid) {
+                    if (not start_return.is_invalid()) {
                         // start trim worked
                         route_type end_return = start_return.trim_merge(end_route);
-                        if (not end_return.is_invalid) {
+                        if (not end_return.is_invalid()) {
                             // end trim also worked, return combination
                             return std::move(end_return);
                         } else {
@@ -472,7 +472,7 @@ namespace map_matching_2::matching {
                     } else {
                         // start trim did not work, try end
                         route_type end_return = route.trim_merge(end_route);
-                        if (not end_return.is_invalid) {
+                        if (not end_return.is_invalid()) {
                             // end trim worked, start did not, merge
                             return route_type::merge({start_route, end_return}, false, true);
                         } else {
@@ -528,12 +528,12 @@ namespace map_matching_2::matching {
                                                within_edge_turns, max_distance_factor);
 
             if (join_merges and not skipped and
-                not routes.empty() and not route.is_invalid and not route.rich_lines.empty()) {
+                not routes.empty() and not route.is_invalid() and not route.rich_lines().empty()) {
                 route_type &prev_route = routes.back();
-                if (not prev_route.is_invalid and not prev_route.rich_lines.empty()) {
-                    const rich_line_type &prev_route_back = prev_route.rich_lines.back();
-                    if (not prev_route_back.line.empty()) {
-                        const point_type &prev_route_last_point = prev_route_back.line.back();
+                if (not prev_route.is_invalid() and not prev_route.rich_lines().empty()) {
+                    const rich_line_type &prev_route_back = prev_route.rich_lines().back();
+                    if (not prev_route_back.line().empty()) {
+                        const point_type &prev_route_last_point = prev_route_back.line().back();
                         const auto point_search = network.point_in_edges(prev_route_last_point);
                         if (not point_search.first) {
                             route_type::join(prev_route, route, true);
@@ -542,7 +542,7 @@ namespace map_matching_2::matching {
                 }
             }
 
-            if (not route.is_invalid and route.has_length) {
+            if (not route.is_invalid() and route.has_length()) {
                 skipped = false;
                 routes.emplace_back(std::move(route));
             }
@@ -562,10 +562,10 @@ namespace map_matching_2::matching {
             edges.reserve(not candidates.empty() ? candidates.size() - 1 : 0);
 
             const auto multi_rich_line = route.get_multi_rich_line();
-            for (const auto &rich_line: multi_rich_line.rich_lines) {
-                for (const auto &rich_segment: rich_line.rich_segments) {
-                    if (rich_segment.has_length and rich_segment.has_azimuth) {
-                        const auto edge_search = network.fitting_edge(rich_segment.segment);
+            for (const auto &rich_line: multi_rich_line.rich_lines()) {
+                for (const auto &rich_segment: rich_line.rich_segments()) {
+                    if (rich_segment.has_length() and rich_segment.has_azimuth()) {
+                        const auto edge_search = network.fitting_edge(rich_segment.segment());
                         if (edge_search.first) {
                             const auto &edge = network.graph[edge_search.second];
                             if (edges.empty() or &edges.back().get() != &edge) {
@@ -692,8 +692,8 @@ namespace map_matching_2::matching {
             const std::size_t round, const Track &track, const std::size_t index, const std::size_t buffer_points,
             const double buffer_radius, const double buffer_upper_radius, const double buffer_lower_radius,
             bool adaptive_radius) const {
-        assert(index < track.measurements.size());
-        const auto &measurement = track.measurements[index];
+        assert(index < track.line().size());
+        const point_type &point = track.line()[index];
 
         bool found = false;
         std::set<edge_descriptor> edge_result;
@@ -703,11 +703,11 @@ namespace map_matching_2::matching {
             if (adaptive_radius) {
                 if (index > 0) {
                     current_buffer_radius =
-                            std::min(current_buffer_radius, (double) track.rich_segments[index - 1].length);
+                            std::min(current_buffer_radius, (double) track.rich_segments()[index - 1].length());
                 }
-                if (index < track.measurements.size() - 1) {
+                if (index < track.line().size() - 1) {
                     current_buffer_radius =
-                            std::min(current_buffer_radius, (double) track.rich_segments[index].length);
+                            std::min(current_buffer_radius, (double) track.rich_segments()[index].length());
                 }
 
                 if (current_buffer_radius < buffer_lower_radius) {
@@ -719,7 +719,7 @@ namespace map_matching_2::matching {
             current_buffer_radius = std::min(current_buffer_radius, buffer_upper_radius);
 
             // create bounding box with at least buffer_distance
-            const auto buffer = _create_buffer(measurement.point, current_buffer_radius, buffer_points);
+            const auto buffer = _create_buffer(point, current_buffer_radius, buffer_points);
 
             // query rtree
             edge_result = network.query_segments_unique(boost::geometry::index::intersects(buffer));
@@ -742,17 +742,17 @@ namespace map_matching_2::matching {
             std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
             const std::size_t round, const Track &track, const std::size_t index, const std::size_t number,
             const bool with_reverse, const bool with_adjacent) const {
-        assert(index < track.measurements.size());
-        const measurement_type &measurement = track.measurements[index];
+        assert(index < track.line().size());
+        const point_type &point = track.line()[index];
 
         // query rtree
         std::set<edge_descriptor> edge_result = network.query_segments_unique(
-                boost::geometry::index::nearest(measurement.point, number));
+                boost::geometry::index::nearest(point, number));
 
         if (with_adjacent) {
             for (const auto &edge_descriptor: edge_result) {
                 const auto &edge = network.graph[edge_descriptor];
-                const auto edge_distance = geometry::distance(measurement.point, edge.line);
+                const auto edge_distance = geometry::distance(point, edge.line());
 
                 const auto source = boost::source(edge_descriptor, network.graph);
                 const auto target = boost::target(edge_descriptor, network.graph);
@@ -760,7 +760,7 @@ namespace map_matching_2::matching {
                 for (const auto vertex: std::array{source, target}) {
                     for (const auto out_edge: boost::make_iterator_range(boost::out_edges(vertex, network.graph))) {
                         const auto &adj_edge = network.graph[out_edge];
-                        const auto adj_distance = geometry::distance(measurement.point, adj_edge.line);
+                        const auto adj_distance = geometry::distance(point, adj_edge.line());
                         if (adj_distance <= edge_distance) {
                             edge_result.emplace(out_edge);
                         }
@@ -792,12 +792,12 @@ namespace map_matching_2::matching {
             const std::size_t round, const Track &track, const std::size_t index, const double buffer_radius,
             const std::size_t number, const double buffer_upper_radius, const double buffer_lower_radius,
             bool adaptive_radius, const bool with_reverse, const bool with_adjacent) const {
-        assert(index < track.measurements.size());
-        const auto &measurement = track.measurements[index];
+        assert(index < track.line().size());
+        const point_type &point = track.line()[index];
 
         // query rtree
         std::set<edge_descriptor> edge_result = network.query_segments_unique(
-                boost::geometry::index::nearest(measurement.point, number));
+                boost::geometry::index::nearest(point, number));
 
         std::vector<typename decltype(edge_result)::const_iterator> removals;
         removals.reserve(edge_result.size());
@@ -808,11 +808,11 @@ namespace map_matching_2::matching {
             if (adaptive_radius) {
                 if (index > 0) {
                     current_buffer_radius =
-                            std::min(current_buffer_radius, (double) track.rich_segments[index - 1].length);
+                            std::min(current_buffer_radius, (double) track.rich_segments()[index - 1].length());
                 }
-                if (index < track.measurements.size() - 1) {
+                if (index < track.line().size() - 1) {
                     current_buffer_radius =
-                            std::min(current_buffer_radius, (double) track.rich_segments[index].length);
+                            std::min(current_buffer_radius, (double) track.rich_segments()[index].length());
                 }
 
                 if (current_buffer_radius < buffer_lower_radius) {
@@ -825,7 +825,7 @@ namespace map_matching_2::matching {
 
             for (auto it = edge_result.cbegin(); it != edge_result.cend(); it++) {
                 const auto &edge = network.graph[*it];
-                const auto edge_distance = geometry::distance(measurement.point, edge.line);
+                const auto edge_distance = geometry::distance(point, edge.line());
 
                 if (edge_distance > current_buffer_radius) {
                     removals.emplace_back(it);
@@ -847,7 +847,7 @@ namespace map_matching_2::matching {
         if (with_adjacent) {
             for (const auto &edge_descriptor: edge_result) {
                 const auto &edge = network.graph[edge_descriptor];
-                const auto edge_distance = geometry::distance(measurement.point, edge.line);
+                const auto edge_distance = geometry::distance(point, edge.line());
 
                 const auto source = boost::source(edge_descriptor, network.graph);
                 const auto target = boost::target(edge_descriptor, network.graph);
@@ -855,7 +855,7 @@ namespace map_matching_2::matching {
                 for (const auto vertex: std::array{source, target}) {
                     for (const auto out_edge: boost::make_iterator_range(boost::out_edges(vertex, network.graph))) {
                         const auto &adj_edge = network.graph[out_edge];
-                        const auto adj_distance = geometry::distance(measurement.point, adj_edge.line);
+                        const auto adj_distance = geometry::distance(point, adj_edge.line());
                         if (adj_distance <= edge_distance) {
                             edge_result.emplace(out_edge);
                         }
@@ -886,8 +886,8 @@ namespace map_matching_2::matching {
             std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
             const std::size_t round, const Track &track, const std::size_t index,
             std::set<edge_descriptor> &edge_result) const {
-        assert(index < track.measurements.size());
-        const measurement_type &measurement = track.measurements[index];
+        assert(index < track.line().size());
+        const point_type &point = track.line()[index];
 
         // remove edges from result that were already processes in candidate_edge_set
         for (const auto &candidate_edge: candidate_edge_set) {
@@ -896,12 +896,12 @@ namespace map_matching_2::matching {
 
         for (const auto &edge_descriptor: edge_result) {
             const auto &edge = network.graph[edge_descriptor];
-            if (edge.has_length) {
+            if (edge.has_length()) {
                 segment_type projection;
-                boost::geometry::closest_points(measurement.point, edge.line, projection);
+                boost::geometry::closest_points(point, edge.line(), projection);
                 auto projection_distance = geometry::point_distance(projection.first, projection.second);
                 if (projection_distance == geometry::default_float_type<distance_type>::v0) {
-                    // when distance is zero, replace closest point with measurement point as it is already fine
+                    // when distance is zero, replace closest point with point point as it is already fine
                     projection.second = projection.first;
                 }
 
@@ -930,46 +930,46 @@ namespace map_matching_2::matching {
                 }
 
                 rich_line_type from_line, to_line;
-                if (geometry::equals_points(edge.line.front(), projection.second)) {
+                if (geometry::equals_points(edge.line().front(), projection.second)) {
                     // projection is equal to front, from is empty, to is edge
                     to_line = edge;
-                } else if (geometry::equals_points(edge.line.back(), projection.second)) {
+                } else if (geometry::equals_points(edge.line().back(), projection.second)) {
                     // projection is equal to back, from is edge, to is empty
                     from_line = edge;
                 } else {
                     // projection is not equal, check distances
-                    const auto from_distance = geometry::point_distance(edge.line.front(), projection.second);
+                    const auto from_distance = geometry::point_distance(edge.line().front(), projection.second);
                     if (from_distance == geometry::default_float_type<distance_type>::v0) {
                         // from distance is zero, from is empty, to is edge
                         to_line = edge;
-                        projection.second = edge.line.front();
+                        projection.second = edge.line().front();
                         projection_distance = geometry::point_distance(projection.first, projection.second);
                     } else {
-                        const auto to_distance = geometry::point_distance(edge.line.back(), projection.second);
+                        const auto to_distance = geometry::point_distance(edge.line().back(), projection.second);
                         if (to_distance == geometry::default_float_type<distance_type>::v0) {
                             // to distance is zero, from is edge, to is empty
                             from_line = edge;
-                            projection.second = edge.line.back();
+                            projection.second = edge.line().back();
                             projection_distance = geometry::point_distance(projection.first, projection.second);
                         } else {
                             // we need to cut substrings
                             from_line = geometry::substring_point_to<rich_line_type>(edge, projection.second, true);
-                            assert(from_line.has_length and
-                                   from_line.length > geometry::default_float_type<length_type>::v0);
-                            if (from_line.length == edge.length) {
+                            assert(from_line.has_length() and
+                                   from_line.length() > geometry::default_float_type<length_type>::v0);
+                            if (from_line.length() == edge.length()) {
                                 // from line has same length as edge, replace with edge again, to_line is empty
                                 from_line = edge;
-                                projection.second = edge.line.back();
+                                projection.second = edge.line().back();
                                 projection_distance = geometry::point_distance(projection.first, projection.second);
                             } else {
                                 to_line = geometry::substring_point_from<rich_line_type>(edge, projection.second, true);
-                                assert(to_line.has_length and
-                                       to_line.length > geometry::default_float_type<length_type>::v0);
-                                if (to_line.length == edge.length) {
+                                assert(to_line.has_length() and
+                                       to_line.length() > geometry::default_float_type<length_type>::v0);
+                                if (to_line.length() == edge.length()) {
                                     // to line has same length as edge, replace with edge again, replace from to empty
                                     from_line = rich_line_type{};
                                     to_line = edge;
-                                    projection.second = edge.line.front();
+                                    projection.second = edge.line().front();
                                     projection_distance = geometry::point_distance(
                                             projection.first, projection.second);
                                 }
@@ -1034,12 +1034,12 @@ namespace map_matching_2::matching {
             std::vector<index_value_type> candidates_index_values;
             candidates_index_values.reserve(candidates_number);
             for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                const auto &measurement = track.measurements[index];
+                const point_type &point = track.line()[index];
                 auto &edge_set = candidate_edge_sets[index];
                 for (const auto &candidate: edge_set) {
                     if (not candidate.adopted) {
                         candidates_index_values.emplace_back(
-                                std::pair{segment_type{measurement.point, candidate.projection_point},
+                                std::pair{segment_type{point, candidate.projection_point},
                                           std::pair{index, std::cref(candidate)}});
                     }
                 }
@@ -1050,13 +1050,13 @@ namespace map_matching_2::matching {
 
             // search in index for adopting nearby candidates not directly attached
             for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                const auto &measurement = track.measurements[index];
+                const point_type &point = track.line()[index];
                 auto &edge_set = candidate_edge_sets[index];
                 auto edge_set_it = edge_set.crbegin();
                 if (edge_set_it != edge_set.crend()) {
                     const auto longest_distance = edge_set_it->distance;
 
-                    const auto buffer = _create_buffer(measurement.point, longest_distance);
+                    const auto buffer = _create_buffer(point, longest_distance);
 
                     std::vector<index_value_type> results;
                     candidates_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
@@ -1067,14 +1067,14 @@ namespace map_matching_2::matching {
                         if (index != result_index) {
                             // skip self references
                             const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
-                            add_candidate(measurement.point, candidate_edge, edge_set);
+                            add_candidate(point, candidate_edge, edge_set);
 
                             if (candidate_adoption_reverse) {
                                 auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
                                 for (const auto &edge: edge_set) {
                                     if (not edge.adopted) {
-                                        const auto &reverse_measurement = track.measurements[result_index];
-                                        add_candidate(reverse_measurement.point, edge, reverse_candidate_edge_set);
+                                        const point_type &reverse_point = track.line()[result_index];
+                                        add_candidate(reverse_point, edge, reverse_candidate_edge_set);
                                     }
                                 }
                             }
@@ -1087,14 +1087,14 @@ namespace map_matching_2::matching {
         if (candidate_adoption_siblings) {
             // adopt from previous and next candidate set the directly attached candidates
             for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                const auto &measurement = track.measurements[index];
+                const point_type &point = track.line()[index];
                 auto &edge_set = candidate_edge_sets[index];
 
                 // we have a previous candidate set
                 if (index >= 1) {
                     for (const auto &candidate_edge: candidate_edge_sets[index - 1]) {
                         if (not candidate_edge.adopted) {
-                            add_candidate(measurement.point, candidate_edge, edge_set);
+                            add_candidate(point, candidate_edge, edge_set);
                         }
                     }
                 }
@@ -1103,7 +1103,7 @@ namespace map_matching_2::matching {
                 if (index + 1 < candidate_edge_sets.size()) {
                     for (const auto &candidate_edge: candidate_edge_sets[index + 1]) {
                         if (not candidate_edge.adopted) {
-                            add_candidate(measurement.point, candidate_edge, edge_set);
+                            add_candidate(point, candidate_edge, edge_set);
                         }
                     }
                 }
@@ -1112,7 +1112,7 @@ namespace map_matching_2::matching {
 
         // preparing node set and finalizing candidates
         for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-            const auto &measurement = track.measurements[index];
+            const point_type &point = track.line()[index];
             auto &edge_set = candidate_edge_sets[index];
 
             // node set
@@ -1125,7 +1125,7 @@ namespace map_matching_2::matching {
                 const auto source = boost::source(edge_descriptor, network.graph);
                 if (not node_check.contains(source)) {
                     const auto &node = network.graph[source];
-                    const auto distance = geometry::point_distance(measurement.point, node.point);
+                    const auto distance = geometry::point_distance(point, node.point);
                     node_set.emplace(candidate_node_type{source, distance});
                     node_check.emplace(source);
                 }
@@ -1133,7 +1133,7 @@ namespace map_matching_2::matching {
                 const auto target = boost::target(edge_descriptor, network.graph);
                 if (not node_check.contains(target)) {
                     const auto &node = network.graph[target];
-                    const auto distance = geometry::point_distance(measurement.point, node.point);
+                    const auto distance = geometry::point_distance(point, node.point);
                     node_set.emplace(candidate_node_type{target, distance});
                     node_check.emplace(target);
                 }
@@ -1148,10 +1148,10 @@ namespace map_matching_2::matching {
             std::move(edge_set.begin(), edge_set.end(), std::back_inserter(edges));
 
             if (index >= candidates.size()) {
-                // next measurement is equal to current measurement
+                // next point is equal to current point
                 bool next_equal = false;
-                if (index + 1 < track.measurements.size()) {
-                    next_equal = geometry::equals_points(measurement.point, track.measurements[index + 1].point);
+                if (index + 1 < track.line().size()) {
+                    next_equal = geometry::equals_points(point, track.line()[index + 1]);
                 }
 
                 candidates.emplace_back(candidate_type{track, index, next_equal, std::move(nodes), std::move(edges)});

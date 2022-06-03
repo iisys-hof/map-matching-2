@@ -44,8 +44,8 @@ namespace map_matching_2::matching {
         row.reserve(4);
         row.emplace_back(std::to_string(distance));
         row.emplace_back(geometry::to_wkt(projection_point));
-        row.emplace_back(geometry::to_wkt(from.line));
-        row.emplace_back(geometry::to_wkt(to.line));
+        row.emplace_back(geometry::to_wkt(from.line()));
+        row.emplace_back(geometry::to_wkt(to.line()));
         return row;
     }
 

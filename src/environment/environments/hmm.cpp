@@ -54,7 +54,7 @@ namespace map_matching_2::environment {
         decltype(_observations) observations;
         _observations.swap(observations);
 
-        _observations.reserve(track.measurements.size());
+        _observations.reserve(track.line().size());
         for (const auto &candidate: _candidates) {
             double max_distance = 0.0;
             for (const auto &candidate_edge: candidate.edges) {
@@ -116,22 +116,22 @@ namespace map_matching_2::environment {
                                 _candidates, from, source, to, target, _match_settings.within_edge_turns,
                                 _match_settings.routing_max_distance_factor);
 
-                        if (route.is_invalid) {
+                        if (route.is_invalid()) {
                             // invalid route, not possible
                             transition_probabilities.emplace_back(std::log(0.0));
                         } else {
                             double transition_probability = std::log(1.0);
-                            if (from_candidate.next_equal and not route.has_length) {
+                            if (from_candidate.next_equal and not route.has_length()) {
                                 // no distance between candidates and empty route, we stay here
                                 transition_probability += std::log(1.0);
                             } else {
                                 // calculate transition probability
                                 const typename Matcher::length_type next_distance =
-                                        to_candidate.track->rich_segments[to_candidate.index - 1].length;
+                                        to_candidate.track->rich_segments()[to_candidate.index - 1].length();
                                 typename Matcher::length_type route_length =
                                         geometry::default_float_type<typename Matcher::length_type>::v1;
-                                if (route.has_length) {
-                                    route_length = route.length;
+                                if (route.has_length()) {
+                                    route_length = route.length();
                                 }
 
 //                                double length_probability = std::max(1e-20L, std::min(next_distance, route_length) /
@@ -160,11 +160,11 @@ namespace map_matching_2::environment {
                                        length_probability <= 0.0);
                                 transition_probability += length_probability;
 
-                                if (route.has_azimuth) {
+                                if (route.has_azimuth()) {
                                     const typename Matcher::coordinate_type next_azimuth =
-                                            to_candidate.track->rich_segments[to_candidate.index - 1].azimuth;
+                                            to_candidate.track->rich_segments()[to_candidate.index - 1].azimuth();
 
-                                    const auto diff_azimuth = geometry::angle_diff(next_azimuth, route.azimuth);
+                                    const auto diff_azimuth = geometry::angle_diff(next_azimuth, route.azimuth());
                                     double azimuth_probability =
                                             std::max(1e-20, (180.0 - std::fabs(diff_azimuth)) / 180.0);
 
@@ -177,28 +177,32 @@ namespace map_matching_2::environment {
                                     // calculate turn
                                     if (from_candidate.index >= 1 and to_candidate.index >= 2) {
                                         typename Matcher::coordinate_type current_azimuth =
-                                                from_candidate.track->rich_segments[from_candidate.index - 1].azimuth;
+                                                from_candidate.track->rich_segments()
+                                                [from_candidate.index - 1].azimuth();
 
                                         const typename Matcher::coordinate_type next_turn =
-                                                to_candidate.track->segments_directions[to_candidate.index - 2];
+                                                to_candidate.track->segments_direction(to_candidate.index - 2);
 
-                                        const auto route_turn = geometry::direction_deg(current_azimuth, route.azimuth);
-                                        const auto turn_diff = geometry::angle_diff(next_turn, route_turn);
+                                        if (not std::isnan(next_turn)) {
+                                            const auto route_turn = geometry::direction_deg(
+                                                    current_azimuth, route.azimuth());
+                                            const auto turn_diff = geometry::angle_diff(next_turn, route_turn);
 
-                                        double turn_probability =
-                                                std::max(1e-20, (360.0 - std::fabs(turn_diff)) / 360.0);
+                                            double turn_probability =
+                                                    std::max(1e-20, (360.0 - std::fabs(turn_diff)) / 360.0);
 
-                                        turn_probability = std::log(
-                                                std::pow(turn_probability, _match_settings.hmm_turn_factor));
-                                        assert(turn_probability > -std::numeric_limits<double>::infinity() and
-                                               turn_probability <= 0.0);
-                                        transition_probability += turn_probability;
+                                            turn_probability = std::log(
+                                                    std::pow(turn_probability, _match_settings.hmm_turn_factor));
+                                            assert(turn_probability > -std::numeric_limits<double>::infinity() and
+                                                   turn_probability <= 0.0);
+                                            transition_probability += turn_probability;
+                                        }
                                     }
                                 }
 
-                                if (route.has_directions) {
+                                if (route.has_directions()) {
                                     double absolute_directions_probability =
-                                            std::max(1e-20, (360.0 - route.absolute_directions) / 360.0);
+                                            std::max(1e-20, (360.0 - route.absolute_directions()) / 360.0);
 
                                     absolute_directions_probability = std::log(
                                             std::pow(absolute_directions_probability,

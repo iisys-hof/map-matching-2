@@ -16,6 +16,8 @@
 #ifndef MAP_MATCHING_2_RICH_SEGMENT_HPP
 #define MAP_MATCHING_2_RICH_SEGMENT_HPP
 
+#include <atomic>
+#include <mutex>
 #include <utility>
 
 #include <boost/serialization/serialization.hpp>
@@ -27,20 +29,15 @@
 namespace map_matching_2::geometry {
 
     template<typename Segment>
-    struct rich_segment {
+    class rich_segment {
 
+    public:
         using point_type = typename boost::geometry::point_type<Segment>::type;
         using line_type = boost::geometry::model::linestring<point_type>;
         using segment_type = boost::geometry::model::segment<point_type>;
         using distance_type = typename boost::geometry::default_distance_result<point_type, point_type>::type;
         using length_type = typename boost::geometry::default_length_result<Segment>::type;
         using angle_type = typename boost::geometry::coordinate_type<Segment>::type;
-
-        bool has_length;
-        bool has_azimuth;
-        length_type length;
-        angle_type azimuth;
-        segment_type segment;
 
         rich_segment();
 
@@ -52,15 +49,35 @@ namespace map_matching_2::geometry {
 
         ~rich_segment() = default;
 
-        rich_segment(const rich_segment &other) = default;
+        rich_segment(const rich_segment &other);
 
-        rich_segment(rich_segment &&other) noexcept = default;
+        rich_segment(rich_segment &&other) noexcept;
 
-        rich_segment &operator=(const rich_segment &other) = default;
+        rich_segment &operator=(const rich_segment &other);
 
-        rich_segment &operator=(rich_segment &&other) noexcept = default;
+        rich_segment &operator=(rich_segment &&other) noexcept;
 
-        void _complete();
+        [[nodiscard]] bool has_length() const;
+
+        [[nodiscard]] length_type length() const;
+
+        [[nodiscard]] bool has_azimuth() const;
+
+        [[nodiscard]] angle_type azimuth() const;
+
+        [[nodiscard]] const segment_type &segment() const;
+
+        [[nodiscard]] line_type line() const;
+
+        template<template<typename> class ContainerA,
+                template<typename> class ContainerB>
+        [[nodiscard]] static ContainerA<rich_segment>
+        points2rich_segments(const ContainerB<point_type> &points);
+
+        template<template<typename> class ContainerA,
+                template<typename> class ContainerB>
+        [[nodiscard]] static ContainerA<point_type>
+        rich_segments2points(const ContainerB<rich_segment> &rich_segments);
 
         template<template<typename> class Container>
         [[nodiscard]] static Container<rich_segment>
@@ -70,17 +87,8 @@ namespace map_matching_2::geometry {
         [[nodiscard]] static line_type
         rich_segments2line(const Container<rich_segment> &rich_segments);
 
-        template<template<typename> class Container>
-        [[nodiscard]] static Container<angle_type>
-        rich_segments_directions_deg(const Container<rich_segment> &rich_segments);
-
         static void simplify(std::list<rich_segment> &segments, bool retain_reversals = true, double tolerance = 1e-3,
                              double reverse_tolerance = 1e-3);
-
-        static void _simplify(std::list<rich_segment> &segments, typename std::list<rich_segment>::iterator begin,
-                              typename std::list<rich_segment>::iterator end, double tolerance);
-
-        [[nodiscard]] line_type line() const;
 
         [[nodiscard]] std::string wkt() const;
 
@@ -99,12 +107,25 @@ namespace map_matching_2::geometry {
 
         template<typename Archive>
         void serialize(Archive &ar, const unsigned int version) {
-            ar & has_length;
-            ar & has_azimuth;
-            ar & length;
-            ar & azimuth;
-            ar & segment;
+            ar & _segment;
         }
+
+    private:
+        mutable std::mutex _mutex_length, _mutex_azimuth;
+        mutable std::atomic<bool> _computed_length, _computed_azimuth;
+        mutable bool _has_length, _has_azimuth;
+        mutable length_type _length;
+        mutable angle_type _azimuth;
+        segment_type _segment;
+
+        void _transfer(const rich_segment &other);
+
+        void _compute_length() const;
+
+        void _compute_azimuth() const;
+
+        static void _simplify(std::list<rich_segment> &segments, typename std::list<rich_segment>::iterator begin,
+                              typename std::list<rich_segment>::iterator end, double tolerance);
 
     };
 

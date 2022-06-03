@@ -38,12 +38,12 @@ namespace map_matching_2::geometry::network {
 
     template<typename Line>
     edge<Line> edge<Line>::merge(edge &a, edge &b) {
-        if (b.line.empty()) {
+        if (b.line().empty()) {
             return edge{a};
-        } else if (not b.line.empty() and a.line.empty()) {
+        } else if (not b.line().empty() and a.line().empty()) {
             return edge{b};
         } else {
-            assert(geometry::equals_points(a.line.back(), b.line.front()));
+            assert(geometry::equals_points(a.line().back(), b.line().front()));
 
             std::vector<osmium::object_id_type> nodes;
             nodes.reserve(a.nodes.size() + b.nodes.size() - 1);
@@ -79,7 +79,7 @@ namespace map_matching_2::geometry::network {
         nodes_str.append("]");
         row.emplace_back(std::move(nodes_str));
         row.emplace_back(this->wkt());
-        row.emplace_back(std::to_string(this->length));
+        row.emplace_back(std::to_string(this->length()));
         std::string tags_str;
         if (!tags.empty()) {
             tags_str.append("[");

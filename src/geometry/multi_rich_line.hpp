@@ -21,8 +21,9 @@
 namespace map_matching_2::geometry {
 
     template<typename Line>
-    struct multi_rich_line {
+    class multi_rich_line {
 
+    public:
         using point_type = typename boost::geometry::point_type<Line>::type;
         using line_type = Line;
         using multi_line_type = boost::geometry::model::multi_linestring<Line>;
@@ -32,16 +33,6 @@ namespace map_matching_2::geometry {
         using length_type = typename boost::geometry::default_length_result<Line>::type;
         using angle_type = typename boost::geometry::coordinate_type<Line>::type;
         using rich_line_type = rich_line<Line>;
-
-        bool has_length;
-        bool has_azimuth;
-        bool has_directions;
-        length_type length;
-        angle_type azimuth;
-        angle_type directions;
-        angle_type absolute_directions;
-        multi_line_type multi_line;
-        std::vector<rich_line_type> rich_lines;
 
         multi_rich_line();
 
@@ -53,8 +44,6 @@ namespace map_matching_2::geometry {
 
         explicit multi_rich_line(std::vector<rich_line_type> rich_lines);
 
-        multi_rich_line(multi_line_type multi_line, std::vector<rich_line_type> rich_lines);
-
         ~multi_rich_line() = default;
 
         multi_rich_line(const multi_rich_line &other) = default;
@@ -65,7 +54,23 @@ namespace map_matching_2::geometry {
 
         multi_rich_line &operator=(multi_rich_line &&other) noexcept = default;
 
-        void _complete();
+        [[nodiscard]] bool has_length() const;
+
+        [[nodiscard]] length_type length() const;
+
+        [[nodiscard]] bool has_azimuth() const;
+
+        [[nodiscard]] angle_type azimuth() const;
+
+        [[nodiscard]] bool has_directions() const;
+
+        [[nodiscard]] angle_type directions() const;
+
+        [[nodiscard]] angle_type absolute_directions() const;
+
+        [[nodiscard]] const std::vector<rich_line_type> &rich_lines() const;
+
+        [[nodiscard]] const multi_line_type &multi_line() const;
 
         [[nodiscard]] std::size_t sizes() const;
 
@@ -77,20 +82,38 @@ namespace map_matching_2::geometry {
         [[nodiscard]] static multi_rich_line
         merge(const std::vector<std::reference_wrapper<rich_line_type>> &rich_lines);
 
-        [[nodiscard]] static multi_line_type lines2multi_lines(const std::vector<line_type> &lines);
+        [[nodiscard]] static multi_line_type lines2multi_line(const std::vector<line_type> &lines);
+
+        [[nodiscard]] static multi_line_type rich_lines2multi_line(const std::vector<rich_line_type> &rich_lines);
 
         [[nodiscard]] std::string wkt() const;
 
         [[nodiscard]] std::string str() const;
 
         template<typename LineT>
-        friend bool operator==(const multi_rich_line<LineT> &left, const multi_rich_line<LineT> &right);
+        friend bool operator==(const multi_rich_line <LineT> &left, const multi_rich_line <LineT> &right);
 
         template<typename LineT>
-        friend bool operator!=(const multi_rich_line<LineT> &left, const multi_rich_line<LineT> &right);
+        friend bool operator!=(const multi_rich_line <LineT> &left, const multi_rich_line <LineT> &right);
 
         template<typename LineT>
-        friend std::ostream &operator<<(std::ostream &out, const multi_rich_line<LineT> &multi_rich_line);
+        friend std::ostream &operator<<(std::ostream &out, const multi_rich_line <LineT> &multi_rich_line);
+
+    private:
+        mutable bool _computed_length, _computed_azimuth, _computed_directions, _computed_rich_lines;
+        mutable bool _has_length, _has_azimuth, _has_directions;
+        mutable length_type _length;
+        mutable angle_type _azimuth, _directions, _absolute_directions;
+        mutable std::vector<rich_line_type> _rich_lines;
+        multi_line_type _multi_line;
+
+        void _compute_length() const;
+
+        void _compute_azimuth() const;
+
+        void _compute_directions() const;
+
+        void _compute_rich_lines() const;
 
     };
 

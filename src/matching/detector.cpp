@@ -42,13 +42,13 @@ namespace map_matching_2::matching {
     std::vector<std::set<defect>> detector<Track>::detect(
             const Track &track, const bool detect_duplicates, const bool detect_forward_backward) const {
         std::vector<std::set<defect>> defects;
-        defects.reserve(track.measurements.size());
-        for (std::size_t i = 0; i < track.measurements.size(); ++i) {
+        defects.reserve(track.line().size());
+        for (std::size_t i = 0; i < track.line().size(); ++i) {
             defects.emplace_back(std::set<defect>{defect::none});
         }
 
         if (detect_duplicates) {
-            for (std::int64_t from = 0, to = 1; to < track.measurements.size(); ++from, ++to) {
+            for (std::int64_t from = 0, to = 1; to < track.line().size(); ++from, ++to) {
                 if (_equal(track, from, to)) {
                     defects[to].emplace(defect::equal);
                 }
@@ -56,8 +56,8 @@ namespace map_matching_2::matching {
         }
 
         if (detect_forward_backward) {
-            for (std::int64_t from = 0, to = 1; to < track.measurements.size(); ++from, ++to) {
-                while (to < track.measurements.size() and
+            for (std::int64_t from = 0, to = 1; to < track.line().size(); ++from, ++to) {
+                while (to < track.line().size() and
                        (defects[to].contains(defect::forward_backward) or
                         defects[to].contains(defect::equal))) {
                     ++to;
@@ -108,17 +108,17 @@ namespace map_matching_2::matching {
 
     template<typename Track>
     bool detector<Track>::_equal(const Track &track, const std::size_t from, const std::size_t to) const {
-        if (from >= track.measurements.size() or to >= track.measurements.size()) {
+        if (from >= track.line().size() or to >= track.line().size()) {
             return false;
         }
 
-        return geometry::equals_points(track.line[from], track.line[to]);
+        return geometry::equals_points(track.line()[from], track.line()[to]);
     }
 
     template<typename Track>
     bool detector<Track>::_forward_backward(const Track &track, const std::size_t from, const std::size_t to,
                                             const double relative_difference) const {
-        if (from >= track.measurements.size() or to >= track.measurements.size()) {
+        if (from >= track.line().size() or to >= track.line().size()) {
             return false;
         }
 
@@ -129,12 +129,12 @@ namespace map_matching_2::matching {
 
         bool adjacent_from = prev + 1 == from;
         const auto current_azimuth =
-                adjacent_from ? track.rich_segments[prev].azimuth
-                              : geometry::azimuth_deg(track.line[prev], track.line[from]);
+                adjacent_from ? track.rich_segments()[prev].azimuth()
+                              : geometry::azimuth_deg(track.line()[prev], track.line()[from]);
         bool adjacent_to = from + 1 == to;
         const auto next_azimuth =
-                adjacent_to ? track.rich_segments[from].azimuth
-                            : geometry::azimuth_deg(track.line[from], track.line[to]);
+                adjacent_to ? track.rich_segments()[from].azimuth()
+                            : geometry::azimuth_deg(track.line()[from], track.line()[to]);
         const auto diff_azimuth = geometry::angle_diff(current_azimuth, next_azimuth);
 
         const auto relative_probability = std::fabs(diff_azimuth) / 180.0;

@@ -35,7 +35,6 @@ namespace map_matching_2::geometry::track {
         using distance_type = typename rich_line_type::distance_type;
 
         std::string id;
-        std::vector<measurement_type> measurements;
 
         track();
 
@@ -44,8 +43,6 @@ namespace map_matching_2::geometry::track {
         track(std::string id, rich_line_type rich_line);
 
         track(std::string id, std::vector<measurement_type> measurements);
-
-        track(std::string id, line_type line, std::vector<measurement_type> measurements);
 
         ~track() = default;
 
@@ -59,8 +56,6 @@ namespace map_matching_2::geometry::track {
 
         track thin_out(const std::set<std::size_t> &indices_to_remove) const;
 
-        void _correct_measurements();
-
         void simplify(bool retain_reversals = true, double tolerance = 1e-3, double reverse_tolerance = 1e-3);
 
         template<typename Network>
@@ -68,26 +63,18 @@ namespace map_matching_2::geometry::track {
 
         template<typename TrackReprojected, typename SRSOriginal, typename SRSProjected>
         TrackReprojected reproject(SRSOriginal from, SRSProjected to) const {
-            using original_point_type = point_type;
-            using reprojected_point_type = typename TrackReprojected::point_type;
-
-            using reprojected_measurement = measurement<reprojected_point_type>;
+            using original_line_type = line_type;
+            using reprojected_line_type = typename TrackReprojected::line_type;
 
             boost::geometry::srs::transformation<> transformation{from, to};
 
-            std::vector<reprojected_measurement> reprojected_measurements;
-            reprojected_measurements.reserve(measurements.size());
-            for (const measurement_type &measurement: measurements) {
-                const original_point_type &point_original = measurement.point;
-                reprojected_point_type point_reprojected;
+            const original_line_type &line_original = this->line();
+            reprojected_line_type line_reprojected;
+            line_reprojected.reserve(line_original.size());
 
-                transformation.forward(point_original, point_reprojected);
+            transformation.forward(line_original, line_reprojected);
 
-                reprojected_measurements.emplace_back(
-                        reprojected_measurement{measurement.timestamp, std::move(point_reprojected)});
-            }
-
-            return TrackReprojected{id, std::move(reprojected_measurements)};
+            return TrackReprojected{id, std::move(line_reprojected)};
         }
 
         [[nodiscard]] std::vector<std::string> header() const;

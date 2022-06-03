@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_SUITE(network_tests)
         BOOST_CHECK_EQUAL(edge.index, std::numeric_limits<std::size_t>::max());
         BOOST_CHECK_EQUAL(edge.id, 1);
         BOOST_CHECK_EQUAL(edge.nodes.size(), 5);
-        BOOST_CHECK_EQUAL(edge.line.size(), line.size());
-        BOOST_CHECK_CLOSE_FRACTION(edge.length, length, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(edge.azimuth, azimuth, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(edge.directions, directions, 1e-6);
+        BOOST_CHECK_EQUAL(edge.line().size(), line.size());
+        BOOST_CHECK_CLOSE_FRACTION(edge.length(), length, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(edge.azimuth(), azimuth, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(edge.directions(), directions, 1e-6);
         BOOST_CHECK_EQUAL(edge.tags.size(), 2);
         BOOST_CHECK_EQUAL(tag_helper.tag(edge.tags.at(0)).first, "tag");
         BOOST_CHECK_EQUAL(tag_helper.tag(edge.tags.at(0)).second, "test");
@@ -103,16 +103,16 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL(boost::num_edges(network.graph), 4);
         BOOST_CHECK_EQUAL(network.graph[edge_a].id, 1);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].line.at(0).get<0>(), 0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].line.at(0).get<1>(), 1, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].length, 1.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].azimuth, 90, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].line.at(1).get<0>(), 1, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].line.at(1).get<1>(), 2, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].line().at(0).get<0>(), 0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].line().at(0).get<1>(), 1, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].length(), 1.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].azimuth(), 90, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].line().at(1).get<0>(), 1, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].line().at(1).get<1>(), 2, 1e-6);
         BOOST_CHECK_EQUAL(network.graph[edge_d].id, 4);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_d].length, 3.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_d].azimuth, 0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_d].directions, 180, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_d].length(), 3.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_d].azimuth(), 0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_d].directions(), 180, 1e-6);
     }
 
     BOOST_FIXTURE_TEST_CASE(network_conversion_test, network_fixture<network_metric>) {
@@ -156,17 +156,17 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL(boost::num_edges(network.graph), 3);
         BOOST_CHECK_EQUAL(network.graph[edge_a].id, 1);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_a].length, 21516.585, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_a].azimuth, 50.274, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_a].directions, -89.936, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_a].length(), 21516.585, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_a].azimuth(), 50.274, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_a].directions(), -89.936, 1e-2);
         BOOST_CHECK_EQUAL(network.graph[edge_b].id, 2);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].length, 21516.585, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].azimuth, -129.599, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].directions, -90.064, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].length(), 21516.585, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].azimuth(), -129.599, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_b].directions(), -90.064, 1e-2);
         BOOST_CHECK_EQUAL(network.graph[edge_c].id, 3);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].length, 15288.437, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].azimuth, 50.274, 1e-2);
-        BOOST_CHECK(not network.graph[edge_c].has_directions);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].length(), 15288.437, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network.graph[edge_c].azimuth(), 50.274, 1e-2);
+        BOOST_CHECK(not network.graph[edge_c].has_directions());
 
         const boost::geometry::srs::proj4 srs_wgs84{"+proj=longlat +datum=WGS84 +no_defs"};
         const boost::geometry::srs::proj4 srs_wgs84_pseudo_mercator{
@@ -197,17 +197,17 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL(boost::num_edges(network_reprojected.graph), 3);
         BOOST_CHECK_EQUAL(network_reprojected.graph[edge_a_r].id, 1);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_a_r].length, 33684.396, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_a_r].azimuth, 50.260, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_a_r].directions, -90.0, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_a_r].length(), 33684.396, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_a_r].azimuth(), 50.260, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_a_r].directions(), -90.0, 1e-2);
         BOOST_CHECK_EQUAL(network_reprojected.graph[edge_b_r].id, 2);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_b_r].length, 33684.396, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_b_r].azimuth, -129.740, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_b_r].directions, -90.0, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_b_r].length(), 33684.396, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_b_r].azimuth(), -129.740, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_b_r].directions(), -90.0, 1e-2);
         BOOST_CHECK_EQUAL(network_reprojected.graph[edge_c_r].id, 3);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_c_r].length, 23919.186, 1e-2);
-        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_c_r].azimuth, 50.260, 1e-2);
-        BOOST_CHECK(not network_reprojected.graph[edge_c_r].has_directions);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_c_r].length(), 23919.186, 1e-2);
+        BOOST_CHECK_CLOSE_FRACTION(network_reprojected.graph[edge_c_r].azimuth(), 50.260, 1e-2);
+        BOOST_CHECK(not network_reprojected.graph[edge_c_r].has_directions());
     }
 
     BOOST_FIXTURE_TEST_CASE(network_simplification_test, network_fixture<network_metric>) {
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
         BOOST_CHECK_EQUAL_COLLECTIONS(shortest_list.begin(), shortest_list.end(),
                                       dijkstra_shortest_paths.at(0).begin(), dijkstra_shortest_paths.at(0).end());
-        BOOST_CHECK_CLOSE_FRACTION(shortest_route.length, dijkstra_shortest_route.length, 1e-12);
+        BOOST_CHECK_CLOSE_FRACTION(shortest_route.length(), dijkstra_shortest_route.length(), 1e-12);
     }
 
     BOOST_FIXTURE_TEST_CASE(network_spatial_index_test, network_fixture<network_metric>) {

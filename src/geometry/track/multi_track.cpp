@@ -43,35 +43,26 @@ namespace map_matching_2::geometry::track {
 
     template<typename Measurement>
     multi_track<Measurement>::multi_track(std::string id, std::vector<line_type> lines)
-            : multi_track{id, multi_rich_line_type{multi_rich_line_type::lines2multi_lines(lines)}} {}
+            : multi_track{std::move(id), multi_rich_line_type{multi_rich_line_type::lines2multi_line(lines)}} {}
 
     template<typename Measurement>
     multi_track<Measurement>::multi_track(std::string id, std::vector<rich_line_type> rich_lines)
-            : multi_track{id, multi_rich_line_type{std::move(rich_lines)}} {}
+            : multi_track{std::move(id), multi_rich_line_type{std::move(rich_lines)}} {}
 
     template<typename Measurement>
     multi_track<Measurement>::multi_track(std::string id, multi_rich_line_type multi_rich_line)
             : multi_rich_line_type{std::move(multi_rich_line)}, id{std::move(id)} {
-        tracks.reserve(this->rich_lines.size());
-        for (std::size_t i = 0; i < this->rich_lines.size(); ++i) {
-            tracks.emplace_back(
-                    track_type{id.append("_").append(std::to_string(i)), this->rich_lines[i]});
+        const multi_line_type &multi_line = this->multi_line();
+        tracks.reserve(multi_line.size());
+        for (std::size_t i = 0; i < multi_line.size(); ++i) {
+            std::string track_id = std::string{this->id}.append("_").append(std::to_string(i));
+            tracks.emplace_back(track_type{std::move(track_id), multi_line[i]});
         }
     }
 
     template<typename Measurement>
     multi_track<Measurement>::multi_track(std::string id, std::vector<track_type> tracks)
-            : id{std::move(id)}, tracks{std::move(tracks)} {
-        this->rich_lines.reserve(this->tracks.size());
-        for (const rich_line_type &rich_line: this->tracks) {
-            this->rich_lines.emplace_back(rich_line);
-        }
-        this->multi_line.reserve(this->rich_lines.size());
-        for (const rich_line_type &rich_line: this->rich_lines) {
-            this->multi_line.emplace_back(rich_line.line);
-        }
-        this->_complete();
-    }
+            : multi_rich_line_type{tracks2multi_line(tracks)}, id{std::move(id)}, tracks{std::move(tracks)} {}
 
     template<typename Measurement>
     void multi_track<Measurement>::simplify(const bool retain_reversals, const double tolerance,
@@ -87,6 +78,17 @@ namespace map_matching_2::geometry::track {
         for (track_type &track: tracks) {
             track.median_merge(tolerance, adaptive, network);
         }
+    }
+
+    template<typename Measurement>
+    typename multi_track<Measurement>::multi_line_type
+    multi_track<Measurement>::tracks2multi_line(const std::vector<track_type> &tracks) {
+        multi_line_type multi_line;
+        multi_line.reserve(tracks.size());
+        for (const track_type &track: tracks) {
+            multi_line.emplace_back(track.line());
+        }
+        return multi_line;
     }
 
     template<typename Measurement>
@@ -124,11 +126,11 @@ namespace map_matching_2::geometry::track {
         const auto size = [&](const multi_track &left, const multi_track &right) {
             std::size_t left_size = 0;
             for (const track_type &track: left.tracks) {
-                left_size += track.measurements.size();
+                left_size += track.line().size();
             }
             std::size_t right_size = 0;
             for (const track_type &track: right.tracks) {
-                right_size += track.measurements.size();
+                right_size += track.line().size();
             }
             return std::pair{left_size, right_size};
         };
