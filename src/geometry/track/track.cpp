@@ -39,7 +39,7 @@ namespace map_matching_2::geometry::track {
 
     template<typename Measurement>
     track<Measurement>
-    track<Measurement>::thin_out(const std::set<std::size_t> &indices_to_remove) const {
+    track<Measurement>::thin_out(const absl::btree_set<std::size_t> &indices_to_remove) const {
         line_type new_line;
         new_line.reserve(this->line().size() - indices_to_remove.size());
 

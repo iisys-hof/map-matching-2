@@ -45,6 +45,9 @@ target_link_libraries(geometry
         PUBLIC
         io
         Threads::Threads
+        absl::flat_hash_set
+        absl::flat_hash_map
+        absl::btree
         Boost::boost
         Boost::graph
         Boost::serialization

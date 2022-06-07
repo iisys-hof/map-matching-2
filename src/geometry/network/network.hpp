@@ -16,6 +16,10 @@
 #ifndef MAP_MATCHING_2_NETWORK_HPP
 #define MAP_MATCHING_2_NETWORK_HPP
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/btree_set.h>
+
 #include <boost/serialization/serialization.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
@@ -119,7 +123,7 @@ namespace map_matching_2::geometry::network {
         [[nodiscard]] std::vector<vertex_descriptor> make_queue() const;
 
         [[nodiscard]] std::vector<std::list<vertex_descriptor>>
-        dijkstra_shortest_paths(const vertex_descriptor &start, const std::unordered_set<vertex_descriptor> &goals,
+        dijkstra_shortest_paths(const vertex_descriptor &start, const absl::flat_hash_set<vertex_descriptor> &goals,
                                 double max_distance_factor, distance_type max_distance,
                                 std::vector<vertex_descriptor> &vertices, std::vector<vertex_descriptor> &predecessors,
                                 std::vector<length_type> &distances,
@@ -152,7 +156,7 @@ namespace map_matching_2::geometry::network {
         }
 
         template<typename Predicate>
-        [[nodiscard]] std::set<edge_descriptor>
+        [[nodiscard]] absl::btree_set<edge_descriptor>
         query_segments_unique(const Predicate &predicate) const {
             return _process_segments_unique_result(query_segments(predicate));
         }
@@ -197,17 +201,17 @@ namespace map_matching_2::geometry::network {
     private:
         void _merge(edge_descriptor in_edge, edge_descriptor out_edge, bool simplify_network_complete = true);
 
-        [[nodiscard]] std::unordered_map<osmium::object_id_type, std::size_t>
+        [[nodiscard]] absl::flat_hash_map<osmium::object_id_type, std::size_t>
         _adjacent_vertices(const vertex_descriptor &vertex) const;
 
         [[nodiscard]] bool _adjacent_mergable(
-                const std::unordered_map<osmium::object_id_type, std::size_t> &adjacent_vertices,
+                const absl::flat_hash_map<osmium::object_id_type, std::size_t> &adjacent_vertices,
                 const vertex_descriptor &vertex) const;
 
         [[nodiscard]] std::vector<point_type> _process_segments_points_result(
                 std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
-        [[nodiscard]] std::set<edge_descriptor> _process_segments_unique_result(
+        [[nodiscard]] absl::btree_set<edge_descriptor> _process_segments_unique_result(
                 std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
 
         template<typename GraphReprojected>
@@ -249,12 +253,12 @@ namespace map_matching_2::geometry::network {
         class vertex_visitor : public boost::default_bfs_visitor {
 
         private:
-            std::unordered_set<vertex_descriptor> &_visited;
-            std::unordered_set<vertex_descriptor> &_discovered;
+            absl::flat_hash_set<vertex_descriptor> &_visited;
+            absl::flat_hash_set<vertex_descriptor> &_discovered;
 
         public:
-            vertex_visitor(std::unordered_set<vertex_descriptor> &visited,
-                           std::unordered_set<vertex_descriptor> &discovered);
+            vertex_visitor(absl::flat_hash_set<vertex_descriptor> &visited,
+                           absl::flat_hash_set<vertex_descriptor> &discovered);
 
             template<typename graph_type_inner>
             void discover_vertex(vertex_descriptor vertex, const graph_type_inner &_graph);
@@ -274,8 +278,8 @@ namespace map_matching_2::geometry::network {
             const distance_type _max_distance;
             const double _max_distance_factor;
 
-            const std::unordered_set<vertex_descriptor> &_goals;
-            std::unordered_set<vertex_descriptor> &_goals_found;
+            const absl::flat_hash_set<vertex_descriptor> &_goals;
+            absl::flat_hash_set<vertex_descriptor> &_goals_found;
             std::vector<vertex_descriptor> &_vertices;
 
             const IndexMap &_index_map;
@@ -286,8 +290,8 @@ namespace map_matching_2::geometry::network {
 
         public:
             explicit goals_visitor(const distance_type max_distance, const double max_distance_factor,
-                                   const std::unordered_set<vertex_descriptor> &goals,
-                                   std::unordered_set<vertex_descriptor> &goals_found,
+                                   const absl::flat_hash_set<vertex_descriptor> &goals,
+                                   absl::flat_hash_set<vertex_descriptor> &goals_found,
                                    std::vector<vertex_descriptor> &vertices, const IndexMap &index_map,
                                    const WeightMap &weight_map, PredecessorMap &predecessor_map,
                                    DistanceMap &distance_map, ColorMap &color_map)

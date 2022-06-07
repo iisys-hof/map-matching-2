@@ -89,6 +89,20 @@ target_link_libraries(rpmalloc
 add_subdirectory("${rpmalloc_SOURCE_DIR}" "${rpmalloc_BINARY_DIR}" EXCLUDE_FROM_ALL)
 set(RPMALLOC_INCLUDE_DIRS "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc include dir" FORCE)
 
+# abseil
+FetchContent_Declare(abseil
+        GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+        GIT_TAG 20211102.0)
+
+FetchContent_GetProperties(abseil)
+if (NOT abseil_POPULATED)
+    FetchContent_Populate(abseil)
+endif ()
+
+set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "enable abseil propagate CXX standard" FORCE)
+
+add_subdirectory("${abseil_SOURCE_DIR}" "${abseil_BINARY_DIR}" EXCLUDE_FROM_ALL)
+
 # boost
 FetchContent_Declare(boost
         URL https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz

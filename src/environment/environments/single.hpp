@@ -17,9 +17,8 @@
 #define MAP_MATCHING_2_SINGLE_HPP
 
 #include <cstdint>
-#include <unordered_map>
 
-#include <boost/functional/hash.hpp>
+#include <absl/container/flat_hash_map.h>
 
 #include <matching/settings.hpp>
 #include <matching/detector.hpp>
@@ -132,7 +131,7 @@ namespace map_matching_2::environment {
         std::vector<typename matcher_type::candidate_type> _candidates;
 
         std::vector<state_internal> _states;
-        std::unordered_map<state_internal, state_type, boost::hash<state_internal>> _state_map;
+        absl::flat_hash_map<state_internal, state_type> _state_map;
         std::vector<std::vector<std::pair<bool, reward_tuple>>> _state_cache;
 
     };

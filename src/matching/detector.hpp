@@ -17,8 +17,9 @@
 #define MAP_MATCHING_2_DETECTOR_HPP
 
 #include <iostream>
-#include <set>
 #include <vector>
+
+#include <absl/container/btree_set.h>
 
 namespace map_matching_2::matching {
 
@@ -28,7 +29,7 @@ namespace map_matching_2::matching {
         forward_backward
     };
 
-    std::ostream &operator<<(std::ostream &out, const std::set<defect> &defect_set);
+    std::ostream &operator<<(std::ostream &out, const absl::btree_set<defect> &defect_set);
 
     template<typename Track>
     class detector {
@@ -37,10 +38,10 @@ namespace map_matching_2::matching {
 
         using measurement_type = typename Track::measurement_type;
 
-        [[nodiscard]] std::vector<std::set<defect>> detect(
+        [[nodiscard]] std::vector<absl::btree_set<defect>> detect(
                 const Track &track, bool detect_duplicates = true, bool detect_forward_backward = true) const;
 
-        [[nodiscard]] std::set<defect> detect(
+        [[nodiscard]] absl::btree_set<defect> detect(
                 const Track &track, std::size_t from, std::size_t to, bool detect_forward_backward = true) const;
 
     private:

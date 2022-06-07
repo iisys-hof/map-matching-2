@@ -18,8 +18,6 @@
 #include <chrono>
 #include <unordered_map>
 
-#include <boost/functional/hash.hpp>
-
 #include <environment/environments/single.hpp>
 #include <geometry/util.hpp>
 #include <io/csv_exporter.hpp>

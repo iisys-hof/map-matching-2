@@ -26,7 +26,7 @@ namespace map_matching_2::io::track {
 
     template<typename MultiTrack>
     gpx_track_importer<MultiTrack>::gpx_track_importer(
-            std::string filename, std::unordered_map<std::string, MultiTrack> &tracks)
+            std::string filename, absl::flat_hash_map<std::string, MultiTrack> &tracks)
             : importer{std::move(filename)}, _tracks{tracks} {}
 
     template<typename MultiTrack>

@@ -32,5 +32,6 @@ target_link_libraries(map_matching_2_tests
         io
         learning
         matching
+        absl::flat_hash_map
         Boost::serialization
         Boost::unit_test_framework)

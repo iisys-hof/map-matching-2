@@ -24,7 +24,7 @@
 namespace map_matching_2::io::track {
 
     template<typename MultiTrack>
-    input_importer<MultiTrack>::input_importer(std::unordered_map<std::string, MultiTrack> &tracks)
+    input_importer<MultiTrack>::input_importer(absl::flat_hash_map<std::string, MultiTrack> &tracks)
             : _tracks{tracks} {}
 
     template<typename MultiTrack>

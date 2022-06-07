@@ -21,7 +21,7 @@ namespace map_matching_2::io::track {
 
     template<typename MultiTrack>
     csv_track_importer<MultiTrack>::csv_track_importer(std::string filename,
-                                                       std::unordered_map<std::string, MultiTrack> &tracks)
+                                                       absl::flat_hash_map<std::string, MultiTrack> &tracks)
             : csv_importer{std::move(filename)}, _tracks{tracks} {}
 
     template<typename MultiTrack>

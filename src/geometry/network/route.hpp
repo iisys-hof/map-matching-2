@@ -115,7 +115,7 @@ namespace map_matching_2::geometry::network {
         [[nodiscard]] std::string str() const;
 
         template<typename LineT>
-        friend std::ostream &operator<<(std::ostream &out, const route <LineT> &route);
+        friend std::ostream &operator<<(std::ostream &out, const route<LineT> &route);
 
     private:
         mutable bool _computed_length, _computed_azimuth, _computed_directions;

@@ -61,7 +61,7 @@ namespace map_matching_2::io::network {
         }
 
         // add ways
-        std::unordered_set<std::size_t> edges_reversed;
+        absl::flat_hash_set<std::size_t> edges_reversed;
         for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(_network.graph))) {
             const auto &edge = _network.graph[edge_descriptor];
             bool is_oneway = true;

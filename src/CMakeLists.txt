@@ -33,6 +33,8 @@ target_link_libraries(map_matching_2
         learning
         matching
         rpmalloc
+        absl::flat_hash_set
+        absl::flat_hash_map
         Boost::boost
         Boost::program_options)
 

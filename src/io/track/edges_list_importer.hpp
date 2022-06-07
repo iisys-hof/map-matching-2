@@ -17,7 +17,8 @@
 #define MAP_MATCHING_2_EDGES_LIST_IMPORTER_HPP
 
 #include <vector>
-#include <unordered_map>
+
+#include <absl/container/flat_hash_map.h>
 
 #include "../importer.hpp"
 
@@ -32,13 +33,13 @@ namespace map_matching_2::io::track {
         using line_type = typename MultiTrack::line_type;
 
         edges_list_importer(std::string filename, const Network &_network,
-                            std::unordered_map<std::string, MultiTrack> &tracks);
+                            absl::flat_hash_map<std::string, MultiTrack> &tracks);
 
         void read() override;
 
     private:
         const Network &_network;
-        std::unordered_map<std::string, MultiTrack> &_tracks;
+        absl::flat_hash_map<std::string, MultiTrack> &_tracks;
 
     };
 

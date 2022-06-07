@@ -19,6 +19,8 @@
 #include "rich_line.hpp"
 #include "multi_rich_line.hpp"
 
+#include <absl/container/btree_set.h>
+
 #include "util.hpp"
 
 namespace map_matching_2::geometry {
@@ -70,7 +72,7 @@ namespace map_matching_2::geometry {
         compare(const RichLine &ground_truth, const RichLine &compare) const;
 
     private:
-        using points_set_type = std::set<point_type, decltype(&geometry::point_set_comparator<point_type>)>;
+        using points_set_type = absl::btree_set<point_type, decltype(&geometry::point_set_comparator<point_type>)>;
         using rtree_segments_key_type = std::pair<segment_type, typename std::list<rich_segment_type>::iterator>;
 
         using rtree_points_type = boost::geometry::index::rtree<point_type, boost::geometry::index::rstar<16>>;

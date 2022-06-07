@@ -18,6 +18,8 @@
 
 #include "../csv_importer.hpp"
 
+#include <absl/container/flat_hash_map.h>
+
 namespace map_matching_2::io::track {
 
     struct csv_track_importer_settings {
@@ -48,10 +50,10 @@ namespace map_matching_2::io::track {
 
         csv_track_importer_settings settings;
 
-        csv_track_importer(std::string filename, std::unordered_map<std::string, MultiTrack> &tracks);
+        csv_track_importer(std::string filename, absl::flat_hash_map<std::string, MultiTrack> &tracks);
 
     protected:
-        std::unordered_map<std::string, MultiTrack> &_tracks;
+        absl::flat_hash_map<std::string, MultiTrack> &_tracks;
 
         void configure_format(csv::CSVFormat &format) override;
 
@@ -60,7 +62,7 @@ namespace map_matching_2::io::track {
         void finish_import() override;
 
     private:
-        std::unordered_map<std::string, std::vector<measurement_type>> _measurements;
+        absl::flat_hash_map<std::string, std::vector<measurement_type>> _measurements;
 
         [[nodiscard]] bool _is_number(const std::string &str);
 

@@ -17,7 +17,8 @@
 #define MAP_MATCHING_2_ARC_NODE_IMPORTER_HPP
 
 #include <vector>
-#include <unordered_map>
+
+#include <absl/container/flat_hash_map.h>
 
 #include "../importer.hpp"
 
@@ -31,7 +32,7 @@ namespace map_matching_2::io::network {
         const std::string _nodes;
 
         std::vector<typename Network::node_type> _node_map;
-        std::unordered_map<std::size_t, typename Network::vertex_descriptor> _vertex_map;
+        absl::flat_hash_map<std::size_t, typename Network::vertex_descriptor> _vertex_map;
 
     public:
         arc_node_importer(std::string arcs, std::string nodes, Network &network);

@@ -16,8 +16,9 @@
 #ifndef MAP_MATCHING_2_NETWORK_FIXTURE_HPP
 #define MAP_MATCHING_2_NETWORK_FIXTURE_HPP
 
-#include <unordered_map>
 #include <initializer_list>
+
+#include <absl/container/flat_hash_map.h>
 
 #include <geometry/types.hpp>
 #include <geometry/network/types.hpp>
@@ -31,8 +32,8 @@ using network_static_metric = map_matching_2::geometry::network::types_cartesian
 template<typename Network>
 struct network_fixture {
 
-    std::unordered_map<osmium::object_id_type, typename Network::vertex_descriptor> nodes_map;
-    std::unordered_map<osmium::object_id_type, typename Network::edge_descriptor> edges_map;
+    absl::flat_hash_map<osmium::object_id_type, typename Network::vertex_descriptor> nodes_map;
+    absl::flat_hash_map<osmium::object_id_type, typename Network::edge_descriptor> edges_map;
 
     map_matching_2::geometry::network::tag_helper tag_helper;
 

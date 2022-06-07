@@ -20,7 +20,7 @@
 
 namespace map_matching_2::matching {
 
-    std::ostream &operator<<(std::ostream &out, const std::set<defect> &defect_set) {
+    std::ostream &operator<<(std::ostream &out, const absl::btree_set<defect> &defect_set) {
         std::string defect_str;
         if (defect_set.contains(defect::none)) {
             defect_str.append("none, ");
@@ -39,12 +39,12 @@ namespace map_matching_2::matching {
     }
 
     template<typename Track>
-    std::vector<std::set<defect>> detector<Track>::detect(
+    std::vector<absl::btree_set<defect>> detector<Track>::detect(
             const Track &track, const bool detect_duplicates, const bool detect_forward_backward) const {
-        std::vector<std::set<defect>> defects;
+        std::vector<absl::btree_set<defect>> defects;
         defects.reserve(track.line().size());
         for (std::size_t i = 0; i < track.line().size(); ++i) {
-            defects.emplace_back(std::set<defect>{defect::none});
+            defects.emplace_back(absl::btree_set<defect>{defect::none});
         }
 
         if (detect_duplicates) {
@@ -90,10 +90,10 @@ namespace map_matching_2::matching {
     }
 
     template<typename Track>
-    std::set<defect> detector<Track>::detect(
+    absl::btree_set<defect> detector<Track>::detect(
             const Track &track, const std::size_t from, const std::size_t to,
             const bool detect_forward_backward) const {
-        std::set<defect> defect_set;
+        absl::btree_set<defect> defect_set;
 
         if (detect_forward_backward and _forward_backward(track, from, to)) {
             defect_set.emplace(defect::forward_backward);

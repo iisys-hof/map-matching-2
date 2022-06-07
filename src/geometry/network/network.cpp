@@ -107,12 +107,12 @@ namespace map_matching_2::geometry::network {
         auto colors = make_colors();
         auto color_map = boost::make_iterator_property_map(colors.begin(), index_map);
 
-        std::unordered_set<vertex_descriptor> visited;
-        std::vector<std::unordered_set<vertex_descriptor>> components;
+        absl::flat_hash_set<vertex_descriptor> visited;
+        std::vector<absl::flat_hash_set<vertex_descriptor>> components;
 
         for (const auto vertex: boost::make_iterator_range(boost::vertices(graph))) {
             if (not visited.contains(vertex)) {
-                auto &discovered = components.emplace_back(std::unordered_set<vertex_descriptor>{});
+                auto &discovered = components.emplace_back(absl::flat_hash_set<vertex_descriptor>{});
                 vertex_visitor vertex_visitor{visited, discovered};
 
                 boost::breadth_first_visit(graph, vertex,
@@ -348,7 +348,7 @@ namespace map_matching_2::geometry::network {
     template<typename Graph>
     std::vector<std::list<typename network<Graph>::vertex_descriptor>>
     network<Graph>::dijkstra_shortest_paths(const vertex_descriptor &start,
-                                            const std::unordered_set<vertex_descriptor> &goals,
+                                            const absl::flat_hash_set<vertex_descriptor> &goals,
                                             const double max_distance_factor, const distance_type max_distance,
                                             std::vector<vertex_descriptor> &vertices,
                                             std::vector<vertex_descriptor> &predecessors,
@@ -365,7 +365,7 @@ namespace map_matching_2::geometry::network {
         auto color_map = boost::make_iterator_property_map(colors.begin(), index_map);
         auto heap_index_map = boost::make_iterator_property_map(&(*heap_index.begin()), index_map);
 
-        std::unordered_set<vertex_descriptor> goals_found;
+        absl::flat_hash_set<vertex_descriptor> goals_found;
         goals_visitor<decltype(index_map), decltype(weight_map), decltype(predecessor_map),
                 decltype(distance_map), decltype(color_map)>
                 goals_visitor{max_distance_factor, max_distance, goals, goals_found, vertices,
@@ -574,12 +574,12 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Graph>
-    std::unordered_map<osmium::object_id_type, std::size_t>
+    absl::flat_hash_map<osmium::object_id_type, std::size_t>
     network<Graph>::_adjacent_vertices(const vertex_descriptor &vertex) const {
         BOOST_CONCEPT_ASSERT((boost::VertexAndEdgeListGraphConcept<Graph>));
         BOOST_CONCEPT_ASSERT((boost::BidirectionalGraphConcept<Graph>));
 
-        std::unordered_map<osmium::object_id_type, std::size_t> adj_vertices_map;
+        absl::flat_hash_map<osmium::object_id_type, std::size_t> adj_vertices_map;
         const auto emplace = [&adj_vertices_map](const osmium::object_id_type id) {
             auto search = adj_vertices_map.find(id);
             if (search == adj_vertices_map.end()) {
@@ -604,7 +604,7 @@ namespace map_matching_2::geometry::network {
 
     template<typename Graph>
     bool network<Graph>::_adjacent_mergable(
-            const std::unordered_map<osmium::object_id_type, std::size_t> &adjacent_vertices,
+            const absl::flat_hash_map<osmium::object_id_type, std::size_t> &adjacent_vertices,
             const vertex_descriptor &vertex) const {
         bool adj_vertices_okay = adjacent_vertices.size() <= 2;
 
@@ -620,7 +620,7 @@ namespace map_matching_2::geometry::network {
 
         if (adj_vertices_okay and adjacent_vertices.size() > 1) {
             // special situation with degree 4 where both sources have the same source vertex
-            std::unordered_set<vertex_descriptor> source_vertices;
+            absl::flat_hash_set<vertex_descriptor> source_vertices;
             for (const auto &in_edge: boost::make_iterator_range(boost::in_edges(vertex, graph))) {
                 const auto &source_vertex = boost::source(in_edge, graph);
                 if (source_vertices.contains(source_vertex)) {
@@ -634,7 +634,7 @@ namespace map_matching_2::geometry::network {
 
         if (adj_vertices_okay and adjacent_vertices.size() > 1) {
             // special situation with degree 4 where both targets have the same target vertex
-            std::unordered_set<vertex_descriptor> target_vertices;
+            absl::flat_hash_set<vertex_descriptor> target_vertices;
             for (const auto &out_edge: boost::make_iterator_range(boost::out_edges(vertex, graph))) {
                 const auto &target_vertex = boost::target(out_edge, graph);
                 if (target_vertices.contains(target_vertex)) {
@@ -663,9 +663,9 @@ namespace map_matching_2::geometry::network {
     }
 
     template<typename Graph>
-    std::set<typename network<Graph>::edge_descriptor> network<Graph>::_process_segments_unique_result(
+    absl::btree_set<typename network<Graph>::edge_descriptor> network<Graph>::_process_segments_unique_result(
             std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const {
-        std::set<edge_descriptor> results;
+        absl::btree_set<edge_descriptor> results;
         for (const auto &pre_result: pre_results) {
             results.emplace(edge_map[pre_result.second.first]);
         }
@@ -734,7 +734,7 @@ namespace map_matching_2::geometry::network {
 
     template<typename Graph>
     network<Graph>::vertex_visitor::vertex_visitor(
-            std::unordered_set<vertex_descriptor> &visited, std::unordered_set<vertex_descriptor> &discovered)
+            absl::flat_hash_set<vertex_descriptor> &visited, absl::flat_hash_set<vertex_descriptor> &discovered)
             : _visited{visited}, _discovered{discovered} {}
 
     template<typename Graph>
@@ -843,7 +843,7 @@ namespace map_matching_2::geometry::network {
     template
     std::vector<std::list<typename network<types_geographic::graph_static>::vertex_descriptor>>
     network<types_geographic::graph_static>::dijkstra_shortest_paths(
-            const vertex_descriptor &start, const std::unordered_set<vertex_descriptor> &goals,
+            const vertex_descriptor &start, const absl::flat_hash_set<vertex_descriptor> &goals,
             const double max_distance_factor, const distance_type max_distance,
             std::vector<vertex_descriptor> &vertices, std::vector<vertex_descriptor> &predecessors,
             std::vector<length_type> &distances, std::vector<typename boost::default_color_type> &colors,
@@ -852,7 +852,7 @@ namespace map_matching_2::geometry::network {
     template
     std::vector<std::list<typename network<types_cartesian::graph_static>::vertex_descriptor>>
     network<types_cartesian::graph_static>::dijkstra_shortest_paths(
-            const vertex_descriptor &start, const std::unordered_set<vertex_descriptor> &goals,
+            const vertex_descriptor &start, const absl::flat_hash_set<vertex_descriptor> &goals,
             const double max_distance_factor, const distance_type max_distance,
             std::vector<vertex_descriptor> &vertices, std::vector<vertex_descriptor> &predecessors,
             std::vector<length_type> &distances, std::vector<typename boost::default_color_type> &colors,
@@ -913,22 +913,26 @@ namespace map_matching_2::geometry::network {
     template
     std::vector<typename network<types_geographic::graph_static>::point_type>
     network<types_geographic::graph_static>::_process_segments_points_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t
+            >>> &&pre_results) const;
 
     template
     std::vector<typename network<types_cartesian::graph_static>::point_type>
     network<types_cartesian::graph_static>::_process_segments_points_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t
+            >>> &&pre_results) const;
 
     template
-    std::set<typename network<types_geographic::graph_static>::edge_descriptor>
+    absl::btree_set<typename network<types_geographic::graph_static>::edge_descriptor>
     network<types_geographic::graph_static>::_process_segments_unique_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t
+            >>> &&pre_results) const;
 
     template
-    std::set<typename network<types_cartesian::graph_static>::edge_descriptor>
+    absl::btree_set<typename network<types_cartesian::graph_static>::edge_descriptor>
     network<types_cartesian::graph_static>::_process_segments_unique_result(
-            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t>>> &&pre_results) const;
+            std::vector<std::pair<segment_type, std::pair<std::size_t, std::size_t
+            >>> &&pre_results) const;
 
     template
     class network<types_geographic::graph_modifiable>::vertex_reprojector<types_cartesian::graph_modifiable>;

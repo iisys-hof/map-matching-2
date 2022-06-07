@@ -20,6 +20,9 @@
 #define BOOST_THREAD_VERSION 5
 #endif
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/btree_set.h>
+
 #include <boost/thread.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 
@@ -150,13 +153,14 @@ namespace map_matching_2::matching {
 
         void save_candidates(std::string filename, const std::vector<candidate_type> &candidates) const;
 
-        [[nodiscard]] std::vector<std::set<defect>> detect(
+        [[nodiscard]] std::vector<absl::btree_set<defect>> detect(
                 const Track &track, bool detect_duplicates = true, bool detect_forward_backward = true) const;
 
-        [[nodiscard]] std::set<defect> detect(
+        [[nodiscard]] absl::btree_set<defect> detect(
                 const Track &track, std::size_t from, std::size_t to, bool detect_forward_backward = true) const;
 
-        [[nodiscard]] Track remove_defects(const Track &track, const std::vector<std::set<defect>> &defects) const;
+        [[nodiscard]] Track
+        remove_defects(const Track &track, const std::vector<absl::btree_set<defect>> &defects) const;
 
         template<typename Learner>
         void match(const multi_track_type &multi_track,
@@ -228,7 +232,7 @@ namespace map_matching_2::matching {
         }
 
         template<typename Learner>
-        void match_all(const std::unordered_map<std::string, multi_track_type> &tracks,
+        void match_all(const absl::flat_hash_map<std::string, multi_track_type> &tracks,
                        const learning::settings &learn_settings = learning::settings{},
                        const matching::settings &match_settings = matching::settings{},
                        const std::function<void(const std::vector<typename Learner::environment_type> &,
@@ -281,8 +285,7 @@ namespace map_matching_2::matching {
         boost::thread_specific_ptr<std::vector<std::size_t>> _heap_index;
         boost::thread_specific_ptr<std::vector<vertex_descriptor>> _queue;
 
-        using route_cache_type = std::unordered_map<route_cache_key_type, route_type, boost::hash<route_cache_key_type>>;
-        using route_cache_iterator_type = typename route_cache_type::iterator;
+        using route_cache_type = absl::flat_hash_map<route_cache_key_type, std::unique_ptr<const route_type>>;
 
         boost::thread_specific_ptr<route_cache_type> _route_cache;
 
@@ -308,7 +311,8 @@ namespace map_matching_2::matching {
 
         void _process_candidate_query(
                 std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
-                std::size_t round, const Track &track, std::size_t index, std::set<edge_descriptor> &edge_result) const;
+                std::size_t round, const Track &track, std::size_t index,
+                absl::btree_set<edge_descriptor> &edge_result) const;
 
         void _finalize_candidates(
                 std::vector<candidate_type> &candidates, std::size_t round, const Track &track,

@@ -21,4 +21,5 @@ target_link_libraries(learning
         PUBLIC
         environment
         matching
+        absl::flat_hash_set
         Boost::boost)

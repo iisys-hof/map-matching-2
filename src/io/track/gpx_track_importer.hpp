@@ -17,7 +17,8 @@
 #define MAP_MATCHING_2_GPX_TRACK_IMPORTER_HPP
 
 #include <string>
-#include <unordered_map>
+
+#include <absl/container/flat_hash_map.h>
 
 #include "../importer.hpp"
 
@@ -27,14 +28,14 @@ namespace map_matching_2::io::track {
     class gpx_track_importer : public importer {
 
     protected:
-        std::unordered_map<std::string, MultiTrack> &_tracks;
+        absl::flat_hash_map<std::string, MultiTrack> &_tracks;
 
     public:
         using measurement_type = typename MultiTrack::measurement_type;
         using point_type = typename measurement_type::point_type;
         using line_type = typename MultiTrack::line_type;
 
-        explicit gpx_track_importer(std::string filename, std::unordered_map<std::string, MultiTrack> &tracks);
+        explicit gpx_track_importer(std::string filename, absl::flat_hash_map<std::string, MultiTrack> &tracks);
 
         void read() override;
 

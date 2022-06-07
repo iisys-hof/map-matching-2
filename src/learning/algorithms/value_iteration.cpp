@@ -16,7 +16,8 @@
 #include "value_iteration.hpp"
 
 #include <deque>
-#include <unordered_set>
+
+#include <absl/container/flat_hash_set.h>
 
 #include <environment/environments/single.hpp>
 #include <geometry/util.hpp>
@@ -34,7 +35,7 @@ namespace map_matching_2::learning {
         auto state = _environment.reset();
         state_type highest_state = state;
 
-        std::unordered_set<state_type> states_visited;
+        absl::flat_hash_set<state_type> states_visited;
         std::deque<state_type> states_to_visit;
 
         states_to_visit.emplace_back(state);

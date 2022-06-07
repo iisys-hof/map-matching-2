@@ -91,13 +91,13 @@ namespace map_matching_2::geometry {
         [[nodiscard]] std::string str() const;
 
         template<typename LineT>
-        friend bool operator==(const multi_rich_line <LineT> &left, const multi_rich_line <LineT> &right);
+        friend bool operator==(const multi_rich_line<LineT> &left, const multi_rich_line<LineT> &right);
 
         template<typename LineT>
-        friend bool operator!=(const multi_rich_line <LineT> &left, const multi_rich_line <LineT> &right);
+        friend bool operator!=(const multi_rich_line<LineT> &left, const multi_rich_line<LineT> &right);
 
         template<typename LineT>
-        friend std::ostream &operator<<(std::ostream &out, const multi_rich_line <LineT> &multi_rich_line);
+        friend std::ostream &operator<<(std::ostream &out, const multi_rich_line<LineT> &multi_rich_line);
 
     private:
         mutable bool _computed_length, _computed_azimuth, _computed_directions, _computed_rich_lines;

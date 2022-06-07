@@ -46,6 +46,8 @@ target_link_libraries(io
         PUBLIC
         geometry
         Threads::Threads
+        absl::flat_hash_set
+        absl::flat_hash_map
         Boost::serialization
         date::date
         gpx

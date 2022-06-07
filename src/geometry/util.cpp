@@ -19,7 +19,7 @@
 #define BOOST_THREAD_VERSION 5
 #endif
 
-#include <unordered_map>
+#include <absl/container/flat_hash_map.h>
 
 #include <boost/thread.hpp>
 
@@ -30,12 +30,10 @@
 namespace map_matching_2::geometry {
 
     using _cache_key_type = std::tuple<double, double, double, double>;
-    using _distance_cache_type = std::unordered_map<_cache_key_type,
-            typename boost::geometry::default_distance_result<geometry::types_geographic::point_type, geometry::types_geographic::point_type>::type,
-            boost::hash<_cache_key_type>>;
-    using _azimuth_cache_type = std::unordered_map<_cache_key_type,
-            typename boost::geometry::coordinate_type<geometry::types_geographic::point_type>::type,
-            boost::hash<_cache_key_type>>;
+    using _distance_cache_type = absl::flat_hash_map<_cache_key_type,
+            typename boost::geometry::default_distance_result<geometry::types_geographic::point_type, geometry::types_geographic::point_type>::type>;
+    using _azimuth_cache_type = absl::flat_hash_map<_cache_key_type,
+            typename boost::geometry::coordinate_type<geometry::types_geographic::point_type>::type>;
 
     boost::thread_specific_ptr<_distance_cache_type> _distance_cache;
     boost::thread_specific_ptr<_azimuth_cache_type> _azimuth_cache;

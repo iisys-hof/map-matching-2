@@ -19,10 +19,9 @@
 #include "../exporter.hpp"
 
 #include <utility>
-#include <unordered_set>
-#include <unordered_map>
 
-#include <boost/functional/hash.hpp>
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/flat_hash_map.h>
 
 #include <osmium/io/any_output.hpp>
 
@@ -39,8 +38,8 @@ namespace map_matching_2::io::network {
         using coordinate_type = typename Network::coordinate_type;
 
         using point_map_key_type = std::pair<coordinate_type, coordinate_type>;
-        using point_map_type = std::unordered_map<point_map_key_type, osmium::object_id_type, boost::hash<point_map_key_type>>;
-        using point_set_type = std::unordered_set<point_map_key_type, boost::hash<point_map_key_type>>;
+        using point_map_type = absl::flat_hash_map<point_map_key_type, osmium::object_id_type>;
+        using point_set_type = absl::flat_hash_set<point_map_key_type>;
 
         point_map_type _point_map;
 

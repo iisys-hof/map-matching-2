@@ -15,6 +15,8 @@
 
 #include "matcher.hpp"
 
+#include <absl/container/btree_map.h>
+
 #include <geometry/track/types.hpp>
 #include <geometry/network/types.hpp>
 #include <geometry/substring.hpp>
@@ -165,7 +167,7 @@ namespace map_matching_2::matching {
             }
         }
 
-        std::map<std::size_t, double> position_map;
+        absl::btree_map<std::size_t, double> position_map;
         for (const auto i: positions) {
             position_map.emplace(i, radii[i] * 2);
         }
@@ -272,7 +274,7 @@ namespace map_matching_2::matching {
             }
         }
 
-        std::map<std::size_t, double> position_map;
+        absl::btree_map<std::size_t, double> position_map;
         for (const auto i: positions) {
             position_map.emplace(i, radii_numbers[i].first * 2);
         }
@@ -331,7 +333,7 @@ namespace map_matching_2::matching {
         const auto &node_start = network.graph[vertex_start];
 
         distance_type max_distance = geometry::default_float_type<distance_type>::v0;
-        std::unordered_set<typename boost::graph_traits<graph_type>::vertex_descriptor> goals;
+        absl::flat_hash_set<typename boost::graph_traits<graph_type>::vertex_descriptor> goals;
         for (const auto &candidate_node: candidates[to].nodes) {
             const auto vertex_goal = candidate_node.vertex_descriptor;
             goals.emplace(vertex_goal);
@@ -367,12 +369,12 @@ namespace map_matching_2::matching {
 
         auto search = _route_cache->find(key);
         bool exists = search != _route_cache->end();
+        const route_type *return_route;
 
         if (exists) {
-            return std::cref(search->second);
+            return_route = &(*(search->second));
         } else {
             bool found = false;
-            route_cache_iterator_type return_route;
 
             const auto shortest_paths = this->shortest_paths(candidates, from, source, to, max_distance_factor);
             for (const auto &shortest_path: shortest_paths) {
@@ -383,29 +385,30 @@ namespace map_matching_2::matching {
 
                 if (exists) {
                     if (key == new_key) {
-                        return_route = new_search;
+                        return_route = &(*(new_search->second));
                         found = true;
                     }
                 } else {
                     auto new_route = network.extract_route(shortest_path);
 
-                    auto inserted = _route_cache->emplace(new_key, std::move(new_route));
+                    auto inserted = _route_cache->emplace(new_key,
+                                                          absl::make_unique<const route_type>(std::move(new_route)));
 
                     if (key == new_key) {
-                        return_route = inserted.first;
+                        return_route = &(*(inserted.first->second));
                         found = true;
                     }
                 }
             }
 
-            if (found) {
-                return std::cref(return_route->second);
-            } else {
+            if (not found) {
                 route_type no_route{true};
-                auto inserted = _route_cache->emplace(key, std::move(no_route));
-                return std::cref(inserted.first->second);
+                auto inserted = _route_cache->emplace(key, absl::make_unique<const route_type>(std::move(no_route)));
+                return_route = &(*(inserted.first->second));
             }
         }
+
+        return std::cref(*return_route);
     }
 
     template<typename Network, typename Track>
@@ -624,13 +627,13 @@ namespace map_matching_2::matching {
     }
 
     template<typename Network, typename Track>
-    std::vector<std::set<defect>> matcher<Network, Track>::detect(
+    std::vector<absl::btree_set<defect>> matcher<Network, Track>::detect(
             const Track &track, const bool detect_duplicates, const bool detect_forward_backward) const {
         return _detector.detect(track, detect_duplicates, detect_forward_backward);
     }
 
     template<typename Network, typename Track>
-    std::set<defect>
+    absl::btree_set<defect>
     matcher<Network, Track>::detect(
             const Track &track, const std::size_t from, const std::size_t to,
             const bool detect_forward_backward) const {
@@ -639,10 +642,11 @@ namespace map_matching_2::matching {
 
     template<typename Network, typename Track>
     Track
-    matcher<Network, Track>::remove_defects(const Track &track, const std::vector<std::set<defect>> &defects) const {
-        std::set<std::size_t> indices_to_remove;
+    matcher<Network, Track>::remove_defects(const Track &track,
+                                            const std::vector<absl::btree_set<defect>> &defects) const {
+        absl::btree_set<std::size_t> indices_to_remove;
         for (std::size_t i = 0; i < defects.size(); ++i) {
-            const std::set<defect> &defect_set = defects[i];
+            const absl::btree_set<defect> &defect_set = defects[i];
             if (not defect_set.contains(defect::none)) {
                 indices_to_remove.emplace(i);
             }
@@ -696,7 +700,7 @@ namespace map_matching_2::matching {
         const point_type &point = track.line()[index];
 
         bool found = false;
-        std::set<edge_descriptor> edge_result;
+        absl::btree_set<edge_descriptor> edge_result;
 
         double current_buffer_radius = buffer_radius;
         while (not found) {
@@ -746,7 +750,7 @@ namespace map_matching_2::matching {
         const point_type &point = track.line()[index];
 
         // query rtree
-        std::set<edge_descriptor> edge_result = network.query_segments_unique(
+        absl::btree_set<edge_descriptor> edge_result = network.query_segments_unique(
                 boost::geometry::index::nearest(point, number));
 
         if (with_adjacent) {
@@ -796,10 +800,10 @@ namespace map_matching_2::matching {
         const point_type &point = track.line()[index];
 
         // query rtree
-        std::set<edge_descriptor> edge_result = network.query_segments_unique(
+        absl::btree_set<edge_descriptor> edge_result = network.query_segments_unique(
                 boost::geometry::index::nearest(point, number));
 
-        std::vector<typename decltype(edge_result)::const_iterator> removals;
+        std::vector<edge_descriptor> removals;
         removals.reserve(edge_result.size());
 
         bool found = false;
@@ -828,7 +832,7 @@ namespace map_matching_2::matching {
                 const auto edge_distance = geometry::distance(point, edge.line());
 
                 if (edge_distance > current_buffer_radius) {
-                    removals.emplace_back(it);
+                    removals.emplace_back(*it);
                 }
             }
 
@@ -837,7 +841,7 @@ namespace map_matching_2::matching {
                 adaptive_radius = false;
                 removals.clear();
             } else {
-                for (const auto remove: removals) {
+                for (const auto &remove: removals) {
                     edge_result.erase(remove);
                 }
                 found = true;
@@ -885,7 +889,7 @@ namespace map_matching_2::matching {
     void matcher<Network, Track>::_process_candidate_query(
             std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
             const std::size_t round, const Track &track, const std::size_t index,
-            std::set<edge_descriptor> &edge_result) const {
+            absl::btree_set<edge_descriptor> &edge_result) const {
         assert(index < track.line().size());
         const point_type &point = track.line()[index];
 
@@ -1118,7 +1122,7 @@ namespace map_matching_2::matching {
             // node set
             std::multiset<candidate_node_type, candidate_node_distance_comparator_type> node_set{
                     &candidate_node_type::distance_comparator};
-            std::set<typename boost::graph_traits<graph_type>::vertex_descriptor> node_check;
+            absl::btree_set<typename boost::graph_traits<graph_type>::vertex_descriptor> node_check;
             for (const auto &candidate_edge: edge_set) {
                 const auto edge_descriptor = candidate_edge.edge_descriptor;
 

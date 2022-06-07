@@ -11,4 +11,5 @@ target_include_directories(environment
 
 target_link_libraries(environment
         PUBLIC
-        matching)
+        matching
+        absl::flat_hash_map)

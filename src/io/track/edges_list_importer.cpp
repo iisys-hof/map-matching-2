@@ -25,7 +25,7 @@ namespace map_matching_2::io::track {
 
     template<typename Network, typename MultiTrack>
     edges_list_importer<Network, MultiTrack>::edges_list_importer(
-            std::string filename, const Network &network, std::unordered_map<std::string, MultiTrack> &tracks)
+            std::string filename, const Network &network, absl::flat_hash_map<std::string, MultiTrack> &tracks)
             : importer{std::move(filename)}, _network{network}, _tracks{tracks} {}
 
     template<typename Network, typename MultiTrack>
@@ -36,7 +36,7 @@ namespace map_matching_2::io::track {
         std::ifstream route;
         route.open(this->filename());
 
-        std::unordered_map<std::int64_t, std::vector<typename Network::edge_descriptor>> edge_map;
+        absl::flat_hash_map<std::int64_t, std::vector<typename Network::edge_descriptor>> edge_map;
         for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(_network.graph))) {
             const auto &edge = _network.graph[edge_descriptor];
             std::int64_t edge_id = edge.id;

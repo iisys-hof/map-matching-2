@@ -69,7 +69,7 @@ void build_spatial_indices(Network &network, const bool verbose = false) {
 
 template<typename MultiTrack>
 std::pair<bool, const MultiTrack &>
-find_ground_truth(const MultiTrack &track, const std::unordered_map<std::string, MultiTrack> &compare_tracks) {
+find_ground_truth(const MultiTrack &track, const absl::flat_hash_map<std::string, MultiTrack> &compare_tracks) {
     const auto &compare_track = compare_tracks.find(track.id);
     if (compare_track != compare_tracks.cend()) {
         return std::pair{true, std::cref(compare_track->second)};
@@ -203,8 +203,8 @@ result_processor(const MultiTrack &track, const MultiTrack &prepared, const Rout
 
 template<typename Environment, typename LearnFunction, typename Matcher, typename MultiTrack>
 void
-matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tracks,
-         const std::unordered_map<std::string, MultiTrack> &compare_tracks,
+matching(Matcher &matcher, const absl::flat_hash_map<std::string, MultiTrack> &tracks,
+         const absl::flat_hash_map<std::string, MultiTrack> &compare_tracks,
          const map_matching_2::geometry::line_comparator<typename MultiTrack::rich_line_type> &comparator,
          std::string output_file, std::string compare_output_file, std::string candidates_folder,
          const map_matching_2::learning::settings &learn_settings, map_matching_2::matching::settings &match_settings,
@@ -354,11 +354,11 @@ matching(Matcher &matcher, const std::unordered_map<std::string, MultiTrack> &tr
 }
 
 template<typename MultiTrack>
-void filter_tracks(std::unordered_map<std::string, MultiTrack> &tracks,
+void filter_tracks(absl::flat_hash_map<std::string, MultiTrack> &tracks,
                    const std::vector<std::string> &selectors) {
-    std::unordered_map<std::string, MultiTrack> selected_tracks;
+    absl::flat_hash_map<std::string, MultiTrack> selected_tracks;
     if (not selectors.empty()) {
-        std::unordered_set<std::string> selectors_set{selectors.cbegin(), selectors.cend()};
+        absl::flat_hash_set<std::string> selectors_set{selectors.cbegin(), selectors.cend()};
         for (const auto &track: tracks) {
             if (selectors_set.contains(track.first)) {
                 selected_tracks.emplace(track);
@@ -375,8 +375,8 @@ void filter_tracks(std::unordered_map<std::string, MultiTrack> &tracks,
 }
 
 template<typename Matcher, typename MultiTrack>
-void match(Matcher &matcher, std::unordered_map<std::string, MultiTrack> tracks,
-           const std::unordered_map<std::string, MultiTrack> &compare_tracks, std::string output_file,
+void match(Matcher &matcher, absl::flat_hash_map<std::string, MultiTrack> tracks,
+           const absl::flat_hash_map<std::string, MultiTrack> &compare_tracks, std::string output_file,
            std::string compare_output_file, const compare_settings &compare_settings,
            std::string candidates_folder, const map_matching_2::learning::settings &learn_settings,
            map_matching_2::matching::settings &match_settings, const std::string &model,
@@ -428,8 +428,8 @@ void match(Matcher &matcher, std::unordered_map<std::string, MultiTrack> tracks,
 
 template<typename MultiTrack>
 void
-compare(std::unordered_map<std::string, MultiTrack> tracks,
-        const std::unordered_map<std::string, MultiTrack> &compare_tracks, std::string compare_output_file,
+compare(absl::flat_hash_map<std::string, MultiTrack> tracks,
+        const absl::flat_hash_map<std::string, MultiTrack> &compare_tracks, std::string compare_output_file,
         const compare_settings &compare_settings,
         const std::vector<std::string> &selectors, const bool single_threading = false,
         const bool console = false, const bool quiet = false, const bool verbose = false) {
@@ -1245,10 +1245,10 @@ int main(int argc, char *argv[]) {
     map_matching_2::geometry::network::types_cartesian::network_static *network_cartesian;
     map_matching_2::geometry::network::types_cartesian::network_modifiable *network_cartesian_import;
 
-    std::unordered_map<std::string, map_matching_2::geometry::track::types_geographic::multi_track_type> tracks_geographic;
-    std::unordered_map<std::string, map_matching_2::geometry::track::types_cartesian::multi_track_type> tracks_cartesian;
-    std::unordered_map<std::string, map_matching_2::geometry::track::types_geographic::multi_track_type> compare_tracks_geographic;
-    std::unordered_map<std::string, map_matching_2::geometry::track::types_cartesian::multi_track_type> compare_tracks_cartesian;
+    absl::flat_hash_map<std::string, map_matching_2::geometry::track::types_geographic::multi_track_type> tracks_geographic;
+    absl::flat_hash_map<std::string, map_matching_2::geometry::track::types_cartesian::multi_track_type> tracks_cartesian;
+    absl::flat_hash_map<std::string, map_matching_2::geometry::track::types_geographic::multi_track_type> compare_tracks_geographic;
+    absl::flat_hash_map<std::string, map_matching_2::geometry::track::types_cartesian::multi_track_type> compare_tracks_cartesian;
 
     auto duration = map_matching_2::util::benchmark([&]() {
         // Network

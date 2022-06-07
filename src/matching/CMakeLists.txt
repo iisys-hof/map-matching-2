@@ -30,6 +30,8 @@ target_link_libraries(matching
         geometry
         learning
         util
+        absl::flat_hash_map
+        absl::btree
         Threads::Threads
         Boost::boost
         Boost::thread)

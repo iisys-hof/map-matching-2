@@ -16,6 +16,8 @@
 #ifndef MAP_MATCHING_2_TRACK_HPP
 #define MAP_MATCHING_2_TRACK_HPP
 
+#include <absl/container/btree_set.h>
+
 #include <boost/geometry/srs/epsg.hpp>
 #include <boost/geometry/srs/projection.hpp>
 #include <boost/geometry/srs/transformation.hpp>
@@ -54,7 +56,7 @@ namespace map_matching_2::geometry::track {
 
         track &operator=(track &&other) noexcept = default;
 
-        track thin_out(const std::set<std::size_t> &indices_to_remove) const;
+        track thin_out(const absl::btree_set<std::size_t> &indices_to_remove) const;
 
         void simplify(bool retain_reversals = true, double tolerance = 1e-3, double reverse_tolerance = 1e-3);
 
