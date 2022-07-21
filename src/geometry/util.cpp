@@ -111,48 +111,56 @@ namespace map_matching_2::geometry {
 
     template<typename Point>
     boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>
-    buffer(const Point &point, std::size_t buffer_points, double buffer_radius) {
+    buffer(const Point &point, const double buffer_radius) {
+        std::size_t buffer_points = geometry::next_pow2((std::uint64_t) (buffer_radius / 4));
+        buffer_points = std::max(buffer_points, 8ul);
+
+        return buffer(point, buffer_radius, buffer_points);
+    }
+
+    template
+    boost::geometry::model::multi_polygon<boost::geometry::model::polygon<geometry::types_geographic::point_type>>
+    buffer(const geometry::types_geographic::point_type &point, const double buffer_radius);
+
+    template
+    boost::geometry::model::multi_polygon<boost::geometry::model::polygon<geometry::types_cartesian::point_type>>
+    buffer(const geometry::types_cartesian::point_type &point, const double buffer_radius);
+
+    template<typename Point>
+    boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>
+    buffer(const Point &point, const double buffer_radius, const std::size_t buffer_points) {
         BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Point<Point>));
 
+        if (buffer_radius <= 0.0) {
+            throw std::invalid_argument("buffer_radius in buffer method must be greater 0.0");
+        }
+
         using multi_polygon_type = boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>;
+        multi_polygon_type buffer;
+
         using buffer_distance_strategy = boost::geometry::strategy::buffer::distance_symmetric<
                 typename boost::geometry::coordinate_type<Point>::type>;
-        using buffer_side_strategy = boost::geometry::strategy::buffer::side_straight;
-        using buffer_join_strategy = boost::geometry::strategy::buffer::join_round;
-        using buffer_end_strategy = boost::geometry::strategy::buffer::end_round;
+        const buffer_distance_strategy buffer_distance{buffer_radius};
 
-        const buffer_side_strategy buffer_side;
-        const buffer_join_strategy buffer_join;
-        const buffer_end_strategy buffer_end;
+        if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
+                geometry::cs_geographic>) {
+            using buffer_point_strategy = boost::geometry::strategy::buffer::geographic_point_circle<>;
+            const buffer_point_strategy buffer_point{buffer_points};
 
-        auto current_buffer_radius = buffer_radius;
+            boost::geometry::buffer(point, buffer, buffer_distance, _buffer_side, _buffer_join, _buffer_end,
+                                    buffer_point);
+        } else if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
+                geometry::cs_cartesian>) {
+            using buffer_point_strategy = boost::geometry::strategy::buffer::point_circle;
+            const buffer_point_strategy buffer_point{buffer_points};
 
-        multi_polygon_type buffer;
-        while (buffer.empty()) {
-            const buffer_distance_strategy buffer_distance{current_buffer_radius};
-
-            if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
-                    geometry::cs_geographic>) {
-                using buffer_point_strategy = boost::geometry::strategy::buffer::geographic_point_circle<>;
-                const buffer_point_strategy buffer_point{buffer_points};
-
-                boost::geometry::buffer(point, buffer, buffer_distance, buffer_side, buffer_join, buffer_end,
-                                        buffer_point);
-            } else if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
-                    geometry::cs_cartesian>) {
-                using buffer_point_strategy = boost::geometry::strategy::buffer::point_circle;
-                const buffer_point_strategy buffer_point{buffer_points};
-
-                boost::geometry::buffer(point, buffer, buffer_distance, buffer_side, buffer_join, buffer_end,
-                                        buffer_point);
-            } else {
-                static_assert(not std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
-                        geometry::cs_geographic> and
-                              not std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
-                                      geometry::cs_cartesian>, "Invalid coordinate system");
-            }
-
-            current_buffer_radius *= 2;
+            boost::geometry::buffer(point, buffer, buffer_distance, _buffer_side, _buffer_join, _buffer_end,
+                                    buffer_point);
+        } else {
+            static_assert(not std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
+                    geometry::cs_geographic> and
+                          not std::is_same_v<typename boost::geometry::coordinate_system<Point>::type,
+                                  geometry::cs_cartesian>, "Invalid coordinate system");
         }
 
         return buffer;
@@ -160,11 +168,37 @@ namespace map_matching_2::geometry {
 
     template
     boost::geometry::model::multi_polygon<boost::geometry::model::polygon<geometry::types_geographic::point_type>>
-    buffer(const geometry::types_geographic::point_type &point, std::size_t buffer_points, double buffer_radius);
+    buffer(const geometry::types_geographic::point_type &point, const double buffer_radius,
+           const std::size_t buffer_points);
 
     template
     boost::geometry::model::multi_polygon<boost::geometry::model::polygon<geometry::types_cartesian::point_type>>
-    buffer(const geometry::types_cartesian::point_type &point, std::size_t buffer_points, double buffer_radius);
+    buffer(const geometry::types_cartesian::point_type &point, const double buffer_radius,
+           const std::size_t buffer_points);
+
+    template<typename Point>
+    boost::geometry::model::box<Point>
+    buffer_box(const Point &point, const double buffer_radius) {
+        BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Point<Point>));
+
+        using multi_polygon_type = boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>;
+        using box_type = boost::geometry::model::box<Point>;
+
+        const multi_polygon_type buffer_polygon = buffer(point, buffer_radius);
+
+        box_type buffer_box;
+        boost::geometry::envelope(buffer_polygon, buffer_box);
+
+        return buffer_box;
+    }
+
+    template
+    boost::geometry::model::box<geometry::types_geographic::point_type>
+    buffer_box(const geometry::types_geographic::point_type &point, const double buffer_radius);
+
+    template
+    boost::geometry::model::box<geometry::types_cartesian::point_type>
+    buffer_box(const geometry::types_cartesian::point_type &point, const double buffer_radius);
 
     template<typename Segment>
     boost::geometry::model::box<typename boost::geometry::point_type<Segment>::type>
@@ -173,17 +207,7 @@ namespace map_matching_2::geometry {
 
         using point_type = typename boost::geometry::point_type<Segment>::type;
         using box_type = boost::geometry::model::box<point_type>;
-        using multi_polygon_type = boost::geometry::model::multi_polygon<boost::geometry::model::polygon<point_type>>;
         using coordinate_type = typename boost::geometry::coordinate_type<point_type>::type;
-        using buffer_distance_strategy = boost::geometry::strategy::buffer::distance_symmetric<
-                typename boost::geometry::coordinate_type<point_type>::type>;
-        using buffer_side_strategy = boost::geometry::strategy::buffer::side_straight;
-        using buffer_join_strategy = boost::geometry::strategy::buffer::join_round;
-        using buffer_end_strategy = boost::geometry::strategy::buffer::end_round;
-
-        const buffer_side_strategy buffer_side;
-        const buffer_join_strategy buffer_join;
-        const buffer_end_strategy buffer_end;
 
         coordinate_type min_x = std::numeric_limits<coordinate_type>::infinity();
         coordinate_type min_y = std::numeric_limits<coordinate_type>::infinity();
@@ -192,38 +216,7 @@ namespace map_matching_2::geometry {
 
         const auto coordinate_finder = [&](const point_type &point, coordinate_type &min_x, coordinate_type &min_y,
                                            coordinate_type &max_x, coordinate_type &max_y) {
-            auto current_buffer_radius = buffer_radius;
-
-            multi_polygon_type buffer;
-            while (buffer.empty()) {
-                const buffer_distance_strategy buffer_distance{current_buffer_radius};
-
-                if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                        geometry::cs_geographic>) {
-                    using buffer_point_strategy = boost::geometry::strategy::buffer::geographic_point_circle<>;
-                    const buffer_point_strategy buffer_point{buffer_points};
-
-                    boost::geometry::buffer(point, buffer, buffer_distance, buffer_side, buffer_join, buffer_end,
-                                            buffer_point);
-                } else if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                        geometry::cs_cartesian>) {
-                    using buffer_point_strategy = boost::geometry::strategy::buffer::point_circle;
-                    const buffer_point_strategy buffer_point{buffer_points};
-
-                    boost::geometry::buffer(point, buffer, buffer_distance, buffer_side, buffer_join, buffer_end,
-                                            buffer_point);
-                } else {
-                    static_assert(not std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                            geometry::cs_geographic> and
-                                  not std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                                          geometry::cs_cartesian>, "Invalid coordinate system");
-                }
-
-                current_buffer_radius *= 2;
-            }
-
-            box_type box;
-            boost::geometry::envelope(buffer, box);
+            box_type box = buffer_box(point, buffer_radius);
 
             const point_type &min_corner = box.min_corner();
             const point_type &max_corner = box.max_corner();

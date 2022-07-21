@@ -37,10 +37,9 @@ namespace map_matching_2::matching {
 
     template<typename Network, typename Track>
     std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search_buffer(
-            const Track &track, const std::size_t buffer_points,
-            const double buffer_radius, const double buffer_upper_radius, const double buffer_lower_radius,
-            const bool adaptive_radius, const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
-            const bool candidate_adoption_reverse) {
+            const Track &track, const double buffer_radius, const double buffer_upper_radius,
+            const double buffer_lower_radius, const bool adaptive_radius, const bool candidate_adoption_siblings,
+            const bool candidate_adoption_nearby, const bool candidate_adoption_reverse) {
         std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
                 track.line().size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
                         &candidate_edge_type::distance_comparator}};
@@ -50,8 +49,8 @@ namespace map_matching_2::matching {
 
         for (std::size_t i = 0; i < track.line().size(); ++i) {
             radii.emplace_back(_candidate_search_buffer_measurement(
-                    candidate_edge_sets[i], 1, track, i, buffer_points, buffer_radius, buffer_upper_radius,
-                    buffer_lower_radius, adaptive_radius));
+                    candidate_edge_sets[i], 1, track, i, buffer_radius, buffer_upper_radius, buffer_lower_radius,
+                    adaptive_radius));
         }
 
         std::vector<candidate_type> candidates;
@@ -119,14 +118,14 @@ namespace map_matching_2::matching {
 
     template<typename Network, typename Track>
     std::vector<typename matcher<Network, Track>::candidate_type> matcher<Network, Track>::candidate_search(
-            const Track &track, const std::size_t buffer_points, const double buffer_radius, const std::size_t number,
-            const bool buffer_candidate_search, const bool nearest_candidate_search,
-            const double buffer_upper_radius, const double buffer_lower_radius, const bool adaptive_radius,
-            const bool with_reverse, const bool with_adjacent, const bool candidate_adoption_siblings,
-            const bool candidate_adoption_nearby, const bool candidate_adoption_reverse) {
+            const Track &track, const double buffer_radius, const std::size_t number,
+            const bool buffer_candidate_search, const bool nearest_candidate_search, const double buffer_upper_radius,
+            const double buffer_lower_radius, const bool adaptive_radius, const bool with_reverse,
+            const bool with_adjacent, const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
+            const bool candidate_adoption_reverse) {
         if (buffer_candidate_search and not nearest_candidate_search) {
             return candidate_search_buffer(
-                    track, buffer_points, buffer_radius, buffer_upper_radius, buffer_lower_radius, adaptive_radius,
+                    track, buffer_radius, buffer_upper_radius, buffer_lower_radius, adaptive_radius,
                     candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse);
         } else if (not buffer_candidate_search and nearest_candidate_search) {
             return candidate_search_nearest(
@@ -146,10 +145,9 @@ namespace map_matching_2::matching {
     template<typename Network, typename Track>
     void matcher<Network, Track>::resize_candidates_buffer(
             const Track &track, std::vector<candidate_type> &candidates, const std::vector<std::size_t> &positions,
-            const std::size_t round, const std::size_t buffer_points, const double buffer_upper_radius,
-            const double buffer_lower_radius, const bool adaptive_radius, const bool adaptive_resize,
-            const bool candidate_adoption_siblings, const bool candidate_adoption_nearby,
-            const bool candidate_adoption_reverse) {
+            const std::size_t round, const double buffer_upper_radius, const double buffer_lower_radius,
+            const bool adaptive_radius, const bool adaptive_resize, const bool candidate_adoption_siblings,
+            const bool candidate_adoption_nearby, const bool candidate_adoption_reverse) {
         std::vector<std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>> candidate_edge_sets{
                 candidates.size(), std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type>{
                         &candidate_edge_type::distance_comparator}};
@@ -191,7 +189,7 @@ namespace map_matching_2::matching {
                 auto edge_set_it = edge_set.crbegin();
                 const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = _create_buffer(point, radii[i] * 2);
+                const auto buffer = geometry::buffer(point, radii[i] * 2);
 
                 std::vector<index_value_type> results;
                 measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
@@ -208,8 +206,7 @@ namespace map_matching_2::matching {
             const auto radius = pos.second;
             // disable adaptive radius this time as we used it the previous time if it was enabled
             radii[i] = _candidate_search_buffer_measurement(
-                    candidate_edge_sets[i], round, track, i, buffer_points, radius, buffer_upper_radius,
-                    buffer_lower_radius, false);
+                    candidate_edge_sets[i], round, track, i, radius, buffer_upper_radius, buffer_lower_radius, false);
         }
 
         _finalize_candidates_buffer(
@@ -298,7 +295,7 @@ namespace map_matching_2::matching {
                 auto edge_set_it = edge_set.crbegin();
                 const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = _create_buffer(point, radii_numbers[i].first * 2);
+                const auto buffer = geometry::buffer(point, radii_numbers[i].first * 2);
 
                 std::vector<index_value_type> results;
                 measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
@@ -656,46 +653,10 @@ namespace map_matching_2::matching {
     }
 
     template<typename Network, typename Track>
-    boost::geometry::model::multi_polygon<boost::geometry::model::polygon<typename matcher<Network, Track>::point_type>>
-    matcher<Network, Track>::_create_buffer(const point_type &point, const double buffer_radius,
-                                            std::size_t buffer_points) const {
-        boost::geometry::model::multi_polygon<boost::geometry::model::polygon<point_type>> buffer;
-
-        const buffer_distance_strategy_type buffer_distance_strategy{buffer_radius};
-
-        std::size_t automatic_buffer_points = geometry::next_pow2((std::uint64_t) (buffer_radius / 4));
-        buffer_points = buffer_points == 0 ? automatic_buffer_points : std::max(buffer_points, automatic_buffer_points);
-
-        if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                geometry::cs_geographic>) {
-            using buffer_point_strategy_type = boost::geometry::strategy::buffer::geographic_point_circle<>;
-            const buffer_point_strategy_type buffer_point_strategy{buffer_points};
-
-            boost::geometry::buffer(point, buffer, buffer_distance_strategy, buffer_side_strategy,
-                                    buffer_join_strategy, buffer_end_strategy, buffer_point_strategy);
-        } else if constexpr(std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                geometry::cs_cartesian>) {
-            using buffer_point_strategy_type = boost::geometry::strategy::buffer::point_circle;
-            const buffer_point_strategy_type buffer_point_strategy{buffer_points};
-
-            boost::geometry::buffer(point, buffer, buffer_distance_strategy, buffer_side_strategy,
-                                    buffer_join_strategy, buffer_end_strategy, buffer_point_strategy);
-        } else {
-            static_assert(not std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                    geometry::cs_geographic> and
-                          not std::is_same_v<typename boost::geometry::coordinate_system<point_type>::type,
-                                  geometry::cs_cartesian>, "Invalid coordinate system");
-        }
-
-        return buffer;
-    }
-
-    template<typename Network, typename Track>
     double matcher<Network, Track>::_candidate_search_buffer_measurement(
             std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
-            const std::size_t round, const Track &track, const std::size_t index, const std::size_t buffer_points,
-            const double buffer_radius, const double buffer_upper_radius, const double buffer_lower_radius,
-            bool adaptive_radius) const {
+            const std::size_t round, const Track &track, const std::size_t index, const double buffer_radius,
+            const double buffer_upper_radius, const double buffer_lower_radius, bool adaptive_radius) const {
         assert(index < track.line().size());
         const point_type &point = track.line()[index];
 
@@ -723,7 +684,7 @@ namespace map_matching_2::matching {
             current_buffer_radius = std::min(current_buffer_radius, buffer_upper_radius);
 
             // create bounding box with at least buffer_distance
-            const auto buffer = _create_buffer(point, current_buffer_radius, buffer_points);
+            const auto buffer = geometry::buffer(point, current_buffer_radius);
 
             // query rtree
             edge_result = network.query_segments_unique(boost::geometry::index::intersects(buffer));
@@ -1059,26 +1020,27 @@ namespace map_matching_2::matching {
                 auto edge_set_it = edge_set.crbegin();
                 if (edge_set_it != edge_set.crend()) {
                     const auto longest_distance = edge_set_it->distance;
+                    if (longest_distance > 0.0) {
+                        const auto buffer = geometry::buffer(point, longest_distance);
 
-                    const auto buffer = _create_buffer(point, longest_distance);
+                        std::vector<index_value_type> results;
+                        candidates_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
 
-                    std::vector<index_value_type> results;
-                    candidates_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
+                        for (const auto &index_value: results) {
+                            const auto &candidate_edge_pair = index_value.second;
+                            std::size_t result_index = candidate_edge_pair.first;
+                            if (index != result_index) {
+                                // skip self references
+                                const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
+                                add_candidate(point, candidate_edge, edge_set);
 
-                    for (const auto &index_value: results) {
-                        const auto &candidate_edge_pair = index_value.second;
-                        std::size_t result_index = candidate_edge_pair.first;
-                        if (index != result_index) {
-                            // skip self references
-                            const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
-                            add_candidate(point, candidate_edge, edge_set);
-
-                            if (candidate_adoption_reverse) {
-                                auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
-                                for (const auto &edge: edge_set) {
-                                    if (not edge.adopted) {
-                                        const point_type &reverse_point = track.line()[result_index];
-                                        add_candidate(reverse_point, edge, reverse_candidate_edge_set);
+                                if (candidate_adoption_reverse) {
+                                    auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
+                                    for (const auto &edge: edge_set) {
+                                        if (not edge.adopted) {
+                                            const point_type &reverse_point = track.line()[result_index];
+                                            add_candidate(reverse_point, edge, reverse_candidate_edge_set);
+                                        }
                                     }
                                 }
                             }

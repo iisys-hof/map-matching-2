@@ -56,7 +56,6 @@ namespace map_matching_2::matching {
         std::size_t k_nearest = 16;
 
         bool buffer_candidate_search = true;
-        std::size_t buffer_points = 16;
         double buffer_radius = 200.0;
         double buffer_upper_radius = 10000.0;
         double buffer_lower_radius = 200.0;

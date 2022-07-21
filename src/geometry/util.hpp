@@ -303,9 +303,25 @@ namespace map_matching_2::geometry {
         return wkt.str();
     }
 
+    using _buffer_side_strategy = boost::geometry::strategy::buffer::side_straight;
+    using _buffer_join_strategy = boost::geometry::strategy::buffer::join_round;
+    using _buffer_end_strategy = boost::geometry::strategy::buffer::end_round;
+
+    const _buffer_side_strategy _buffer_side;
+    const _buffer_join_strategy _buffer_join;
+    const _buffer_end_strategy _buffer_end;
+
     template<typename Point>
     [[nodiscard]] boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>
-    buffer(const Point &point, std::size_t buffer_points, double buffer_radius);
+    buffer(const Point &point, double buffer_radius);
+
+    template<typename Point>
+    [[nodiscard]] boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>
+    buffer(const Point &point, double buffer_radius, std::size_t buffer_points);
+
+    template<typename Point>
+    [[nodiscard]] boost::geometry::model::box<Point>
+    buffer_box(const Point &point, double buffer_radius);
 
     template<typename Segment>
     [[nodiscard]] boost::geometry::model::box<typename boost::geometry::point_type<Segment>::type>

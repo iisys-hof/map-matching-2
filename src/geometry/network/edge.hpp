@@ -74,7 +74,7 @@ namespace map_matching_2::geometry::network {
         [[nodiscard]] std::string str(const tag_helper &tag_helper) const;
 
         template<typename LineT>
-        friend std::ostream &operator<<(std::ostream &out, const edge <LineT> &edge);
+        friend std::ostream &operator<<(std::ostream &out, const edge<LineT> &edge);
 
         friend class boost::serialization::access;
 

@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
 
         std::cout << track.str() << std::endl;
 
-        auto candidates_1_1 = matcher.candidate_search_buffer(track, 32, 0.75, 10.0, 2.0, false, false);
+        auto candidates_1_1 = matcher.candidate_search_buffer(track, 0.75, 10.0, 2.0, false, false);
 
         BOOST_CHECK_EQUAL(candidates_1_1.size(), 3);
         BOOST_CHECK_EQUAL(candidates_1_1.at(0).nodes.size(), 5);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_EQUAL(candidates_1_1.at(2).nodes.size(), 5);
         BOOST_CHECK_EQUAL(candidates_1_1.at(2).edges.size(), 8);
 
-        auto candidates_1_2 = matcher.candidate_search_buffer(track, 32, 0.75, 10.0, 2.0, false, true);
+        auto candidates_1_2 = matcher.candidate_search_buffer(track, 0.75, 10.0, 2.0, false, true);
 
         BOOST_CHECK_EQUAL(candidates_1_2.size(), 3);
         BOOST_CHECK_EQUAL(candidates_1_2.at(0).nodes.size(), 16);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_EQUAL(route_1_4.get_line().size(), 0);
         BOOST_CHECK(not route_1_4.has_length());
 
-        auto candidates_2 = matcher.candidate_search_buffer(track, 32, 3.5, 10.0, 2.0, false, false);
+        auto candidates_2 = matcher.candidate_search_buffer(track, 3.5, 10.0, 2.0, false, false);
 
         auto route_2_1 = matcher.candidate_route(
                 candidates_2,
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
 
         std::cout << track_2.str() << std::endl;
 
-        auto candidates_3 = matcher.candidate_search_buffer(track_2, 32, 0.75);
+        auto candidates_3 = matcher.candidate_search_buffer(track_2, 0.75);
 
         auto route_3_1 = matcher.candidate_route(
                 candidates_3,
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
 
         std::cout << track.str() << std::endl;
 
-        auto candidates = matcher.candidate_search_buffer(track, 32, 2.0);
+        auto candidates = matcher.candidate_search_buffer(track, 2.0);
 
         BOOST_CHECK_EQUAL(candidates.size(), 3);
         BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).distance, 0.1, 1e-6);
@@ -249,8 +249,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                                           {1, {5.1, 2.3}},
                                           {2, {4.9, 5.8}}});
 
-        auto candidates = matcher.candidate_search_buffer(track, match_settings.buffer_points,
-                                                          match_settings.buffer_radius);
+        auto candidates = matcher.candidate_search_buffer(track, match_settings.buffer_radius);
         matcher.save_candidates("matching_value_iteration_test_candidates.csv", candidates);
 
         typename matcher_metric::matcher_static::line_type ground_truth_line;
@@ -296,8 +295,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                                           {1, {5.1, 2.3}},
                                           {2, {4.9, 5.8}}});
 
-        auto candidates = matcher.candidate_search_buffer(track, match_settings.buffer_points,
-                                                          match_settings.buffer_radius);
+        auto candidates = matcher.candidate_search_buffer(track, match_settings.buffer_radius);
         matcher.save_candidates("matching_viterbi_hmm_test_candidates.csv", candidates);
 
         typename matcher_metric::matcher_static::line_type ground_truth_line;

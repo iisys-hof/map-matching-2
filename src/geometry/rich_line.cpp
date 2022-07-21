@@ -177,8 +177,6 @@ namespace map_matching_2::geometry {
 
         index_type points_index{index_points};
 
-        std::size_t min_buffer_points = 8;
-
         auto it = points.begin();
         while (it != points.end()) {
             const auto &point = *it;
@@ -193,10 +191,7 @@ namespace map_matching_2::geometry {
                 }
             }
 
-            std::size_t automatic_buffer_points = geometry::next_pow2((std::uint64_t) (current_tolerance / 4));
-            std::size_t buffer_points = std::max(min_buffer_points, automatic_buffer_points);
-
-            const auto buffer = geometry::buffer(point, buffer_points, current_tolerance);
+            const auto buffer = geometry::buffer(point, current_tolerance);
             std::list<index_key_type> results;
             points_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
 
