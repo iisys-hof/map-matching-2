@@ -105,8 +105,8 @@ example [WGS-84 Pseudo-Mercator](https://epsg.io/3857) by setting
 
 | Mode                                     | Time (s) | CPU resources (s) | Max RAM (MB) | `.osm.pbf` size (MB) | `.dat` size (MB) |
 |------------------------------------------|----------|-------------------|--------------|----------------------|------------------|
-| Prepare Network                          | 25.31    | 27.68             | 3607         | 75                   | 440              |
-| Prepare Network (Cartesian Reprojection) | 29.59    | 31.93             | 3919         | 75                   | 440              |
+| Prepare Network                          | 13.77    | 16.10             | 2620         | 75                   | 286              |
+| Prepare Network (Cartesian Reprojection) | 12.03    | 14.30             | 2621         | 75                   | 286              |
 
 The times are measured with `/usr/bin/time -v` prepended to the command above. The file sized were read from the data
 folder via `ls -lah` command.
@@ -129,7 +129,7 @@ The reading time is the same in both cases.
 
 | Mode                              | Time (s) | CPU resources (s) | Max RAM (MB) |
 |-----------------------------------|----------|-------------------|--------------|
-| Read Prepared Network             | 3.01     | 3.01              | 769          |
+| Read Prepared Network             | 2.24     | 2.24              | 545          |
 
 We can see that reading the prepared graph is a lot faster and needs less resources.
 
@@ -194,13 +194,13 @@ provided `points_anonymized.csv` file. Other data and hardware leads to other re
 
 | Mode                                        | Track points | Sanitized track points | Candidates |  Combinations | Time (s) | CPU resources (s) | Max RAM (MB) |
 |:--------------------------------------------|-------------:|-----------------------:|-----------:|--------------:|---------:|------------------:|-------------:|
-| Default settings                            |       88,825 |                 32,624 |  7,718,128 | 2,530,630,400 |      243 |            13,401 |       41,286 |
-| Default settings cartesian                  |       88,825 |                 37,920 |  4,616,189 |   884,453,279 |      108 |             3,000 |       22,106 |
-| Disabled candidate adoption (no CA)         |       88,825 |                 32,624 |  2,319,466 |   201,671,783 |     36,1 |              4044 |       13,594 |
-| Combined candidate search (with CA)         |       88,825 |                 32,624 |    794,997 |    27,726,139 |     10,1 |               861 |        5,936 |
-| Combined (no CA)                            |       88,825 |                 32,624 |    255,434 |     2,646,243 |     5,98 |               433 |        3,943 |
-| Combined single threading (no CA)           |       88,825 |                 32,624 |    255,434 |     2,646,243 |     62,4 |              62,4 |          846 |
-| Combined single threading cartesian (no CA) |       88,825 |                 37,920 |    298,243 |     3,141,385 |     21,2 |              21,2 |          872 |
+| Default settings                            |       88,825 |                 32,585 |  7,723,164 | 2,524,741,883 |      233 |             8,986 |       50,359 |
+| Default settings cartesian                  |       88,825 |                 37,901 |  4,631,332 |   883,948,607 |       73 |             2,758 |       23,974 |
+| Disabled candidate adoption (no CA)         |       88,825 |                 32,585 |  2,319,264 |   201,870,589 |     24,1 |             2,672 |       15,750 |
+| Combined candidate search (with CA)         |       88,825 |                 32,585 |    799,044 |    27,177,491 |     9,36 |               809 |        5,921 |
+| Combined (no CA)                            |       88,825 |                 32,585 |    255,093 |     2,644,733 |     5,07 |               431 |        3,858 |
+| Combined single threading (no CA)           |       88,825 |                 32,585 |    255,093 |     2,644,733 |     58,4 |              58,4 |          612 |
+| Combined single threading cartesian (no CA) |       88,825 |                 37,901 |    298,084 |     3,142,476 |     18,9 |              18,9 |          615 |
 
 We can see how reducing the amount of candidates and thus combinations reduces the CPU and memory load. The software
 benefits a lot from multiple CPU cores, but needs more memory in its peak when multiple tracks are matched in parallel.
