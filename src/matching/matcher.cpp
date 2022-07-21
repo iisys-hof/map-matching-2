@@ -189,14 +189,17 @@ namespace map_matching_2::matching {
                 auto edge_set_it = edge_set.crbegin();
                 const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = geometry::buffer(point, radii[i] * 2);
+                const auto buffer_radius = radii[i] * 2;
+                const auto buffer = geometry::buffer_box(point, buffer_radius);
 
                 std::vector<index_value_type> results;
                 measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
 
                 for (const auto &result: results) {
-                    const auto j = result.second;
-                    position_map.emplace(j, radii[j] * 2);
+                    if (geometry::point_distance(point, result.first) <= buffer_radius) {
+                        const auto j = result.second;
+                        position_map.emplace(j, radii[j] * 2);
+                    }
                 }
             }
         }
@@ -295,14 +298,17 @@ namespace map_matching_2::matching {
                 auto edge_set_it = edge_set.crbegin();
                 const auto longest_distance = edge_set_it->distance;
 
-                const auto buffer = geometry::buffer(point, radii_numbers[i].first * 2);
+                const auto buffer_radius = radii_numbers[i].first * 2;
+                const auto buffer = geometry::buffer(point, buffer_radius);
 
                 std::vector<index_value_type> results;
                 measurements_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
 
                 for (const auto &result: results) {
-                    const auto j = result.second;
-                    position_map.emplace(j, radii_numbers[j].first * 2);
+                    if (geometry::point_distance(point, result.first) <= buffer_radius) {
+                        const auto j = result.second;
+                        position_map.emplace(j, radii_numbers[j].first * 2);
+                    }
                 }
             }
         }
@@ -684,10 +690,20 @@ namespace map_matching_2::matching {
             current_buffer_radius = std::min(current_buffer_radius, buffer_upper_radius);
 
             // create bounding box with at least buffer_distance
-            const auto buffer = geometry::buffer(point, current_buffer_radius);
+            const auto buffer = geometry::buffer_box(point, current_buffer_radius);
 
             // query rtree
             edge_result = network.query_segments_unique(boost::geometry::index::intersects(buffer));
+
+            // remove results outside of current radius
+            for (auto edge_it = edge_result.begin(); edge_it != edge_result.end();) {
+                const auto &edge = network.graph[*edge_it];
+                if (geometry::distance(point, edge.line()) > current_buffer_radius) {
+                    edge_it = edge_result.erase(edge_it);
+                } else {
+                    edge_it++;
+                }
+            }
 
             if (edge_result.empty() and current_buffer_radius != buffer_upper_radius) {
                 current_buffer_radius *= 2;
@@ -1021,25 +1037,27 @@ namespace map_matching_2::matching {
                 if (edge_set_it != edge_set.crend()) {
                     const auto longest_distance = edge_set_it->distance;
                     if (longest_distance > 0.0) {
-                        const auto buffer = geometry::buffer(point, longest_distance);
+                        const auto buffer = geometry::buffer_box(point, longest_distance);
 
                         std::vector<index_value_type> results;
                         candidates_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
 
                         for (const auto &index_value: results) {
-                            const auto &candidate_edge_pair = index_value.second;
-                            std::size_t result_index = candidate_edge_pair.first;
-                            if (index != result_index) {
-                                // skip self references
-                                const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
-                                add_candidate(point, candidate_edge, edge_set);
+                            if (geometry::distance(point, index_value.first) <= longest_distance) {
+                                const auto &candidate_edge_pair = index_value.second;
+                                std::size_t result_index = candidate_edge_pair.first;
+                                if (index != result_index) {
+                                    // skip self references
+                                    const candidate_edge_type &candidate_edge = candidate_edge_pair.second;
+                                    add_candidate(point, candidate_edge, edge_set);
 
-                                if (candidate_adoption_reverse) {
-                                    auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
-                                    for (const auto &edge: edge_set) {
-                                        if (not edge.adopted) {
-                                            const point_type &reverse_point = track.line()[result_index];
-                                            add_candidate(reverse_point, edge, reverse_candidate_edge_set);
+                                    if (candidate_adoption_reverse) {
+                                        auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
+                                        for (const auto &edge: edge_set) {
+                                            if (not edge.adopted) {
+                                                const point_type &reverse_point = track.line()[result_index];
+                                                add_candidate(reverse_point, edge, reverse_candidate_edge_set);
+                                            }
                                         }
                                     }
                                 }

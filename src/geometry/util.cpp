@@ -184,7 +184,7 @@ namespace map_matching_2::geometry {
         using multi_polygon_type = boost::geometry::model::multi_polygon<boost::geometry::model::polygon<Point>>;
         using box_type = boost::geometry::model::box<Point>;
 
-        const multi_polygon_type buffer_polygon = buffer(point, buffer_radius);
+        const multi_polygon_type buffer_polygon = buffer(point, buffer_radius, 4ul);
 
         box_type buffer_box;
         boost::geometry::envelope(buffer_polygon, buffer_box);

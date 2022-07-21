@@ -506,7 +506,7 @@ namespace map_matching_2::geometry {
             const segment_type &segment = segment_it->segment();
             const point_type &point = first ? segment.first : segment.second;
 
-            const auto buffer = geometry::buffer(point, buffer_radius);
+            const auto buffer = geometry::buffer_box(point, buffer_radius);
             std::vector<point_type> result_points;
             points_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(result_points));
 
@@ -566,7 +566,7 @@ namespace map_matching_2::geometry {
         const auto buffer_radius = std::max(1e-3, 2 * distance_tolerance);
 
         for (const auto &point: points_set) {
-            const auto buffer = geometry::buffer(point, buffer_radius);
+            const auto buffer = geometry::buffer_box(point, buffer_radius);
             std::vector<rtree_segments_key_type> result_segments;
             segments_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(result_segments));
 

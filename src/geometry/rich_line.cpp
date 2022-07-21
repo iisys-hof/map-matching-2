@@ -191,9 +191,18 @@ namespace map_matching_2::geometry {
                 }
             }
 
-            const auto buffer = geometry::buffer(point, current_tolerance);
+            const auto buffer = geometry::buffer_box(point, current_tolerance);
             std::list<index_key_type> results;
             points_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(results));
+
+            // remove results outside current tolerance
+            for (auto results_it = results.begin(); results_it != results.end();) {
+                if (geometry::point_distance(point, results_it->first) > current_tolerance) {
+                    results_it = results.erase(results_it);
+                } else {
+                    results_it++;
+                }
+            }
 
             // only retain connected points
             if (results.size() > 1) {

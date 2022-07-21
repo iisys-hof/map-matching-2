@@ -654,7 +654,7 @@ int main(int argc, char *argv[]) {
                 ("remove-unconnected", po::value<bool>(&remove_unconnected)->default_value(false, "off"),
                  "remove weakly unconnected components so that only the largest subgraph remains")
                 ("routing-max-distance-factor",
-                 po::value<double>(&routing_max_distance_factor)->default_value(10.0, "10.0"),
+                 po::value<double>(&routing_max_distance_factor)->default_value(5.0, "5.0"),
                  "max distance factor for upper bound for routing algorithm, "
                  "removes all nodes from routing that are too far away from the search area between a start and end node, "
                  "dramatically reduces routing duration in networks significantly larger than the given track");

@@ -34,7 +34,7 @@ namespace map_matching_2::matching {
         bool candidate_adoption_siblings = true;
         bool candidate_adoption_nearby = true;
         bool candidate_adoption_reverse = false;
-        double routing_max_distance_factor = 10.0;
+        double routing_max_distance_factor = 5.0;
         bool export_edges = false;
         bool join_merges = true;
 
