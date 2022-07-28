@@ -26,8 +26,7 @@ namespace map_matching_2::geometry::network {
     template<typename Point>
     node<Point>::node(osmium::object_id_type id, Point point, std::vector<std::uint64_t> tags)
             : index{std::numeric_limits<std::size_t>::max()}, id{id},
-              point{std::move(point)}, tags{std::move(tags)} {
-    }
+              point{std::move(point)}, tags{std::move(tags)} {}
 
     template<typename Point>
     std::string node<Point>::wkt() const {

@@ -437,7 +437,7 @@ namespace map_matching_2::geometry::network {
 
     template<typename Line>
     Line route<Line>::get_line() const {
-        std::size_t size = 0;
+        std::size_t size = 1;
         for (const rich_line_type &rich_line: _rich_lines) {
             if (not rich_line.line().empty()) {
                 size += rich_line.line().size() - 1;
@@ -455,6 +455,8 @@ namespace map_matching_2::geometry::network {
                 line.insert(line.end(), line_it_begin, rich_line.line().cend());
             }
         }
+
+        assert(size >= line.size());
 
         return line;
     }
@@ -492,6 +494,8 @@ namespace map_matching_2::geometry::network {
                                      rich_line.rich_segments().cbegin(), rich_line.rich_segments().cend());
             }
         }
+
+        assert(size >= rich_segments.size());
 
         return rich_line_type{std::move(rich_segments)};
     }
@@ -536,6 +540,9 @@ namespace map_matching_2::geometry::network {
             rich_segments.insert(rich_segments.end(), copy_rich_line.rich_segments().cbegin(),
                                  copy_rich_line.rich_segments().cend());
         }
+
+        assert(size >= rich_segments.size());
+
         multi_rich_lines.emplace_back(rich_line_type{std::move(rich_segments)});
 
         return multi_rich_line_type{std::move(multi_rich_lines)};
@@ -622,6 +629,8 @@ namespace map_matching_2::geometry::network {
                 }
             }
         }
+
+        assert(new_references_size >= new_references.size());
 
         return route{std::move(new_rich_lines), std::move(new_references)};
     }
