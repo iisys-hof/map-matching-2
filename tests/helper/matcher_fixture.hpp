@@ -29,41 +29,41 @@ using matcher_metric = map_matching_2::matching::types_cartesian;
 template<typename Types>
 struct matcher_fixture {
 
-    typename Types::matcher_static::track_type
+    typename Types::internal_matcher::track_type
     create_track(std::string id,
-                 std::initializer_list<typename Types::matcher_static::track_type::measurement_type> measurements) {
-        typename Types::matcher_static::track_type::line_type line;
+                 std::initializer_list<typename Types::internal_matcher::track_type::measurement_type> measurements) {
+        typename Types::internal_matcher::track_type::line_type line;
         line.reserve(measurements.size());
         for (const auto &measurement: measurements) {
             line.emplace_back(measurement.point);
         }
 
-        return typename Types::matcher_static::track_type{std::move(id), std::move(line)};
+        return typename Types::internal_matcher::track_type{std::move(id), std::move(line)};
     }
 
     template<typename Network>
-    typename Types::matcher_static::network_type prepare_network(Network &network) {
-        typename Types::matcher_static::network_type matcher_network;
+    typename Types::internal_matcher::network_type prepare_network(Network &network) {
+        typename Types::internal_matcher::network_type matcher_network;
         network.simplify();
         network.convert(matcher_network);
         matcher_network.rebuild_spatial_indices();
         return matcher_network;
     }
 
-    typename Types::matcher_static create_matcher(typename Types::matcher_static::network_type &network) {
-        return typename Types::matcher_static{network, true};
+    typename Types::internal_matcher create_matcher(typename Types::internal_matcher::network_type &network) {
+        return typename Types::internal_matcher{network, true};
     }
 
-    std::int64_t get_candidate_position(typename Types::matcher_static::network_type &network,
-                                        std::vector<typename Types::matcher_static::candidate_type> &candidates,
+    std::int64_t get_candidate_position(typename Types::internal_matcher::network_type &network,
+                                        std::vector<typename Types::internal_matcher::candidate_type> &candidates,
                                         std::size_t candidate_index,
                                         std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
         for (std::int64_t i = 0; i < candidates.at(candidate_index).edges.size(); ++i) {
             const auto &candidate_edge = candidates.at(candidate_index).edges.at(i);
-            const auto source = boost::source(candidate_edge.edge_descriptor, network.graph);
-            const auto target = boost::target(candidate_edge.edge_descriptor, network.graph);
+            const auto source = boost::source(candidate_edge.edge_descriptor, network.graph());
+            const auto target = boost::target(candidate_edge.edge_descriptor, network.graph());
 
-            if (network.graph[source].id == node_pair.first and network.graph[target].id == node_pair.second) {
+            if (network.vertex(source).id == node_pair.first and network.vertex(target).id == node_pair.second) {
                 return i;
             }
         }

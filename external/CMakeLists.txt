@@ -50,7 +50,7 @@ set(GPX_INCLUDE_DIRS "${gpx_SOURCE_DIR}" CACHE PATH "gpx include dir" FORCE)
 # rpmalloc
 FetchContent_Declare(rpmalloc
         GIT_REPOSITORY https://github.com/mjansson/rpmalloc.git
-        GIT_TAG 1.4.3)
+        GIT_TAG 1.4.4)
 
 FetchContent_GetProperties(rpmalloc)
 if (NOT rpmalloc_POPULATED)
@@ -60,7 +60,7 @@ endif ()
 file(WRITE "${rpmalloc_SOURCE_DIR}/CMakeLists.txt"
         [[
 project(rpmalloc
-        VERSION 1.4.3
+        VERSION 1.4.4
         DESCRIPTION "rpmalloc"
         LANGUAGES C)
 
@@ -92,7 +92,7 @@ set(RPMALLOC_INCLUDE_DIRS "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc
 # abseil
 FetchContent_Declare(abseil
         GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-        GIT_TAG 20211102.0)
+        GIT_TAG 20220623.1)
 
 FetchContent_GetProperties(abseil)
 if (NOT abseil_POPULATED)
@@ -105,8 +105,8 @@ add_subdirectory("${abseil_SOURCE_DIR}" "${abseil_BINARY_DIR}" EXCLUDE_FROM_ALL)
 
 # boost
 FetchContent_Declare(boost
-        URL https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.gz
-        URL_HASH SHA256=273f1be93238a068aba4f9735a4a2b003019af067b9c183ed227780b8f36062c)
+        URL https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
+        URL_HASH SHA256=4b2136f98bdd1f5857f1c3dea9ac2018effe65286cf251534b6ae20cc45e1847)
 
 FetchContent_GetProperties(boost)
 if (NOT boost_POPULATED)

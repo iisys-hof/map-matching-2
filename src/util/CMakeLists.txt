@@ -3,22 +3,17 @@ find_package(Threads REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS thread)
 
-add_library(util STATIC)
+add_library(util INTERFACE)
 
-target_sources(util
-        PRIVATE
-        benchmark.cpp)
+target_precompile_headers(util
+        INTERFACE
+        <functional>
+        <chrono>)
 
 target_compile_definitions(util
-        PUBLIC
+        INTERFACE
         BOOST_ALLOW_DEPRECATED_HEADERS)
 
 target_include_directories(util
-        PUBLIC
+        INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/..)
-
-target_link_libraries(matching
-        PUBLIC
-        Threads::Threads
-        Boost::boost
-        Boost::thread)

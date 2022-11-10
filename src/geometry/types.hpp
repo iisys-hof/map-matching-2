@@ -30,14 +30,14 @@ namespace map_matching_2::geometry {
     struct types {
         using coordinate_system_type = CoordinateSystem;
         using point_type = boost::geometry::model::point<double, 2, coordinate_system_type>;
-        using line_type = boost::geometry::model::linestring<point_type>;
-        using segment_type = boost::geometry::model::segment<point_type>;
     };
 
     using cs_geographic = boost::geometry::cs::geographic<boost::geometry::degree>;
+    using cs_spherical_equatorial = boost::geometry::cs::spherical_equatorial<boost::geometry::degree>;
     using cs_cartesian = boost::geometry::cs::cartesian;
 
     using types_geographic = types<cs_geographic>;
+    using types_spherical_equatorial = types<cs_spherical_equatorial>;
     using types_cartesian = types<cs_cartesian>;
 
 }

@@ -28,14 +28,66 @@ namespace map_matching_2::io::network {
         Network &_network;
 
     public:
-        explicit osm_relations_manager(Network &network);
+        explicit osm_relations_manager(Network &network)
+                : _network{network} {}
 
-        bool new_relation(const osmium::Relation &relation) noexcept;
+        bool new_relation(const osmium::Relation &relation) noexcept {
+            return relation.tags().has_tag("type", "restriction") and
+                   relation.tags().has_key("restriction");
+        }
 
-        bool new_member(
-                const osmium::Relation &relation, const osmium::RelationMember &member, std::size_t n) noexcept;
+        bool new_member(const osmium::Relation &relation,
+                        const osmium::RelationMember &member, std::size_t n) noexcept {
+            return true;
+        }
 
-        void complete_relation(const osmium::Relation &relation);
+        void complete_relation(const osmium::Relation &relation) {
+            const auto &restriction = relation.tags().get_value_by_key("restriction");
+
+//            std::cout << "Relation: " << relation.id() << ": ";
+//            for (const auto &tag : relation.tags()) {
+//                std::cout << tag << ", ";
+//            }
+//            std::cout << std::endl;
+
+            for (const auto &member: relation.members()) {
+                if (member.ref() != 0) {
+                    const osmium::OSMObject *obj = this->get_member_object(member);
+
+                    if (obj->type() == osmium::item_type::node) {
+                        const osmium::Node *node = this->get_member_node(member.ref());
+                    } else if (obj->type() == osmium::item_type::way) {
+                        const osmium::Way *way = this->get_member_way(member.ref());
+                    }
+
+//                    if (obj->type() == osmium::item_type::way and std::strcmp(member.role(), "via") == 0) {
+//                        std::cout << "Relation: " << relation.id() << ": ";
+//                        for (const auto &tag : relation.tags()) {
+//                            std::cout << tag << ", ";
+//                        }
+//                        std::cout << std::endl;
+//
+//                        std::cout << member.role() << " " << obj->type() << " " << obj->id() << ": ";
+//                        for (const auto &tag : obj->tags()) {
+//                            std::cout << tag << ", ";
+//                        }
+//                        std::cout << std::endl;
+//                    }
+
+//                    std::cout << member.role() << " " << obj->type() << " " << obj->id() << ": ";
+//                    for (const auto &tag : obj->tags()) {
+//                        std::cout << tag << ", ";
+//                    }
+//                    std::cout << std::endl;
+
+                    // If you know which type you have you can also use any of these:
+//                    const osmium::Node *node = this->get_member_node(member.ref());
+//                    const osmium::Way *way = this->get_member_way(member.ref());
+//                    const osmium::Relation *relation = this->get_member_relation(member.ref());
+                }
+            }
+//            std::cout << std::endl;
+        }
 
     };
 

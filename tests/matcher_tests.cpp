@@ -28,12 +28,79 @@
 
 BOOST_AUTO_TEST_SUITE(matcher_tests)
 
-    BOOST_FIXTURE_TEST_CASE(candidate_search_grid_test, matcher_fixture<matcher_metric>) {
-        network_fixture<network_metric> network_fixture;
-        auto network = network_fixture.generate_grid_network();
+    BOOST_FIXTURE_TEST_CASE(candidate_search_test, matcher_fixture<matcher_metric>) {
+        network_fixture<network_import_metric> network_fixture;
 
-        auto network_matcher = prepare_network(network);
+        network_import_metric network;
+        network_fixture.add_vertex(network, 1, {0, 0});
+        network_fixture.add_vertex(network, 2, {10, 0});
+        network_fixture.add_vertex(network, 3, {1, 0});
+        network_fixture.add_vertex(network, 4, {1, 1});
+        network_fixture.add_vertex(network, 5, {4, 1});
+        network_fixture.add_vertex(network, 6, {4, -1});
+        network_fixture.add_vertex(network, 7, {8, -1});
+        network_fixture.add_vertex(network, 8, {8, 0});
+        network_fixture.add_edge(network, 1, {1, 3});
+        network_fixture.add_edge(network, 2, {3, 4});
+        network_fixture.add_edge(network, 3, {4, 5});
+        network_fixture.add_edge(network, 4, {5, 6});
+        network_fixture.add_edge(network, 5, {6, 7});
+        network_fixture.add_edge(network, 6, {7, 8});
+        network_fixture.add_edge(network, 7, {8, 2});
+
+        network_metric network_matcher = prepare_network(network);
         auto matcher = create_matcher(network_matcher);
+
+        network_matcher.save_csv("candidate_search_test_nodes.csv",
+                                 "candidate_search_test_edges.csv");
+
+        auto track = create_track("two", {{0, {0.1, 0.1}},
+                                          {1, {4.2, -0.2}},
+                                          {2, {9.8, 0.3}}});
+
+        std::cout << track.str() << std::endl;
+
+        auto candidates = matcher.candidate_search_buffer(track, 2.0);
+
+        BOOST_CHECK_EQUAL(candidates.size(), 3);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).distance, 0.1, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<0>(candidates.at(0).edges.at(0).projection_point), 0.1, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<1>(candidates.at(0).edges.at(0).projection_point), 0.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<0>(candidates.at(0).edges.at(0).from.at(0)), 0.0, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<1>(candidates.at(0).edges.at(0).from.at(0)), 0.0, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<0>(candidates.at(0).edges.at(0).from.at(1)), 0.1, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<1>(candidates.at(0).edges.at(0).from.at(1)), 0.0, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).from.length(), 0.1, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).to.length(), 13.9, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(1).edges.at(0).from.length(), 6.2, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(1).edges.at(0).to.length(), 7.8, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(2).edges.at(0).from.length(), 13.8, 1e-4);
+        BOOST_CHECK_CLOSE_FRACTION(candidates.at(2).edges.at(0).to.length(), 0.2, 1e-4);
+        BOOST_CHECK_EQUAL(candidates.at(0).edges.at(0).from.size(), 2);
+        BOOST_CHECK_EQUAL(candidates.at(0).edges.at(0).to.size(), 8);
+        BOOST_CHECK_EQUAL(candidates.at(1).edges.at(0).from.size(), 5);
+        BOOST_CHECK_EQUAL(candidates.at(1).edges.at(0).to.size(), 5);
+        BOOST_CHECK_EQUAL(candidates.at(2).edges.at(0).from.size(), 8);
+        BOOST_CHECK_EQUAL(candidates.at(2).edges.at(0).to.size(), 2);
+
+        auto route_1 = matcher.candidate_route(candidates, 0, 0, 1, 0);
+        BOOST_CHECK_EQUAL(route_1.get_line().size(), 5);
+        BOOST_CHECK_CLOSE_FRACTION(route_1.length(), 6.1, 1e-4);
+
+        auto route_2 = matcher.candidate_route(candidates, 1, 0, 2, 0);
+        BOOST_CHECK_EQUAL(route_2.get_line().size(), 5);
+        BOOST_CHECK_CLOSE_FRACTION(route_2.length(), 7.6, 1e-4);
+    }
+
+    BOOST_FIXTURE_TEST_CASE(candidate_search_grid_test, matcher_fixture<matcher_metric>) {
+        network_fixture<network_import_metric> network_fixture;
+        network_import_metric network = network_fixture.generate_grid_network();
+
+        network_metric network_matcher = prepare_network(network);
+        auto matcher = create_matcher(network_matcher);
+
+        network.save_csv("candidate_search_grid_test_nodes.csv",
+                         "candidate_search_grid_test_edges.csv");
 
         auto track = create_track("one", {{0, {2.2, 2.2}},
                                           {1, {4.5, 2.5}},
@@ -177,63 +244,17 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_CLOSE_FRACTION(route_3_1.length(), 1.0, 1e-3);
     }
 
-    BOOST_FIXTURE_TEST_CASE(candidate_search_test, matcher_fixture<matcher_metric>) {
-        network_fixture<network_metric> network_fixture;
-
-        network_metric network;
-        network_fixture.add_vertex(network, 1, {0, 0});
-        network_fixture.add_vertex(network, 2, {10, 0});
-        network_fixture.add_edge(network, 1, {1, 2}, {1, 0, 1, 1, 4, 1, 4, -1, 8, -1, 8, 0});
-
-        auto network_matcher = prepare_network(network);
-        auto matcher = create_matcher(network_matcher);
-
-        network.save("candidate_search_test_nodes.csv",
-                     "candidate_search_test_edges.csv");
-
-        auto track = create_track("two", {{0, {0.1, 0.1}},
-                                          {1, {4.2, -0.2}},
-                                          {2, {9.8, 0.3}}});
-
-        std::cout << track.str() << std::endl;
-
-        auto candidates = matcher.candidate_search_buffer(track, 2.0);
-
-        BOOST_CHECK_EQUAL(candidates.size(), 3);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).distance, 0.1, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<0>(candidates.at(0).edges.at(0).projection_point), 0.1, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<1>(candidates.at(0).edges.at(0).projection_point), 0.0, 1e-6);
-        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<0>(candidates.at(0).edges.at(0).from.line().at(0)), 0.0, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<1>(candidates.at(0).edges.at(0).from.line().at(0)), 0.0, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<0>(candidates.at(0).edges.at(0).from.line().at(1)), 0.1, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(boost::geometry::get<1>(candidates.at(0).edges.at(0).from.line().at(1)), 0.0, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).from.length(), 0.1, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(0).edges.at(0).to.length(), 13.9, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(1).edges.at(0).from.length(), 6.2, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(1).edges.at(0).to.length(), 7.8, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(2).edges.at(0).from.length(), 13.8, 1e-4);
-        BOOST_CHECK_CLOSE_FRACTION(candidates.at(2).edges.at(0).to.length(), 0.2, 1e-4);
-        BOOST_CHECK_EQUAL(candidates.at(0).edges.at(0).from.line().size(), 2);
-        BOOST_CHECK_EQUAL(candidates.at(0).edges.at(0).to.line().size(), 8);
-        BOOST_CHECK_EQUAL(candidates.at(1).edges.at(0).from.line().size(), 5);
-        BOOST_CHECK_EQUAL(candidates.at(1).edges.at(0).to.line().size(), 5);
-        BOOST_CHECK_EQUAL(candidates.at(2).edges.at(0).from.line().size(), 8);
-        BOOST_CHECK_EQUAL(candidates.at(2).edges.at(0).to.line().size(), 2);
-
-        auto route_1 = matcher.candidate_route(candidates, 0, 0, 1, 0);
-        BOOST_CHECK_EQUAL(route_1.get_line().size(), 5);
-        BOOST_CHECK_CLOSE_FRACTION(route_1.length(), 6.1, 1e-4);
-
-        auto route_2 = matcher.candidate_route(candidates, 1, 0, 2, 0);
-        BOOST_CHECK_EQUAL(route_2.get_line().size(), 5);
-        BOOST_CHECK_CLOSE_FRACTION(route_2.length(), 7.6, 1e-4);
-    }
-
     BOOST_FIXTURE_TEST_CASE(matching_value_iteration_test, matcher_fixture<matcher_metric>) {
-        network_fixture<network_metric> network_fixture;
-        auto network = network_fixture.generate_grid_network();
+        using point_type = typename matcher_metric::internal_matcher::point_type;
+        using line_type = map_matching_2::geometry::models<point_type>::line_type;
+        using rich_line_type = map_matching_2::geometry::rich_line_type<point_type>;
+        using route_type = map_matching_2::geometry::network::route<rich_line_type>;
+        using multi_rich_line_type = map_matching_2::geometry::multi_rich_line_type<point_type>;
 
-        auto network_matcher = prepare_network(network);
+        network_fixture<network_import_metric> network_fixture;
+        network_import_metric network = network_fixture.generate_grid_network();
+
+        network_metric network_matcher = prepare_network(network);
         auto matcher = create_matcher(network_matcher);
 
         map_matching_2::learning::settings learn_settings;
@@ -242,7 +263,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         match_settings.simplify = false;
         match_settings.median_merge = false;
 
-        using environment = map_matching_2::environment::single<typename matcher_metric::matcher_static>;
+        using environment = map_matching_2::environment::single<typename matcher_metric::internal_matcher>;
         using learn_function = map_matching_2::learning::value_iteration<environment>;
 
         auto track = create_track("one", {{0, {2.3, 2.2}},
@@ -252,9 +273,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         auto candidates = matcher.candidate_search_buffer(track, match_settings.buffer_radius);
         matcher.save_candidates("matching_value_iteration_test_candidates.csv", candidates);
 
-        typename matcher_metric::matcher_static::line_type ground_truth_line;
+        line_type ground_truth_line;
         boost::geometry::read_wkt("LINESTRING(2.3 2,3 2,4 2,5 2,5 3,5 4,5 5,5 5.8)", ground_truth_line);
-        const typename matcher_metric::matcher_static::route_type ground_truth{ground_truth_line};
+        const route_type ground_truth{ground_truth_line};
 
         matcher.template match<learn_function>(
                 track, learn_settings, match_settings,
@@ -265,7 +286,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                     std::cout << "Route: " << route.str() << std::endl;
                     std::cout << "Ground truth: " << ground_truth.str() << std::endl;
 
-                    map_matching_2::geometry::line_comparator<typename network_metric::route_type::rich_line_type> line_comparator;
+                    map_matching_2::geometry::line_comparator<multi_rich_line_type> line_comparator;
                     const auto comparison = line_comparator.compare(
                             route.get_rich_line(), ground_truth.get_rich_line());
 
@@ -276,10 +297,16 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
     }
 
     BOOST_FIXTURE_TEST_CASE(matching_viterbi_hmm_test, matcher_fixture<matcher_metric>) {
-        network_fixture<network_metric> network_fixture;
-        auto network = network_fixture.generate_grid_network();
+        using point_type = typename matcher_metric::internal_matcher::point_type;
+        using line_type = map_matching_2::geometry::models<point_type>::line_type;
+        using rich_line_type = map_matching_2::geometry::rich_line_type<point_type>;
+        using route_type = map_matching_2::geometry::network::route<rich_line_type>;
+        using multi_rich_line_type = map_matching_2::geometry::multi_rich_line_type<point_type>;
 
-        auto network_matcher = prepare_network(network);
+        network_fixture<network_import_metric> network_fixture;
+        network_import_metric network = network_fixture.generate_grid_network();
+
+        network_metric network_matcher = prepare_network(network);
         auto matcher = create_matcher(network_matcher);
 
         map_matching_2::learning::settings learn_settings;
@@ -288,7 +315,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         match_settings.simplify = false;
         match_settings.median_merge = false;
 
-        using environment = map_matching_2::environment::hmm<typename matcher_metric::matcher_static>;
+        using environment = map_matching_2::environment::hmm<typename matcher_metric::internal_matcher>;
         using learn_function = map_matching_2::learning::viterbi<environment>;
 
         auto track = create_track("one", {{0, {2.3, 2.2}},
@@ -298,9 +325,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         auto candidates = matcher.candidate_search_buffer(track, match_settings.buffer_radius);
         matcher.save_candidates("matching_viterbi_hmm_test_candidates.csv", candidates);
 
-        typename matcher_metric::matcher_static::line_type ground_truth_line;
+        line_type ground_truth_line;
         boost::geometry::read_wkt("LINESTRING(2.3 2,3 2,4 2,5 2,5 3,5 4,5 5,5 5.8)", ground_truth_line);
-        const typename matcher_metric::matcher_static::route_type ground_truth{ground_truth_line};
+        const route_type ground_truth{ground_truth_line};
 
         matcher.template match<learn_function>(
                 track, learn_settings, match_settings,
@@ -311,7 +338,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                     std::cout << "Route: " << route.str() << std::endl;
                     std::cout << "Ground truth: " << ground_truth.str() << std::endl;
 
-                    map_matching_2::geometry::line_comparator<typename network_metric::route_type::rich_line_type> line_comparator;
+                    map_matching_2::geometry::line_comparator<multi_rich_line_type> line_comparator;
                     const auto comparison = line_comparator.compare(
                             route.get_rich_line(), ground_truth.get_rich_line());
 

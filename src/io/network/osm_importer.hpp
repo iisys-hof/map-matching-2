@@ -16,9 +16,12 @@
 #ifndef MAP_MATCHING_2_OSM_IMPORTER_HPP
 #define MAP_MATCHING_2_OSM_IMPORTER_HPP
 
+#include <osmium/io/any_input.hpp>
+#include <osmium/visitor.hpp>
 #include <osmium/tags/tags_filter.hpp>
 
 #include "../importer.hpp"
+#include "osm_handler.hpp"
 
 namespace map_matching_2::io::network {
 
@@ -29,18 +32,50 @@ namespace map_matching_2::io::network {
         Network &_network;
 
     protected:
-        virtual osmium::TagsFilter query();
+        virtual osmium::TagsFilter query() {
+            osmium::TagsFilter filter{false};
+            filter.add_rule(true, "highway");
+            return filter;
+        }
 
-        virtual osmium::TagsFilter filter();
+        virtual osmium::TagsFilter filter() {
+            osmium::TagsFilter filter{true};
+            return filter;
+        }
 
-        virtual osmium::TagsFilter oneway();
+        virtual osmium::TagsFilter oneway() {
+            osmium::TagsFilter filter{false};
+            filter.add_rule(true, "oneway", "yes");
+            filter.add_rule(true, "oneway", "true");
+            filter.add_rule(true, "oneway", "1");
+            filter.add_rule(true, "junction", "roundabout");
+            filter.add_rule(true, "highway", "motorway");
+            return filter;
+        }
 
-        virtual osmium::TagsFilter oneway_reverse();
+        virtual osmium::TagsFilter oneway_reverse() {
+            osmium::TagsFilter filter{false};
+            filter.add_rule(true, "oneway", "-1");
+            filter.add_rule(true, "oneway", "reverse");
+            return filter;
+        }
 
     public:
-        osm_importer(std::string filename, Network &network);
+        osm_importer(std::string filename, Network &network)
+                : importer{std::move(filename)}, _network{network} {}
 
-        void read() override;
+        void read() override {
+            osmium::io::File file{this->filename()};
+
+            //osm_relations_manager osm_relations_manager{_network};
+            //osmium::relations::read_relations(file, osm_relations_manager);
+
+            osmium::io::Reader reader{file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+            osm_handler<Network> osm_handler{_network, query(), filter(), oneway(), oneway_reverse()};
+
+            //osmium::apply(reader, osm_handler, osm_relations_manager.handler());
+            osmium::apply(reader, osm_handler);
+        }
 
     };
 

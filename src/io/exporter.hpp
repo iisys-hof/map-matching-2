@@ -26,9 +26,12 @@ namespace map_matching_2::io {
         std::string _filename;
 
     public:
-        explicit exporter(std::string filename);
+        explicit exporter(std::string filename)
+                : _filename{std::move(filename)} {}
 
-        [[nodiscard]] const std::string &filename() const;
+        [[nodiscard]] const std::string &filename() const {
+            return _filename;
+        }
 
     };
 

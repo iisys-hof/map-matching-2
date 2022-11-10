@@ -24,12 +24,33 @@ namespace map_matching_2::io::network {
     class osm_car_importer : public osm_importer<Network> {
 
     protected:
-        osmium::TagsFilter query() override;
+        osmium::TagsFilter query() override {
+            osmium::TagsFilter filter{false};
+            // https://wiki.openstreetmap.org/wiki/Key:highway
+            filter.add_rule(false, "highway", "footway");
+            filter.add_rule(false, "highway", "pedestrian");
+            filter.add_rule(false, "highway", "steps");
+            filter.add_rule(false, "highway", "bridleway");
+            filter.add_rule(false, "highway", "construction");
+            filter.add_rule(false, "highway", "cycleway");
+            filter.add_rule(false, "highway", "path");
+            filter.add_rule(false, "highway", "bus_guideway");
+            filter.add_rule(false, "highway", "platform");
+            filter.add_rule(true, "highway");
+            return filter;
+        }
 
-        osmium::TagsFilter filter() override;
+        osmium::TagsFilter filter() override {
+            osmium::TagsFilter filter{true};
+            // https://wiki.openstreetmap.org/wiki/Key:access
+            filter.add_rule(false, "access", "no");
+            filter.add_rule(false, "access", "private");
+            return filter;
+        }
 
     public:
-        osm_car_importer(std::string filename, Network &network);
+        osm_car_importer(std::string filename, Network &network)
+                : osm_importer<Network>{std::move(filename), network} {}
 
     };
 

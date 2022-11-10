@@ -3,30 +3,27 @@ find_package(Threads REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS thread)
 
-add_library(matching STATIC)
+add_library(matching INTERFACE)
 
-target_sources(matching
-        PRIVATE
-        candidate.cpp
-        candidate_edge.cpp
-        candidate_node.cpp
-        detector.cpp
-        matcher.cpp)
+target_precompile_headers(matching
+        INTERFACE
+        <absl/container/flat_hash_map.h>
+        <absl/container/btree_set.h>
+        <absl/container/btree_map.h>
+        <boost/thread.hpp>
+        <boost/thread/executors/basic_thread_pool.hpp>)
 
 target_compile_definitions(matching
-        PUBLIC
-        BOOST_ALLOW_DEPRECATED_HEADERS)
+        INTERFACE
+        BOOST_ALLOW_DEPRECATED_HEADERS
+        BOOST_THREAD_VERSION=5)
 
 target_include_directories(matching
-        PUBLIC
+        INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-target_include_directories(matching SYSTEM
-        PUBLIC
-        ${GEOMETRY_DEVELOP_INCLUDE_DIRS})
-
 target_link_libraries(matching
-        PUBLIC
+        INTERFACE
         geometry
         learning
         util

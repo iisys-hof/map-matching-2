@@ -30,18 +30,35 @@ namespace map_matching_2::io {
         std::vector<std::string> _columns;
 
     protected:
-        virtual void configure_format(csv::CSVFormat &format);
+        virtual void configure_format(csv::CSVFormat &format) {}
 
         virtual void process_row(std::size_t n, const csv::CSVRow &row) = 0;
 
-        virtual void finish_import();
+        virtual void finish_import() {}
 
     public:
-        explicit csv_importer(std::string filename);
+        explicit csv_importer(std::string filename)
+                : importer{std::move(filename)} {}
 
-        void read() override;
+        void read() override {
+            csv::CSVFormat format;
+            configure_format(format);
 
-        [[nodiscard]] const std::vector<std::string> &columns() const;
+            csv::CSVReader csv{filename(), format};
+
+            _columns = csv.get_col_names();
+
+            std::size_t n = 0;
+            for (const auto &row: csv) {
+                process_row(n++, row);
+            }
+
+            finish_import();
+        }
+
+        [[nodiscard]] const std::vector<std::string> &columns() const {
+            return _columns;
+        }
 
     };
 

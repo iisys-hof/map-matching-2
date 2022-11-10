@@ -26,7 +26,8 @@ namespace map_matching_2::io {
     class csv_exporter : public file_exporter, public csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush> {
 
     public:
-        explicit csv_exporter(std::string filename);
+        explicit csv_exporter(std::string filename)
+                : file_exporter{std::move(filename)}, csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush>{out()} {}
 
     };
 

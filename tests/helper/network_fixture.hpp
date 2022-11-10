@@ -16,6 +16,7 @@
 #ifndef MAP_MATCHING_2_NETWORK_FIXTURE_HPP
 #define MAP_MATCHING_2_NETWORK_FIXTURE_HPP
 
+#include <vector>
 #include <initializer_list>
 
 #include <absl/container/flat_hash_map.h>
@@ -23,113 +24,95 @@
 #include <geometry/types.hpp>
 #include <geometry/network/types.hpp>
 
-using network_geographic = map_matching_2::geometry::network::types_geographic::network_modifiable;
-using network_metric = map_matching_2::geometry::network::types_cartesian::network_modifiable;
+#include "geometry_helper.hpp"
 
-using network_static_geographic = map_matching_2::geometry::network::types_geographic::network_static;
-using network_static_metric = map_matching_2::geometry::network::types_cartesian::network_static;
+using network_import_geographic = map_matching_2::geometry::network::types_geographic::internal_network_import;
+using network_import_metric = map_matching_2::geometry::network::types_cartesian::internal_network_import;
+
+using network_geographic = map_matching_2::geometry::network::types_geographic::internal_network;
+using network_metric = map_matching_2::geometry::network::types_cartesian::internal_network;
 
 template<typename Network>
 struct network_fixture {
 
-    absl::flat_hash_map<osmium::object_id_type, typename Network::vertex_descriptor> nodes_map;
-    absl::flat_hash_map<osmium::object_id_type, typename Network::edge_descriptor> edges_map;
+    using point_type = typename Network::point_type;
+    using line_type = typename Network::line_type;
+    using node_type = typename Network::node_type;
+    using edge_type = typename Network::edge_type;
+    using vertex_descriptor = typename Network::vertex_descriptor;
+    using edge_descriptor = typename Network::edge_descriptor;
+
+    absl::flat_hash_map<osmium::object_id_type, vertex_descriptor> nodes_map;
+    absl::flat_hash_map<osmium::object_id_type, edge_descriptor> edges_map;
 
     map_matching_2::geometry::network::tag_helper tag_helper;
 
-    typename Network::line_type
-    add_to_line(typename Network::line_type &line, const std::initializer_list<typename Network::point_type> points) {
-        line.reserve(line.size() + points.size());
-        for (const auto &point: points) {
-            line.emplace_back(point);
-        }
-
-        return line;
-    }
-
-    typename Network::line_type
-    add_to_line(typename Network::line_type &line,
-                const std::initializer_list<typename boost::geometry::traits::coordinate_type<typename Network::point_type>::type> coordinates) {
-        assert(coordinates.size() % 2 == 0);
-
-        line.reserve(line.size() + coordinates.size() / 2);
-        for (auto it = coordinates.begin(); it != coordinates.end(); ++it) {
-            const auto x = *it;
-            const auto y = *(++it);
-            line.emplace_back(typename Network::point_type{x, y});
-        }
-
-        return line;
-    }
-
-    typename Network::line_type
-    create_line(const std::initializer_list<typename Network::point_type> points) {
-        return typename Network::line_type{points};
-    }
-
-    typename Network::line_type
-    create_line(
-            const std::initializer_list<typename boost::geometry::traits::coordinate_type<typename Network::point_type>::type> coordinates) {
-        assert(coordinates.size() % 2 == 0);
-
-        typename Network::line_type line;
-        return add_to_line(line, coordinates);
-    }
-
-    typename Network::node_type
-    create_node(osmium::object_id_type id, typename Network::point_type point,
-                std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
+    node_type create_node(osmium::object_id_type id, point_type point,
+                          std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
         std::vector<std::uint64_t> tag_ids;
         tag_ids.reserve(tags.size());
         for (const auto &tag_pair: tags) {
             tag_ids.emplace_back(tag_helper.id(tag_pair.first, tag_pair.second));
         }
 
-        return typename Network::node_type{id, std::move(point), std::move(tag_ids)};
+        return node_type{id, std::move(point), std::move(tag_ids)};
     }
 
-    typename Network::edge_type
-    create_edge(osmium::object_id_type id, std::vector<osmium::object_id_type> nodes,
-                typename Network::line_type line,
-                std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
+    edge_type create_edge(osmium::object_id_type id, const line_type &line,
+                          std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
         std::vector<std::uint64_t> tag_ids;
         tag_ids.reserve(tags.size());
         for (const auto &tag_pair: tags) {
             tag_ids.emplace_back(tag_helper.id(tag_pair.first, tag_pair.second));
         }
 
-        return typename Network::edge_type{id, std::move(nodes), std::move(line), std::move(tag_ids)};
+        return edge_type{id, line, std::move(tag_ids)};
     }
 
-    typename boost::graph_traits<typename Network::graph_type>::vertex_descriptor
-    add_vertex(Network &network, const osmium::object_id_type node_id, const typename Network::point_type point) {
+    vertex_descriptor add_vertex(Network &network, const osmium::object_id_type node_id, const point_type point) {
         auto node = create_node(node_id, point);
         auto vertex = network.add_vertex(node);
         nodes_map.emplace(node_id, vertex);
         return vertex;
     }
 
-    typename boost::graph_traits<typename Network::graph_type>::edge_descriptor
-    add_edge(Network &network, const osmium::object_id_type edge_id,
-             const std::pair<osmium::object_id_type, osmium::object_id_type> node_pair,
-             const std::initializer_list<typename boost::geometry::traits::coordinate_type<typename Network::point_type>::type> additional_coordinates_between = {}) {
-        const auto vertex_a = nodes_map.at(node_pair.first);
-        const auto vertex_b = nodes_map.at(node_pair.second);
-        const auto &node_a = network.graph[vertex_a];
-        const auto &node_b = network.graph[vertex_b];
+    edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
+                             const std::initializer_list<const std::pair<osmium::object_id_type, osmium::object_id_type>> node_pairs) {
+        using rich_line_type = typename edge_type::rich_line_type;
+        using rich_segment_type = typename rich_line_type::rich_segment_type;
+        using segment_type = typename rich_segment_type::segment_type;
 
-        typename Network::line_type line;
-        line.reserve(2 + additional_coordinates_between.size());
-        add_to_line(line, {node_a.point});
-        if (additional_coordinates_between.size() > 0) {
-            add_to_line(line, additional_coordinates_between);
+        std::vector<rich_segment_type> rich_segments;
+        rich_segments.reserve(node_pairs.size() * 2 - 1);
+
+        vertex_descriptor start, end;
+        for (auto it = node_pairs.begin(); it != node_pairs.end(); ++it) {
+            const auto &node_pair = *it;
+
+            const auto vertex_a = nodes_map.at(node_pair.first);
+            const auto vertex_b = nodes_map.at(node_pair.second);
+            const auto &node_a = network.vertex(vertex_a);
+            const auto &node_b = network.vertex(vertex_b);
+
+            rich_segments.emplace_back(rich_segment_type{segment_type{node_a.point, node_b.point}});
+
+            if (it == node_pairs.begin()) {
+                start = vertex_a;
+            }
+            if (std::next(it) == node_pairs.end()) {
+                end = vertex_b;
+            }
         }
-        add_to_line(line, {node_b.point});
 
-        auto edge = create_edge(edge_id, {node_a.id, node_b.id}, line);
-        auto edge_descriptor = network.add_edge(vertex_a, vertex_b, edge);
+        edge_type edge{edge_id, rich_line_type{std::move(rich_segments)}};
+        auto edge_descriptor = network.add_edge(start, end, edge).first;
         edges_map.emplace(edge_id, edge_descriptor);
         return edge_descriptor;
+    }
+
+    edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
+                             const std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
+        return add_edge(network, edge_id, {node_pair});
     }
 
     Network generate_simplification_network() {

@@ -1,15 +1,25 @@
-add_library(environment STATIC)
+add_library(environment INTERFACE)
 
-target_sources(environment
-        PRIVATE
-        environments/hmm.cpp
-        environments/single.cpp)
+target_precompile_headers(environment
+        INTERFACE
+        <cstddef>
+        <cstdint>
+        <cmath>
+        <limits>
+        <numeric>
+        <utility>
+        <algorithm>
+        <iterator>
+        <string>
+        <vector>
+        <tuple>
+        <absl/container/flat_hash_map.h>)
 
 target_include_directories(environment
-        PUBLIC
+        INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 target_link_libraries(environment
-        PUBLIC
+        INTERFACE
         matching
         absl::flat_hash_map)

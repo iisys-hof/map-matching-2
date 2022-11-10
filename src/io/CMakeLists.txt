@@ -6,44 +6,52 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 list(APPEND CMAKE_MODULE_PATH "${OSMIUM_INCLUDE_DIR}/cmake")
 find_package(Osmium REQUIRED COMPONENTS io proj)
 
-add_library(io STATIC)
+add_library(io INTERFACE)
 
-target_sources(io
-        PRIVATE
-        importer.cpp
-        exporter.cpp
-        file_exporter.cpp
-        csv_importer.cpp
-        csv_exporter.cpp
-        network/arc_node_importer.cpp
-        network/network_loader.cpp
-        network/network_saver.cpp
-        network/osm_car_importer.cpp
-        network/osm_exporter.cpp
-        network/osm_handler.cpp
-        network/osm_importer.cpp
-        network/osm_relations_manager.cpp
-        track/csv_track_importer.cpp
-        track/edges_list_importer.cpp
-        track/gpx_track_importer.cpp
-        track/input_importer.cpp)
+target_precompile_headers(io
+        INTERFACE
+        <absl/container/flat_hash_map.h>
+        <absl/container/flat_hash_set.h>
+        <date/date.h>
+        <csv.hpp>
+        <gpx/Parser.h>
+        <gpx/ReportCerr.h>
+        <osmium/osm.hpp>
+        <osmium/handler.hpp>
+        <osmium/builder/osm_object_builder.hpp>
+        <osmium/io/any_output.hpp>
+        <osmium/io/any_input.hpp>
+        <osmium/visitor.hpp>
+        <osmium/tags/tags_filter.hpp>
+        <osmium/relations/relations_manager.hpp>
+        <boost/serialization/serialization.hpp>
+        <boost/interprocess/managed_mapped_file.hpp>
+        <boost/interprocess/allocators/private_node_allocator.hpp>
+        <boost/interprocess/containers/vector.hpp>
+        <boost/interprocess/containers/list.hpp>
+        <boost/algorithm/string.hpp>
+        <boost/tokenizer.hpp>
+        <boost/archive/binary_iarchive.hpp>
+        <boost/archive/binary_oarchive.hpp>
+        <boost/geometry/geometry.hpp>
+        <boost/geometry/geometries/geometries.hpp>)
 
 target_compile_definitions(io
-        PRIVATE
+        INTERFACE
         BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL)
 
 target_include_directories(io
-        PUBLIC
+        INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 target_include_directories(io SYSTEM
-        PUBLIC
+        INTERFACE
         ${GPX_INCLUDE_DIRS}
         ${CSV_PARSER_INCLUDE_DIRS}
         ${OSMIUM_INCLUDE_DIR}/include)
 
 target_link_libraries(io
-        PUBLIC
+        INTERFACE
         geometry
         Threads::Threads
         absl::flat_hash_set

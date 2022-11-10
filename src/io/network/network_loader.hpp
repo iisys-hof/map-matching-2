@@ -16,6 +16,11 @@
 #ifndef MAP_MATCHING_2_NETWORK_LOADER_HPP
 #define MAP_MATCHING_2_NETWORK_LOADER_HPP
 
+#include <fstream>
+#include <filesystem>
+
+#include <boost/archive/binary_iarchive.hpp>
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::network {
@@ -27,9 +32,23 @@ namespace map_matching_2::io::network {
         Network &_network;
 
     public:
-        network_loader(std::string filename, Network &network);
+        network_loader(std::string filename, Network &network)
+                : importer{std::move(filename)}, _network{network} {}
 
-        void read() override;
+        void read() override {
+            std::ifstream file;
+            std::filesystem::path path{this->filename()};
+
+            if (not std::filesystem::exists(path)) {
+                throw std::runtime_error("file " + this->filename() + " does not exist.");
+            }
+
+            file.open(path, std::ios_base::binary);
+            if (file.is_open() && file.good()) {
+                boost::archive::binary_iarchive in{file};
+                in >> _network;
+            }
+        }
 
     };
 

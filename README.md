@@ -105,10 +105,32 @@ example [WGS-84 Pseudo-Mercator](https://epsg.io/3857) by setting
 
 | Mode                                     | Time (s) | CPU resources (s) | Max RAM (MB) | `.osm.pbf` size (MB) | `.dat` size (MB) |
 |------------------------------------------|----------|-------------------|--------------|----------------------|------------------|
-| Prepare Network                          | 13.77    | 16.10             | 2620         | 75                   | 286              |
-| Prepare Network (Cartesian Reprojection) | 12.03    | 14.30             | 2621         | 75                   | 286              |
+| Prepare Network                          | 12.46    | 14.82             | 1793         | 75                   | 254              |
+| Prepare Network (Cartesian Reprojection) | 11.07    | 13.29             | 1792         | 75                   | 254              |
 
-The times are measured with `/usr/bin/time -v` prepended to the command above. The file sized were read from the data
+<details>
+<summary>Prepare Commands</summary>
+
+```
+# Prepare Network
+./map_matching_2 \
+  --network "/app/data/oberfranken-latest.osm.pbf" \
+  --network-save "/app/data/oberfranken-latest.dat" \
+  --verbose
+```
+
+```
+# Prepare Network (Cartesian Reprojection)
+./map_matching_2 \
+  --network "/app/data/oberfranken-latest.osm.pbf" \
+  --network-transform-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs" \
+  --network-save "/app/data/oberfranken-latest-cartesian.dat" \
+  --verbose
+```
+
+</details>
+
+The times are measured with `/usr/bin/time -v` prepended to the commands above. The file sized were read from the data
 folder via `ls -lah` command.
 
 For using the exported network graph instead of original input file, simply replace `--network` with `--network-load`
@@ -129,21 +151,28 @@ The reading time is the same in both cases.
 
 | Mode                              | Time (s) | CPU resources (s) | Max RAM (MB) |
 |-----------------------------------|----------|-------------------|--------------|
-| Read Prepared Network             | 2.24     | 2.24              | 545          |
+| Read Prepared Network             | 2.74     | 2.74              | 806          |
 
-We can see that reading the prepared graph is a lot faster and needs less resources.
+<details>
+<summary>Read Prepared Network Commands</summary>
 
 The command that was used for reading this time is the following. The software normally requires tracks supplied, but
 it can be tricked by supplying an empty track in readline mode in shell pipeline syntax:
 
 ```
+# Read Prepared Network
 echo "" | ./map_matching_2 \
   --network-load "/app/data/oberfranken-latest.dat" \
-  --readline --no-compare --verbose
+  --readline --no-compare \
+  --verbose
 ```
 
 When you want to measure this via `/usr/bin/time -v` you need to put the command in `/bin/bash -c '<cmd>'` so that it is
 measured completely, else only the echo is measured.
+
+</details>
+
+We can see that reading the prepared graph is a lot faster and needs less resources.
 
 Now we can use the prepared network graph in real use-cases, for example with the provided floating car data, here it
 takes up to 64 GB of RAM on 256 CPU threads:
@@ -194,13 +223,127 @@ provided `points_anonymized.csv` file. Other data and hardware leads to other re
 
 | Mode                                        | Track points | Sanitized track points | Candidates |  Combinations | Time (s) | CPU resources (s) | Max RAM (MB) |
 |:--------------------------------------------|-------------:|-----------------------:|-----------:|--------------:|---------:|------------------:|-------------:|
-| Default settings                            |       88,825 |                 32,585 |  7,723,164 | 2,524,741,883 |      233 |             8,986 |       50,359 |
-| Default settings cartesian                  |       88,825 |                 37,901 |  4,631,332 |   883,948,607 |       73 |             2,758 |       23,974 |
-| Disabled candidate adoption (no CA)         |       88,825 |                 32,585 |  2,319,264 |   201,870,589 |     24,1 |             2,672 |       15,750 |
-| Combined candidate search (with CA)         |       88,825 |                 32,585 |    799,044 |    27,177,491 |     9,36 |               809 |        5,921 |
-| Combined (no CA)                            |       88,825 |                 32,585 |    255,093 |     2,644,733 |     5,07 |               431 |        3,858 |
-| Combined single threading (no CA)           |       88,825 |                 32,585 |    255,093 |     2,644,733 |     58,4 |              58,4 |          612 |
-| Combined single threading cartesian (no CA) |       88,825 |                 37,901 |    298,084 |     3,142,476 |     18,9 |              18,9 |          615 |
+| Default settings                            |       88,807 |                 32,585 |  7,723,164 | 2,524,741,847 |      184 |             7,775 |       50,256 |
+| Default settings cartesian                  |       88,807 |                 37,901 |  4,631,332 |   88,3948,571 |      102 |             2,671 |       23,638 |
+| Disabled candidate adoption (no CA)         |       88,807 |                 32,585 |  2,319,264 |   201,870,553 |     27,8 |             2,700 |       16,212 |
+| Combined candidate search (with CA)         |       88,807 |                 32,585 |    799,044 |    27,177,433 |     9,01 |               820 |        6,215 |
+| Combined (no CA)                            |       88,807 |                 32,585 |    255,093 |     2,644,697 |     5,88 |               456 |        4,226 |
+| Combined single threading (no CA)           |       88,807 |                 32,585 |    255,093 |     2,644,697 |     65,0 |              65,0 |          868 |
+| Combined single threading cartesian (no CA) |       88,807 |                 37,901 |    298,084 |     3,142,440 |     24,5 |              18,9 |          878 |
+
+<details>
+<summary>Map Matching Benchmark Commands</summary>
+
+```
+# Default settings
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --verbose
+```
+
+```
+# Default settings cartesian
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest-cartesian.dat" \
+  --network-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --tracks-transform-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --verbose
+```
+
+```
+# Disabled candidate adoption (no CA)
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --candidate-adoption-siblings off \
+  --candidate-adoption-nearby off \
+  --verbose
+```
+
+```
+# Combined candidate search (with CA)
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --candidate-search combined \
+  --verbose
+```
+
+```
+# Combined (no CA)
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --candidate-search combined \
+  --candidate-adoption-siblings off \
+  --candidate-adoption-nearby off \
+  --verbose
+```
+
+```
+# Combined single threading (no CA)
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest.dat" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --candidate-search combined \
+  --candidate-adoption-siblings off \
+  --candidate-adoption-nearby off \
+  --single-threading \
+  --verbose
+```
+
+```
+# Combined single threading cartesian (no CA)
+./map_matching_2 \
+  --network-load "/app/data/oberfranken-latest-cartesian.dat" \
+  --network-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs" \
+  --tracks "/app/data/points_anonymized.csv" \
+  --tracks-transform-srs "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs" \
+  --delimiter ";" \
+  --id "device" --id "subid" \
+  --x "lon" --y "lat" \
+  --time "timestamp" --time-format "%F %T%Oz" \
+  --output "/app/data/matches.csv" \
+  --candidate-search combined \
+  --candidate-adoption-siblings off \
+  --candidate-adoption-nearby off \
+  --single-threading \
+  --verbose
+```
+
+</details>
 
 We can see how reducing the amount of candidates and thus combinations reduces the CPU and memory load. The software
 benefits a lot from multiple CPU cores, but needs more memory in its peak when multiple tracks are matched in parallel.
@@ -240,7 +383,7 @@ Then the built software can be found in the newly created `run/bin` directory. T
 this directory (so nothing is installed system-wide), uninstalling is simply deleting the directory.
 
 For building under Windows you need Ubuntu 20.04 LTS for the Windows Subsystem for Linux (WSL). Building is the same as
-under Linux then. Native build currently is unsupported due to several dependencies not building natively under Windows.
+under Linux then. Native build currently is unsupported due to several dependencies currently not building natively under Windows.
 
 ### Examples
 

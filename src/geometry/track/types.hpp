@@ -26,11 +26,16 @@ namespace map_matching_2::geometry::track {
     template<typename CoordinateSystem>
     struct types {
         using measurement_type = measurement<typename geometry::types<CoordinateSystem>::point_type>;
-        using track_type = track<measurement_type>;
-        using multi_track_type = multi_track<measurement_type>;
+        using track_type = geometry::track::track_type<typename geometry::types<CoordinateSystem>::point_type>;
+        using eager_track_type = geometry::track::eager_track_type<typename geometry::types<CoordinateSystem>::point_type>;
+        using lazy_track_type = geometry::track::lazy_track_type<typename geometry::types<CoordinateSystem>::point_type>;
+        using multi_track_type = geometry::track::multi_track_type<typename geometry::types<CoordinateSystem>::point_type>;
+        using eager_multi_track_type = geometry::track::eager_multi_track_type<typename geometry::types<CoordinateSystem>::point_type>;
+        using lazy_multi_track_type = geometry::track::lazy_multi_track_type<typename geometry::types<CoordinateSystem>::point_type>;
     };
 
     using types_geographic = types<geometry::cs_geographic>;
+    using types_spherical_equatorial = types<geometry::cs_spherical_equatorial>;
     using types_cartesian = types<geometry::cs_cartesian>;
 
 }

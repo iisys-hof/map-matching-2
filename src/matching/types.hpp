@@ -23,13 +23,15 @@
 
 namespace map_matching_2::matching {
 
-    template<typename NetworkTypes, typename Track>
+    template<typename NetworkTypes, typename MultiTrack>
     struct types {
-        using matcher_static = matcher<typename NetworkTypes::network_static, Track>;
+        using internal_matcher = matcher<typename NetworkTypes::internal_network, MultiTrack>;
+        using external_matcher = matcher<typename NetworkTypes::external_network, MultiTrack>;
     };
 
-    using types_geographic = types<geometry::network::types_geographic, geometry::track::types_geographic::track_type>;
-    using types_cartesian = types<geometry::network::types_cartesian, geometry::track::types_cartesian::track_type>;
+    using types_geographic = types<geometry::network::types_geographic, geometry::track::types_geographic::eager_multi_track_type>;
+    using types_spherical_equatorial = types<geometry::network::types_spherical_equatorial, geometry::track::types_spherical_equatorial::eager_multi_track_type>;
+    using types_cartesian = types<geometry::network::types_cartesian, geometry::track::types_cartesian::eager_multi_track_type>;
 
 }
 

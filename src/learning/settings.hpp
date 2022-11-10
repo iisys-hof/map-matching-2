@@ -16,6 +16,8 @@
 #ifndef MAP_MATCHING_2_LEARNING_SETTINGS_HPP
 #define MAP_MATCHING_2_LEARNING_SETTINGS_HPP
 
+#include <cstddef>
+
 namespace map_matching_2::learning {
 
     struct settings {

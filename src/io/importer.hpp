@@ -18,6 +18,8 @@
 
 #include <string>
 
+#include <date/date.h>
+
 namespace map_matching_2::io {
 
     class importer {
@@ -26,14 +28,24 @@ namespace map_matching_2::io {
         const std::string _filename;
 
     protected:
-        virtual std::uint64_t parse_time(const std::string &time_str, const std::string &format);
+        virtual std::uint64_t parse_time(const std::string &time_str, const std::string &format) {
+            date::sys_time<std::chrono::milliseconds> time;
+            std::istringstream time_str_stream{time_str};
+            time_str_stream >> date::parse(format, time);
+            const auto count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
+            assert(count >= 0);
+            return (std::uint64_t) count;
+        }
 
     public:
-        explicit importer(std::string filename);
+        explicit importer(std::string filename)
+                : _filename{std::move(filename)} {}
 
         virtual void read() = 0;
 
-        [[nodiscard]] const std::string &filename() const;
+        [[nodiscard]] const std::string &filename() const {
+            return _filename;
+        }
 
     };
 

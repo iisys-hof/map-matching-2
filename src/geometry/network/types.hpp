@@ -17,28 +17,53 @@
 #define MAP_MATCHING_2_NETWORK_TYPES_HPP
 
 #include "../types.hpp"
-#include "node.hpp"
-#include "edge.hpp"
-#include "route.hpp"
 #include "network.hpp"
 
 namespace map_matching_2::geometry::network {
 
     template<typename CoordinateSystem>
     struct types {
-        using node_type = node<typename geometry::types<CoordinateSystem>::point_type>;
-        using edge_type = edge<typename geometry::types<CoordinateSystem>::line_type>;
+        using point_type = typename geometry::types<CoordinateSystem>::point_type;
 
-        using graph_modifiable = boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS,
-                node_type, edge_type, boost::no_property, boost::listS>;
-        using graph_static = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
-                node_type, edge_type, boost::no_property, boost::vecS>;
+        using internal_node_type = geometry::network::internal_node<point_type>;
+        using internal_edge_type = geometry::network::internal_edge_type<point_type>;
+        using eager_internal_edge_type = geometry::network::eager_internal_edge_type<point_type>;
+        using lazy_internal_edge_type = geometry::network::lazy_internal_edge_type<point_type>;
 
-        using network_modifiable = network<graph_modifiable>;
-        using network_static = network<graph_static>;
+        using external_node_type = geometry::network::node<point_type>;
+        using external_edge_type = geometry::network::edge_type<point_type>;
+        using eager_external_edge_type = geometry::network::eager_edge_type<point_type>;
+        using lazy_external_edge_type = geometry::network::lazy_edge_type<point_type>;
+
+        using internal_graph_import = boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS,
+                internal_node_type, internal_edge_type,
+                boost::no_property, boost::listS>;
+        using internal_graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
+                internal_node_type, lazy_internal_edge_type,
+                boost::no_property, boost::vecS>;
+
+        using external_graph_import = boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS,
+                boost::property<boost::vertex_index_t, std::size_t>, boost::property<boost::edge_index_t, std::size_t>,
+                boost::no_property, boost::listS>;
+        using external_graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
+                boost::no_property, boost::property<boost::edge_index_t, std::size_t>,
+                boost::no_property, boost::vecS>;
+
+        using internal_graph_storage_import = graph_memory<internal_graph_import>;
+        using internal_graph_storage = graph_memory<internal_graph>;
+
+        using external_graph_storage_import = graph_memory_external<external_graph_import, external_node_type, eager_external_edge_type>;
+        using external_graph_storage = graph_memory_external<external_graph, external_node_type, eager_external_edge_type>;
+
+        using internal_network_import = class network_import<internal_graph_storage_import>;
+        using internal_network = class network<internal_graph_storage>;
+
+        using external_network_import = class network_import<external_graph_storage_import>;
+        using external_network = class network<external_graph_storage>;
     };
 
     using types_geographic = types<geometry::cs_geographic>;
+    using types_spherical_equatorial = types<geometry::cs_spherical_equatorial>;
     using types_cartesian = types<geometry::cs_cartesian>;
 
 }

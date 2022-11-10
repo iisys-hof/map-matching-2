@@ -16,6 +16,10 @@
 #ifndef MAP_MATCHING_2_NETWORK_SAVER_HPP
 #define MAP_MATCHING_2_NETWORK_SAVER_HPP
 
+#include <fstream>
+
+#include <boost/archive/binary_oarchive.hpp>
+
 #include "../exporter.hpp"
 
 namespace map_matching_2::io::network {
@@ -27,9 +31,18 @@ namespace map_matching_2::io::network {
         const Network &_network;
 
     public:
-        network_saver(std::string filename, const Network &network);
+        network_saver(std::string filename, const Network &network)
+                : exporter{std::move(filename)}, _network{network} {}
 
-        void write();
+        void write() {
+            std::ofstream file;
+            file.open(this->filename(), std::ios_base::binary | std::ios_base::trunc);
+
+            if (file.is_open() && file.good()) {
+                boost::archive::binary_oarchive out{file};
+                out << _network;
+            }
+        }
 
     };
 

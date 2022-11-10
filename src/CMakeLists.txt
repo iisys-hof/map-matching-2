@@ -5,6 +5,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 
 option(INSTALL_ALL_SHARED_LIBS "Install all shared libraries to install directory" OFF)
 
+add_subdirectory(app)
 add_subdirectory(environment)
 add_subdirectory(geometry)
 add_subdirectory(io)
@@ -32,6 +33,7 @@ target_link_libraries(map_matching_2
         io
         learning
         matching
+        app
         rpmalloc
         absl::flat_hash_set
         absl::flat_hash_map

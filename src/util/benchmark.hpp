@@ -17,10 +17,20 @@
 #define MAP_MATCHING_2_BENCHMARK_HPP
 
 #include <functional>
+#include <chrono>
 
 namespace map_matching_2::util {
 
-    double benchmark(const std::function<void()> &function);
+    double benchmark(const std::function<void()> &function) {
+        using clock = std::chrono::high_resolution_clock;
+
+        const auto start = clock::now();
+        function();
+        const auto end = clock::now();
+
+        const std::chrono::duration<double> duration = end - start;
+        return duration.count();
+    }
 
 }
 

@@ -29,7 +29,8 @@ namespace map_matching_2::matching {
         vertex_descriptor_type vertex_descriptor;
         distance_type distance;
 
-        candidate_node(vertex_descriptor_type vertex_descriptor, distance_type distance);
+        candidate_node(vertex_descriptor_type vertex_descriptor, distance_type distance)
+                : vertex_descriptor{vertex_descriptor}, distance{distance} {}
 
         ~candidate_node() = default;
 
@@ -41,7 +42,9 @@ namespace map_matching_2::matching {
 
         candidate_node &operator=(candidate_node &&other) noexcept = default;
 
-        [[nodiscard]] static bool distance_comparator(const candidate_node &left, const candidate_node &right);
+        [[nodiscard]] static bool distance_comparator(const candidate_node &left, const candidate_node &right) {
+            return left.distance < right.distance;
+        }
 
     };
 

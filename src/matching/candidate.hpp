@@ -36,7 +36,11 @@ namespace map_matching_2::matching {
         std::vector<candidate_edge_type> edges;
 
         candidate(const Track &track, std::size_t index, bool next_equal,
-                  std::vector<candidate_node_type> nodes, std::vector<candidate_edge_type> edges);
+                  std::vector<candidate_node_type> nodes, std::vector<candidate_edge_type> edges)
+                : track{&track}, index{index}, next_equal{next_equal}, nodes{std::move(nodes)},
+                  edges{std::move(edges)} {
+            assert(index < track.size());
+        }
 
         ~candidate() = default;
 
@@ -48,16 +52,52 @@ namespace map_matching_2::matching {
 
         candidate &operator=(candidate &&other) noexcept = default;
 
-        [[nodiscard]] const point_type &point() const;
+        [[nodiscard]] const point_type &point() const {
+            return track->at(index);
+        }
 
-        [[nodiscard]] std::vector<std::string> header() const;
+        [[nodiscard]] std::vector<std::string> header() const {
+            return {"index", "projection", "distance", "projection_point", "from", "to"};
+        }
 
-        [[nodiscard]] std::vector<std::vector<std::string>> rows() const;
+        [[nodiscard]] std::vector<std::vector<std::string>> rows() const {
+            std::vector<std::vector<std::string>> row_list;
+            row_list.reserve(edges.size());
+            for (std::size_t i = 0; i < edges.size(); ++i) {
+                const auto &edge = edges[i];
+                std::vector<std::string> row;
+                row.reserve(6);
+                row.emplace_back(std::to_string(i));
+                typename Network::edge_type::segment_type projection{point(), edge.projection_point};
+                row.emplace_back(geometry::to_wkt(projection));
+                std::vector<std::string> row_edge = edge.row();
+                row.insert(row.end(), row_edge.begin(), row_edge.end());
+                row_list.emplace_back(std::move(row));
+            }
+            return row_list;
+        }
 
-        [[nodiscard]] std::string str() const;
+        [[nodiscard]] std::string str() const {
+            const auto row_list = rows();
+            std::string str;
+            for (const auto &fields: row_list) {
+                str.append("Candidate(");
+                bool first = true;
+                for (const auto &field: fields) {
+                    if (!first) {
+                        str.append(",");
+                    }
+                    first = false;
+                    str.append(field);
+                }
+                str.append(")\n");
+            }
+            return str;
+        }
 
-        template<typename NetworkT, typename TrackT>
-        friend std::ostream &operator<<(std::ostream &out, const candidate<NetworkT, TrackT> &candidate);
+        friend std::ostream &operator<<(std::ostream &out, const candidate &candidate) {
+            return out << candidate.str();
+        }
 
     };
 

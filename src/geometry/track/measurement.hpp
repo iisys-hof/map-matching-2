@@ -21,18 +21,20 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
+#include "../util.hpp"
+
 namespace map_matching_2::geometry::track {
 
     template<typename Point>
     struct measurement {
 
         using point_type = Point;
-        using line_type = boost::geometry::model::linestring<Point>;
 
         std::uint64_t timestamp;
-        Point point;
+        point_type point;
 
-        measurement(std::uint64_t timestamp, Point point);
+        measurement(std::uint64_t timestamp, point_type point)
+                : timestamp{timestamp}, point{std::move(point)} {}
 
         ~measurement() = default;
 
@@ -44,20 +46,66 @@ namespace map_matching_2::geometry::track {
 
         measurement &operator=(measurement &&other) noexcept = default;
 
-        static line_type measurements2line(const std::vector<measurement> &measurements);
+        template<typename Line>
+        [[nodiscard]] static Line measurements2line(const std::vector<measurement> &measurements) {
+            BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Linestring<Line>));
 
-        static std::vector<measurement> line2measurements(const line_type &line);
+            Line line;
+            line.reserve(measurements.size());
+            for (const measurement &measurement: measurements) {
+                line.emplace_back(measurement.point);
+            }
+            return line;
+        }
 
-        [[nodiscard]] std::string wkt() const;
+        template<typename Line>
+        [[nodiscard]] static std::vector<measurement> line2measurements(const Line &line) {
+            BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Linestring<Line>));
 
-        [[nodiscard]] std::vector<std::string> header() const;
+            std::vector<measurement> measurements;
+            measurements.reserve(line.size());
+            std::uint64_t _timestamp = 0;
+            for (const point_type &_point: line) {
+                measurements.emplace_back(measurement{_timestamp++, _point});
+            }
+            return measurements;
+        }
 
-        [[nodiscard]] std::vector<std::string> row() const;
+        [[nodiscard]] std::string wkt() const {
+            return geometry::to_wkt(point);
+        }
 
-        [[nodiscard]] std::string str() const;
+        [[nodiscard]] std::vector<std::string> header() const {
+            return {"timestamp", "geometry"};
+        }
 
-        template<typename T>
-        friend std::ostream &operator<<(std::ostream &out, const measurement<T> &measurement);
+        [[nodiscard]] std::vector<std::string> row() const {
+            std::vector<std::string> row;
+            row.reserve(2);
+            row.emplace_back(std::to_string(timestamp));
+            row.emplace_back(wkt());
+            return row;
+        }
+
+        [[nodiscard]] std::string str() const {
+            const auto &fields = row();
+            std::string str = "Measurement(";
+            bool first = true;
+            for (const auto &field: fields) {
+                if (!first) {
+                    str.append(",");
+                }
+                first = false;
+                str.append(field);
+            }
+            str.append(")");
+            return str;
+        }
+
+
+        friend std::ostream &operator<<(std::ostream &out, const measurement &measurement) {
+            return out << measurement.str();
+        }
 
     };
 

@@ -16,6 +16,8 @@
 #ifndef MAP_MATCHING_2_MATCHING_SETTINGS_HPP
 #define MAP_MATCHING_2_MATCHING_SETTINGS_HPP
 
+#include <cstddef>
+
 namespace map_matching_2::matching {
 
     struct settings {

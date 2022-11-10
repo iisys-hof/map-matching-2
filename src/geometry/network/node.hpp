@@ -26,6 +26,7 @@
 
 #include <osmium/osm/types.hpp>
 
+#include "../util.hpp"
 #include "tag_helper.hpp"
 
 namespace map_matching_2::geometry::network {
@@ -35,14 +36,15 @@ namespace map_matching_2::geometry::network {
 
         using point_type = Point;
 
-        std::size_t index;
         osmium::object_id_type id;
         Point point;
         std::vector<std::uint64_t> tags;
 
-        node();
+        node()
+                : node({}, {}) {}
 
-        node(osmium::object_id_type id, Point point, std::vector<std::uint64_t> tags = {});
+        node(osmium::object_id_type id, Point point, std::vector<std::uint64_t> tags = {})
+                : id{id}, point{std::move(point)}, tags{std::move(tags)} {}
 
         ~node() = default;
 
@@ -54,25 +56,110 @@ namespace map_matching_2::geometry::network {
 
         node &operator=(node &&other) noexcept = default;
 
-        [[nodiscard]] std::string wkt() const;
+        [[nodiscard]] std::string wkt() const {
+            return geometry::to_wkt(point);
+        }
 
-        [[nodiscard]] std::vector<std::string> header() const;
+        [[nodiscard]] std::vector<std::string> header() const {
+            return {"id", "geometry", "tags"};
+        }
 
-        [[nodiscard]] std::vector<std::string> row(const tag_helper &tag_helper) const;
+        [[nodiscard]] std::vector<std::string> row(const tag_helper &tag_helper) const {
+            std::vector<std::string> row;
+            row.reserve(3);
+            row.emplace_back(std::to_string(id));
+            row.emplace_back(wkt());
+            std::string tags_str;
+            if (!tags.empty()) {
+                tags_str.append("[");
+                bool first = true;
+                for (const auto &tag_id: tags) {
+                    if (!first) {
+                        tags_str.append(",");
+                    }
+                    first = false;
+                    try {
+                        const auto &tag = tag_helper.tag(tag_id);
+                        tags_str.append("'").append(tag.first).append("':'").append(tag.second).append("'");
+                    } catch (std::invalid_argument &) {}
+                }
+                tags_str.append("]");
+            }
+            if (tags_str.length() <= 2) {
+                tags_str.clear();
+            }
+            row.emplace_back(std::move(tags_str));
+            return row;
+        }
 
-        [[nodiscard]] std::string str(const tag_helper &tag_helper) const;
+        [[nodiscard]] std::string str(const tag_helper &tag_helper) const {
+            const auto &fields = row(tag_helper);
+            std::string str = "Node(";
+            bool first = true;
+            for (const auto &field: fields) {
+                if (!first) {
+                    str.append(",");
+                }
+                first = false;
+                str.append(field);
+            }
+            str.append(")");
+            return str;
+        }
 
-        template<typename PointT>
-        friend std::ostream &operator<<(std::ostream &out, const node<PointT> &node);
+        friend bool operator==(const node &left, const node &right) {
+            return left.id == right.id and geometry::equals_points(left.point, right.point);
+        }
+
+        friend bool operator!=(const node &left, const node &right) {
+            return not(left == right);
+        }
+
+        friend std::ostream &operator<<(std::ostream &out, const node &node) {
+            return out << node.str(tag_helper{});
+        }
 
         friend class boost::serialization::access;
 
         template<typename Archive>
         void serialize(Archive &ar, const unsigned int version) {
-            ar & index;
             ar & id;
             ar & point;
             ar & tags;
+        }
+
+    };
+
+    template<typename Point>
+    struct internal_node : public node<Point> {
+
+        using point_type = Point;
+
+        std::size_t index;
+
+        internal_node()
+                : node<Point>() {}
+
+        internal_node(osmium::object_id_type id, Point point, std::vector<std::uint64_t> tags = {})
+                : node<Point>(id, std::move(point), std::move(tags)),
+                  index{std::numeric_limits<std::size_t>::max()} {}
+
+        ~internal_node() = default;
+
+        internal_node(const internal_node &other) = default;
+
+        internal_node(internal_node &&other) noexcept = default;
+
+        internal_node &operator=(const internal_node &other) = default;
+
+        internal_node &operator=(internal_node &&other) noexcept = default;
+
+        friend class boost::serialization::access;
+
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & boost::serialization::base_object<node<Point>>(*this);
+            ar & index;
         }
 
     };

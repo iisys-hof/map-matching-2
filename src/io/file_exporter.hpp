@@ -28,16 +28,31 @@ namespace map_matching_2::io {
         std::ofstream _out;
 
     protected:
-        void open();
+        void open() {
+            if (not filename().empty()) {
+                _out = std::ofstream{filename(), std::ofstream::out | std::ofstream::trunc};
+            }
+        }
 
-        [[nodiscard]] std::ofstream &out();
+        [[nodiscard]] std::ofstream &out() {
+            return _out;
+        }
 
-        void close();
+        void close() {
+            if (_out.is_open()) {
+                try {
+                    _out.close();
+                } catch (std::exception &e) {}
+            }
+        }
 
     public:
-        explicit file_exporter(std::string filename);
+        explicit file_exporter(std::string filename)
+                : exporter{std::move(filename)} {
+            open();
+        }
 
-        file_exporter() = default;
+        file_exporter() = delete;
 
         file_exporter(const file_exporter &other) = delete;
 
@@ -47,9 +62,13 @@ namespace map_matching_2::io {
 
         file_exporter &operator=(file_exporter &&other) noexcept = default;
 
-        ~file_exporter();
+        ~file_exporter() {
+            close();
+        }
 
-        [[nodiscard]] bool is_writable() const;
+        [[nodiscard]] bool is_writable() const {
+            return _out.is_open() and _out.good() and not filename().empty();
+        }
 
     };
 
