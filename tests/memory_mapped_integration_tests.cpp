@@ -152,6 +152,11 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_integration_tests)
             BOOST_TEST_MESSAGE("vertices file free size: " << graph_vertices_mmap_file->get_free_memory());
             BOOST_TEST_MESSAGE("edges file size: " << graph_edges_mmap_file->get_size());
             BOOST_TEST_MESSAGE("edges file free size: " << graph_edges_mmap_file->get_free_memory());
+
+            delete graph_vertices_allocator;
+            delete graph_vertices_mmap_file;
+            delete graph_edges_allocator;
+            delete graph_edges_mmap_file;
         }
 
         boost::interprocess::managed_mapped_file::shrink_to_fit(graph_vertices_file);
@@ -216,6 +221,9 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_integration_tests)
                 }
                 i++;
             }
+
+            delete graph_vertices_mmap_file;
+            delete graph_edges_mmap_file;
         }
     }
 
@@ -245,6 +253,8 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_integration_tests)
             BOOST_TEST_MESSAGE("points index file free size: " << points_index_mmap_file->get_free_memory());
             BOOST_TEST_MESSAGE("points index size: " << points_index->size());
 
+            delete points_index_allocator;
+            delete points_index_mmap_file;
         }
 
         boost::interprocess::managed_mapped_file::shrink_to_fit(points_index_file);
@@ -257,6 +267,8 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_integration_tests)
             BOOST_TEST_MESSAGE("points index file size: " << points_index_mmap_file->get_size());
             BOOST_TEST_MESSAGE("points index file free size: " << points_index_mmap_file->get_free_memory());
             BOOST_TEST_MESSAGE("points index size: " << points_index->size());
+
+            delete points_index_mmap_file;
         }
 
     }
