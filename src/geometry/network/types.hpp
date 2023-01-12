@@ -39,7 +39,7 @@ namespace map_matching_2::geometry::network {
                 internal_node_type, internal_edge_type,
                 boost::no_property, boost::listS>;
         using internal_graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
-                internal_node_type, lazy_internal_edge_type,
+                internal_node_type, eager_internal_edge_type,
                 boost::no_property, boost::vecS>;
 
         using external_graph_import = boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS,
@@ -52,7 +52,7 @@ namespace map_matching_2::geometry::network {
         using internal_graph_storage_import = graph_memory<internal_graph_import>;
         using internal_graph_storage = graph_memory<internal_graph>;
 
-        using external_graph_storage_import = graph_memory_external<external_graph_import, external_node_type, eager_external_edge_type>;
+        using external_graph_storage_import = graph_memory_external<external_graph_import, external_node_type, external_edge_type>;
         using external_graph_storage = graph_memory_external<external_graph, external_node_type, eager_external_edge_type>;
 
         using internal_network_import = class network_import<internal_graph_storage_import>;
