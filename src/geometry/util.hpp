@@ -37,6 +37,7 @@
 
 #include <boost/thread.hpp>
 
+#include <boost/type_traits/is_detected.hpp>
 #include <boost/serialization/serialization.hpp>
 
 #include <boost/geometry/geometry.hpp>
@@ -76,6 +77,12 @@ namespace map_matching_2::geometry {
         static constexpr long double v180 = 180.0L;
         static constexpr long double v360 = 360.0L;
     };
+
+    template<typename T>
+    using reserve_method = decltype(std::declval<T &>().reserve());
+
+    template<typename T>
+    inline static constexpr bool has_reserve = boost::is_detected_v<reserve_method, T>;
 
     [[nodiscard]] constexpr std::uint64_t next_pow2(std::uint64_t x) {
         x--;
@@ -502,7 +509,7 @@ namespace map_matching_2::geometry {
 
         Container<segment_type> segments;
         if (line.size() >= 2) {
-            if constexpr (std::is_void_v<decltype(&Container<segment_type>::reserve)>) {
+            if constexpr (has_reserve<Container<segment_type>>) {
                 segments.reserve(line.size() - 1);
             }
             for (std::size_t i = 0; i < line.size() - 1; ++i) {
@@ -540,7 +547,7 @@ namespace map_matching_2::geometry {
         using length_type = typename data<Segment>::length_type;
 
         Container<length_type> lengths;
-        if constexpr (std::is_void_v<decltype(&Container<length_type>::reserve)>) {
+        if constexpr (has_reserve<Container<length_type>>) {
             lengths.reserve(segments.size());
         }
         for (const auto &segment: segments) {
@@ -557,7 +564,7 @@ namespace map_matching_2::geometry {
         using angle_type = typename data<Segment>::angle_type;
 
         Container<angle_type> azimuths;
-        if constexpr (std::is_void_v<decltype(&Container<angle_type>::reserve)>) {
+        if constexpr (has_reserve<Container<angle_type>>) {
             azimuths.reserve(segments.size());
         }
         for (const auto &segment: segments) {
@@ -576,7 +583,7 @@ namespace map_matching_2::geometry {
         using angle_type = typename data<Segment>::angle_type;
 
         Container<angle_type> directions;
-        if constexpr (std::is_void_v<decltype(&Container<angle_type>::reserve)>) {
+        if constexpr (has_reserve<Container<angle_type>>) {
             directions.reserve(segments.size() - 1);
         }
         if (segments_azimuths.empty()) {
@@ -604,7 +611,7 @@ namespace map_matching_2::geometry {
         using angle_type = typename data<Segment>::angle_type;
 
         Container<angle_type> directions;
-        if constexpr (std::is_void_v<decltype(&Container<angle_type>::reserve)>) {
+        if constexpr (has_reserve<Container<angle_type>>) {
             directions.reserve(segments.size() - 1);
         }
         if (segments_azimuths.empty()) {
@@ -634,7 +641,7 @@ namespace map_matching_2::geometry {
 
         Container<angle_type> directions;
         Container<angle_type> absolute_directions;
-        if constexpr (std::is_void_v<decltype(&Container<angle_type>::reserve)>) {
+        if constexpr (has_reserve<Container<angle_type>>) {
             directions.reserve(segments.size() - 1);
             absolute_directions.reserve(segments.size() - 1);
         }

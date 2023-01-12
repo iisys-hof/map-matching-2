@@ -34,7 +34,7 @@ namespace map_matching_2::io {
             time_str_stream >> date::parse(format, time);
             const auto count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
             assert(count >= 0);
-            return (std::uint64_t) count;
+            return static_cast<std::uint64_t>(count);
         }
 
     public:

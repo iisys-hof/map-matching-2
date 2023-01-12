@@ -189,16 +189,16 @@ namespace map_matching_2::geometry {
 
         template<typename RichLineT>
         void _transfer(const base_multi_rich_line<RichLineT> &other) {
+            this->_has_length = other.has_length();
             if (other.has_length()) {
-                this->_has_length = other.has_length();
                 this->_length = other.length();
             }
+            this->_has_azimuth = other.has_azimuth();
             if (other.has_azimuth()) {
-                this->_has_azimuth = other.has_azimuth();
                 this->_azimuth = other.azimuth();
             }
+            this->_has_directions = other.has_directions();
             if (other.has_directions()) {
-                this->_has_directions = other.has_directions();
                 this->_directions = other.directions();
                 this->_absolute_directions = other.absolute_directions();
             }
@@ -313,8 +313,10 @@ namespace map_matching_2::geometry {
                 std::lock_guard<std::mutex> lock(_mutex);
                 std::lock_guard<std::mutex> other_lock(other.mutex());
                 if (other.computed_length().load(std::memory_order_relaxed)) {
-                    this->_length = other.length();
                     this->_has_length = other.has_length();
+                    if (other.has_length()) {
+                        this->_length = other.length();
+                    }
                     _computed_length.store(true, std::memory_order_release);
                 }
             }
@@ -324,8 +326,10 @@ namespace map_matching_2::geometry {
                 std::lock_guard<std::mutex> lock(_mutex);
                 std::lock_guard<std::mutex> other_lock(other.mutex());
                 if (other.computed_azimuth().load(std::memory_order_relaxed)) {
-                    this->_azimuth = other.azimuth();
                     this->_has_azimuth = other.has_azimuth();
+                    if (other.has_azimuth()) {
+                        this->_azimuth = other.azimuth();
+                    }
                     _computed_azimuth.store(true, std::memory_order_release);
                 }
             }
@@ -335,9 +339,11 @@ namespace map_matching_2::geometry {
                 std::lock_guard<std::mutex> lock(_mutex);
                 std::lock_guard<std::mutex> other_lock(other.mutex());
                 if (other.computed_directions().load(std::memory_order_relaxed)) {
-                    this->_directions = other.directions();
-                    this->_absolute_directions = other.absolute_directions();
                     this->_has_directions = other.has_directions();
+                    if (other.has_directions()) {
+                        this->_directions = other.directions();
+                        this->_absolute_directions = other.absolute_directions();
+                    }
                     _computed_directions.store(true, std::memory_order_release);
                 }
             }
@@ -348,9 +354,9 @@ namespace map_matching_2::geometry {
             _computed_length.store(false, std::memory_order_release);
             if (other.has_length()) {
                 std::lock_guard<std::mutex> lock(_mutex);
+                this->_has_length = other.has_length();
                 if (other.has_length()) {
                     this->_length = other.length();
-                    this->_has_length = other.has_length();
                     _computed_length.store(true, std::memory_order_release);
                 }
             }
@@ -358,9 +364,9 @@ namespace map_matching_2::geometry {
             _computed_azimuth.store(false, std::memory_order_release);
             if (other.has_azimuth()) {
                 std::lock_guard<std::mutex> lock(_mutex);
+                this->_has_azimuth = other.has_azimuth();
                 if (other.has_azimuth()) {
                     this->_azimuth = other.azimuth();
-                    this->_has_azimuth = other.has_azimuth();
                     _computed_azimuth.store(true, std::memory_order_release);
                 }
             }
@@ -368,10 +374,10 @@ namespace map_matching_2::geometry {
             _computed_directions.store(false, std::memory_order_release);
             if (other.has_directions()) {
                 std::lock_guard<std::mutex> lock(_mutex);
+                this->_has_directions = other.has_directions();
                 if (other.has_directions()) {
                     this->_directions = other.directions();
                     this->_absolute_directions = other.absolute_directions();
-                    this->_has_directions = other.has_directions();
                     _computed_directions.store(true, std::memory_order_release);
                 }
             }

@@ -611,7 +611,6 @@ int main(int argc, char *argv[]) {
             export_retained_network_nodes, export_retained_network_edges,
             export_transformed_network_nodes, export_transformed_network_edges;
 
-    po::variables_map vm;
     po::options_description all("Available Options"),
             options_network("Network Options"),
             options_tracks("Track Options"),
@@ -1023,6 +1022,7 @@ int main(int argc, char *argv[]) {
                 .add(options_dp_iteration)
                 .add(options_q_learning);
 
+        po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, all), vm);
         po::notify(vm);
 

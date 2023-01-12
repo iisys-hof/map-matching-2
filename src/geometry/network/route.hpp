@@ -433,7 +433,12 @@ namespace map_matching_2::geometry::network {
             std::size_t size = 0;
             for (const rich_line_type &rich_line: _rich_lines) {
                 if (not rich_line.empty()) {
-                    size += rich_line.size();
+                    const auto points_size = rich_line.size();
+                    if (size == 0) {
+                        size += points_size;
+                    } else {
+                        size += points_size > 1 ? points_size - 1 : points_size;
+                    }
                 }
             }
 
@@ -751,17 +756,23 @@ namespace map_matching_2::geometry::network {
             _computed_directions = other._computed_directions;
             if (other._computed_length) {
                 _has_length = other._has_length;
-                _length = other._length;
+                if (other._has_length) {
+                    _length = other._length;
+                }
             }
             if (other._computed_azimuth) {
                 _has_azimuth = other._has_azimuth;
-                _azimuth = other._azimuth;
+                if (other._has_azimuth) {
+                    _azimuth = other._azimuth;
+                }
             }
             if (other._computed_directions) {
                 _is_connected = other._is_connected;
                 _has_directions = other._has_directions;
-                _directions = other._directions;
-                _absolute_directions = other._absolute_directions;
+                if (other._has_directions) {
+                    _directions = other._directions;
+                    _absolute_directions = other._absolute_directions;
+                }
             }
         }
 

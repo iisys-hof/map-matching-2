@@ -7,8 +7,10 @@ add_library(util INTERFACE)
 
 target_precompile_headers(util
         INTERFACE
-        <functional>
-        <chrono>)
+        <chrono>
+        <memory>
+        <string>
+        <stdexcept>)
 
 target_compile_definitions(util
         INTERFACE

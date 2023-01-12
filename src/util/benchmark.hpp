@@ -16,12 +16,12 @@
 #ifndef MAP_MATCHING_2_BENCHMARK_HPP
 #define MAP_MATCHING_2_BENCHMARK_HPP
 
-#include <functional>
 #include <chrono>
 
 namespace map_matching_2::util {
 
-    double benchmark(const std::function<void()> &function) {
+    template<typename Function>
+    double benchmark(const Function &function) {
         using clock = std::chrono::high_resolution_clock;
 
         const auto start = clock::now();

@@ -45,7 +45,7 @@ namespace map_matching_2::geometry::track {
 
         Container<rich_line_type> rich_lines;
         if (not tracks.empty()) {
-            if constexpr (std::is_void_v<decltype(&Container<rich_line_type>::reserve)>) {
+            if constexpr (geometry::has_reserve<Container<rich_line_type>>) {
                 rich_lines.reserve(tracks.size());
             }
             for (const auto &track: tracks) {
@@ -64,7 +64,7 @@ namespace map_matching_2::geometry::track {
 
         Container<track_type> tracks;
         if (not multi_line.empty()) {
-            if constexpr (std::is_void_v<decltype(&Container<track_type>::reserve)>) {
+            if constexpr (geometry::has_reserve<Container<track_type>>) {
                 tracks.reserve(multi_line.size());
             }
             for (const auto &line: multi_line) {
