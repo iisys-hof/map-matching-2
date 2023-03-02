@@ -79,7 +79,7 @@ namespace map_matching_2::io::track {
                     if (not id.empty()) {
                         id.append(settings.id_aggregator);
                     }
-                    if (settings.no_header and _is_number(_field_id)) {
+                    if (settings.no_header and this->is_number(_field_id)) {
                         id.append(row[std::stoul(_field_id)].get<std::string>());
                     } else {
                         id.append(row[_field_id].get<std::string>());
@@ -89,7 +89,7 @@ namespace map_matching_2::io::track {
 
             std::uint64_t timestamp = 0;
             std::string time;
-            if (settings.no_header and _is_number(settings.field_time)) {
+            if (settings.no_header and this->is_number(settings.field_time)) {
                 time = row[std::stoul(settings.field_time)].get<std::string>();
             } else {
                 const auto &columns = row.get_col_names();
@@ -100,7 +100,7 @@ namespace map_matching_2::io::track {
 
             if (not time.empty()) {
                 if (settings.no_parse_time) {
-                    if (_is_number(time)) {
+                    if (this->is_number(time)) {
                         timestamp = std::stoul(time);
                     } else if (_measurements.contains(id)) {
                         timestamp = _measurements[id].size();
@@ -114,7 +114,7 @@ namespace map_matching_2::io::track {
 
             if (settings.wkt) {
                 std::string wkt_string;
-                if (settings.no_header and _is_number(settings.field_geometry)) {
+                if (settings.no_header and this->is_number(settings.field_geometry)) {
                     wkt_string = row[std::stoul(settings.field_geometry)].get<std::string>();
                 } else {
                     wkt_string = row[settings.field_geometry].get<std::string>();
@@ -153,12 +153,12 @@ namespace map_matching_2::io::track {
                 }
             } else {
                 coordinate_type x, y;
-                if (settings.no_header and _is_number(settings.field_x)) {
+                if (settings.no_header and this->is_number(settings.field_x)) {
                     x = row[std::stoul(settings.field_x)].get<coordinate_type>();
                 } else {
                     x = row[settings.field_x].get<coordinate_type>();
                 }
-                if (settings.no_header and _is_number(settings.field_y)) {
+                if (settings.no_header and this->is_number(settings.field_y)) {
                     y = row[std::stoul(settings.field_y)].get<coordinate_type>();
                 } else {
                     y = row[settings.field_y].get<coordinate_type>();
@@ -187,18 +187,6 @@ namespace map_matching_2::io::track {
 
     private:
         absl::flat_hash_map<std::string, std::vector<measurement_type>> _measurements;
-
-        [[nodiscard]] bool _is_number(const std::string &str) {
-            if (not str.empty()) {
-                for (char c: str) {
-                    if (not std::isdigit(c)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
 
     };
 

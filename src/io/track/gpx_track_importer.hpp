@@ -37,6 +37,9 @@ namespace map_matching_2::io::track {
     class gpx_track_importer : public importer {
 
     protected:
+        bool _no_parse_time;
+        std::string _time_format;
+
         absl::flat_hash_map<std::string, MultiTrack> &_tracks;
 
     public:
@@ -44,8 +47,10 @@ namespace map_matching_2::io::track {
         using point_type = typename MultiTrack::point_type;
         using line_type = typename MultiTrack::line_type;
 
-        explicit gpx_track_importer(std::string filename, absl::flat_hash_map<std::string, MultiTrack> &tracks)
-                : importer{std::move(filename)}, _tracks{tracks} {}
+        explicit gpx_track_importer(std::string filename, absl::flat_hash_map<std::string, MultiTrack> &tracks,
+                                    std::string &time_format, const bool no_parse_time)
+                : importer{std::move(filename)}, _tracks{tracks}, _time_format{time_format},
+                  _no_parse_time{no_parse_time} {}
 
         void read() override {
             std::ifstream gpx;
@@ -68,12 +73,18 @@ namespace map_matching_2::io::track {
                         for (const auto trkpt: trkpts) {
                             if (trkpt != nullptr) {
                                 const auto time = trkpt->time().getValue();
-                                std::uint64_t timestamp;
-                                if (time.ends_with('Z')) {
-                                    timestamp = this->parse_time(trkpt->time().getValue(), "%FT%TZ");
-                                } else {
-                                    timestamp = this->parse_time(trkpt->time().getValue(), "%FT%T%Oz");
+                                std::uint64_t timestamp = measurements.size();
+
+                                if (not time.empty()) {
+                                    if (_no_parse_time) {
+                                        if (this->is_number(time)) {
+                                            timestamp = std::stoul(time);
+                                        }
+                                    } else {
+                                        timestamp = this->parse_time(time, _time_format);
+                                    }
                                 }
+
                                 const coordinate_type x = std::stod(trkpt->lon().getValue());
                                 const coordinate_type y = std::stod(trkpt->lat().getValue());
                                 measurements.emplace_back(measurement_type{timestamp, point_type{x, y}});

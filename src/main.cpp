@@ -1738,11 +1738,11 @@ int main(int argc, char *argv[]) {
                 } else if (tracks_file_type == ".gpx") {
                     if (tracks_srs_type == geographic) {
                         map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
-                                gpx_track_importer{file, tracks_geographic};
+                                gpx_track_importer{file, tracks_geographic, time_format, no_parse_time};
                         duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
                     } else {
                         map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::eager_multi_track_type>
-                                gpx_track_importer{file, tracks_cartesian};
+                                gpx_track_importer{file, tracks_cartesian, time_format, no_parse_time};
                         duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
                     }
                 }
@@ -1865,11 +1865,11 @@ int main(int argc, char *argv[]) {
                     } else if (compare_file_type == ".gpx") {
                         if (compare_srs_type == geographic) {
                             map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
-                                    gpx_track_importer{file, compare_tracks_geographic};
+                                    gpx_track_importer{file, compare_tracks_geographic, time_format, no_parse_time};
                             duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
                         } else {
                             map_matching_2::io::track::gpx_track_importer<map_matching_2::geometry::track::types_cartesian::eager_multi_track_type>
-                                    gpx_track_importer{file, compare_tracks_cartesian};
+                                    gpx_track_importer{file, compare_tracks_cartesian, time_format, no_parse_time};
                             duration += map_matching_2::util::benchmark([&]() { gpx_track_importer.read(); });
                         }
                     }

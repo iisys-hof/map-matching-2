@@ -28,6 +28,18 @@ namespace map_matching_2::io {
         const std::string _filename;
 
     protected:
+        [[nodiscard]] bool is_number(const std::string &str) {
+            if (not str.empty()) {
+                for (char c: str) {
+                    if (not std::isdigit(c)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
         virtual std::uint64_t parse_time(const std::string &time_str, const std::string &format) {
             date::sys_time<std::chrono::milliseconds> time;
             std::istringstream time_str_stream{time_str};
