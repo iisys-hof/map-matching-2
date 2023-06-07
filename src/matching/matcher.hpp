@@ -896,6 +896,7 @@ namespace map_matching_2::matching {
             // query rtree
             absl::btree_set<edge_descriptor> edge_result = network.query_segments_unique(
                     boost::geometry::index::nearest(point, number));
+            std::list<edge_descriptor> additions;
 
             if (with_adjacent) {
                 for (const auto &edge_descriptor: edge_result) {
@@ -913,10 +914,15 @@ namespace map_matching_2::matching {
                             const auto adj_edge_line = edge.line();
                             const auto adj_distance = geometry::distance(point, adj_edge_line);
                             if (adj_distance <= edge_distance) {
-                                edge_result.emplace(out_edge);
+                                additions.emplace_back(out_edge);
                             }
                         }
                     }
+                }
+
+                while (not additions.empty()) {
+                    edge_result.emplace(std::move(additions.front()));
+                    additions.pop_front();
                 }
             }
 
@@ -926,9 +932,14 @@ namespace map_matching_2::matching {
                     const auto target = boost::target(edge_descriptor, network.graph());
                     for (const auto out_edge: boost::make_iterator_range(boost::out_edges(target, network.graph()))) {
                         if (boost::target(out_edge, network.graph()) == source) {
-                            edge_result.emplace(out_edge);
+                            additions.emplace_back(out_edge);
                         }
                     }
+                }
+
+                while (not additions.empty()) {
+                    edge_result.emplace(std::move(additions.front()));
+                    additions.pop_front();
                 }
             }
 
