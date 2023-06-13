@@ -43,8 +43,9 @@ namespace map_matching_2::io::network {
         osmium::TagsFilter filter() override {
             osmium::TagsFilter filter{true};
             // https://wiki.openstreetmap.org/wiki/Key:access
-            filter.add_rule(false, "access", "no");
-            filter.add_rule(false, "access", "private");
+            // for now, allow all access restricted roads, since tracks might lie on them
+            // filter.add_rule(false, "access", "no");
+            // filter.add_rule(false, "access", "private");
             return filter;
         }
 
