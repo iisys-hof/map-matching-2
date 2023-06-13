@@ -25,6 +25,7 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <boost/serialization/serialization.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <boost/geometry/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
@@ -112,7 +113,21 @@ namespace map_matching_2::io::track {
                                 }
                             }
 
-                            std::string id_str = std::to_string(_tracks.size());
+                            std::string id_str = trk->name().getValue();
+                            if (id_str.empty()) {
+                                std::string new_id_str = std::to_string(_tracks.size());
+                                std::clog << "GPX track id is empty, using '" << new_id_str << "' ..." << std::endl;
+                                id_str = std::move(new_id_str);
+                            }
+
+                            while (_tracks.contains(id_str)) {
+                                boost::uuids::uuid uid{};
+                                std::string new_id_str = boost::to_string(uid);
+                                std::clog << "GPX track id '" << id_str << "' already taken, using generated '"
+                                          << new_id_str << "', comparison might not work ..." << std::endl;
+                                id_str = std::move(new_id_str);
+                            }
+
                             if (lines.size() <= 1) {
                                 // Track
                                 _tracks.emplace(id_str, MultiTrack{id_str, lines.front()});

@@ -25,6 +25,7 @@ target_precompile_headers(io
         <osmium/tags/tags_filter.hpp>
         <osmium/relations/relations_manager.hpp>
         <boost/serialization/serialization.hpp>
+        <boost/uuid/uuid_io.hpp>
         <boost/interprocess/managed_mapped_file.hpp>
         <boost/interprocess/allocators/private_node_allocator.hpp>
         <boost/interprocess/containers/vector.hpp>
