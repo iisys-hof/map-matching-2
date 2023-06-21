@@ -415,6 +415,7 @@ extract the zip file and use the following command:
   --no-header --no-id --delimiter $'\t' --x 0 --y 1 --time 2 --no-parse-time \
   --compare "/app/data/map-matching-dataset/00000000/00000000.route" \
   --compare-edges-list-mode \
+  --export-edges on \
   --output "/app/data/map-matching-dataset/00000000/00000000.result.csv" \
   --compare-output "/app/data/map-matching-dataset/00000000/00000000.compared.csv" \
   --model value-iteration \
@@ -432,6 +433,39 @@ The `*.compared.csv` file contains again the id, track, prepared and result WKT 
 and additionally the ground truth track that the matched track was compared against. Moreover, the exact error
 fraction (see paper for formula), added and missed lengths as well as WKT lines are provided for easy view in QGIS. Use
 import of delimited text file for importing the WKT lines from the resulting csv files.
+
+For comparing all 100 tracks from the dataset in one command and receive the average accuracy, use the following
+(longer-running) script (can be made faster by using `--candidate-search combined`):
+
+<details>
+<summary>Kubicka et al. map matching dataset benchmark command</summary>
+
+```
+#!/bin/bash
+path=$(realpath "/app/data/map-matching-dataset/")
+folders=$(find "$path" -mindepth 1 -maxdepth 1 -type d | sort)
+files=$(echo "$folders" | wc -l)
+acc=0.0
+for d in $folders; do
+  n="${d##*/}"; f="${d}/${n}"
+  printf "Matching $n ... "
+  output=$(./map_matching_2 --nodes "${f}.nodes" --arcs "${f}.arcs" --tracks "${f}.track" \
+    --no-header --no-id --delimiter $'\t' --x 0 --y 1 --time 2 --no-parse-time \
+    --compare "${f}.route" --compare-edges-list-mode \
+    --output "/app/data/kubicka_match.csv" --compare-output "/app/data/kubicka_compare.csv" \
+    --verbose | grep "Correct Fraction:")
+  echo "$output"
+  res=($(echo "$output" | grep -Po '(\d+(\.\d+)?)'))
+  acc=$(echo "$acc + ${res[0]}" | bc -l)
+done
+acc=$(echo "$acc / $files" | bc -l)
+LC_NUMERIC="en_US.UTF-8" printf "\nMean accuracy: %.8f\n" $acc
+```
+
+</details>
+
+With this command, a mean accuracy of approximately 98.0% is reached. We want to note that the map matching dataset form
+Kubkicka et al. is not a ground truth dataset. However, it is the most diverse dataset.
 
 This tool also has native support for
 the [ground truth Seattle dataset](https://www.microsoft.com/en-us/research/publication/hidden-markov-map-matching-noise-sparseness/)
