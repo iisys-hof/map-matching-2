@@ -149,9 +149,9 @@ When you want to read the cartesian reprojected network, you need to set the net
 
 The reading time is the same in both cases.
 
-| Mode                              | Time (s) | CPU resources (s) | Max RAM (MB) |
-|-----------------------------------|----------|-------------------|--------------|
-| Read Prepared Network             | 2.74     | 2.74              | 806          |
+| Mode                  | Time (s) | CPU resources (s) | Max RAM (MB) |
+|-----------------------|----------|-------------------|--------------|
+| Read Prepared Network | 2.74     | 2.74              | 806          |
 
 <details>
 <summary>Read Prepared Network Commands</summary>
@@ -383,7 +383,8 @@ Then the built software can be found in the newly created `run/bin` directory. T
 this directory (so nothing is installed system-wide), uninstalling is simply deleting the directory.
 
 For building under Windows you need Ubuntu 20.04 LTS for the Windows Subsystem for Linux (WSL). Building is the same as
-under Linux then. Native build currently is unsupported due to several dependencies currently not building natively under Windows.
+under Linux then. Native build currently is unsupported due to several dependencies currently not building natively
+under Windows.
 
 ### Examples
 
@@ -431,6 +432,55 @@ The `*.compared.csv` file contains again the id, track, prepared and result WKT 
 and additionally the ground truth track that the matched track was compared against. Moreover, the exact error
 fraction (see paper for formula), added and missed lengths as well as WKT lines are provided for easy view in QGIS. Use
 import of delimited text file for importing the WKT lines from the resulting csv files.
+
+This tool also has native support for
+the [ground truth Seattle dataset](https://www.microsoft.com/en-us/research/publication/hidden-markov-map-matching-noise-sparseness/)
+from Newson and Krumm.
+
+For matching the given track with the provided road network, use the text files, put them in the `/app/data/seattle/`
+folder and use the following base command:
+
+```
+./map_matching_2 \
+  --seattle /app/data/seattle/road_network.txt \
+  --seattle-fix-connections on \
+  --tracks /app/data/seattle/gps_data.txt \
+  --delimiter $'\t' --no-id --x "Longitude" --y "Latitude" --no-parse-time \
+  --compare /app/data/seattle/ground_truth_route.txt \
+  --seattle-ground-truth-mode \
+  --export-edges on \
+  --compare-output /app/data/seattle_compare.csv \
+  --output /app/data/seattle_match.csv \
+  --verbose
+```
+
+With this command, an accuracy of approximately 99.6 % can be reached.
+The road network has some connection issues, the `--seattle-fix-connections` argument is a workaround with side-effects
+that tries to resolve these issues. Read the `help.txt` for more information or try out the command without this
+parameter and review the comparison output in QGIS.
+
+Moreover, this tool has native support for
+the [ground truth Melbourne dataset](https://people.eng.unimelb.edu.au/henli/projects/map-matching/) from Hengfeng.
+
+For matching the given track with the provided road network, use the text files, put them in `/app/data/seattle/` and
+uncompress the network zip file into the subfolder `complete-osm-map`, then use the following base command:
+
+```
+./map_matching_2 \
+  --melbourne-vertex /app/data/melbourne/complete-osm-map/vertex.txt \
+  --melbourne-streets /app/data/melbourne/complete-osm-map/streets.txt \
+  --melbourne-edges /app/data/melbourne/complete-osm-map/edges.txt \
+  --tracks /app/data/melbourne/gps_track.txt \
+  --delimiter ' ' --skip-lines 1 --no-id --no-header --x 2 --y 1 --no-parse-time
+  --compare /app/data/melbourne/groundtruth.txt \
+  --compare-edges-list-mode --compare-skip-lines 1 \
+  --export-edges on \
+  --compare-output /app/data/melbourne_compare.csv \
+  --output /app/data/melbourne_match.csv \
+  --verbose
+```
+
+With this command, an accuracy of approximately 99.8 % can be reached.
 
 The following five examples come from the [map matching dataset](https://doi.org/10.5281/zenodo.57731) from Kubicka, M.
 et al. All following examples were matched with our Markov Decision Process with Value Iteration and default parameter

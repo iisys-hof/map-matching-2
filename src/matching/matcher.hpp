@@ -656,33 +656,50 @@ namespace map_matching_2::matching {
         void save_candidates(std::string filename, const std::vector<candidate_type> &candidates) const {
             io::csv_exporter<',', '"'> csv{std::move(filename)};
             bool first = true;
-            for (const auto &candidate: candidates) {
+            for (std::size_t i = 0; i < candidates.size(); ++i) {
+                const auto &candidate = candidates[i];
                 if (first) {
-                    csv << candidate.header();
+                    auto candidate_header = candidate.header();
+                    std::vector<std::string> header;
+                    header.reserve(1 + candidate_header.size());
+                    header.emplace_back("id");
+                    std::move(candidate_header.begin(), candidate_header.end(), std::back_inserter(header));
+
+                    csv << header;
                     first = false;
                 }
-                const auto rows = candidate.rows();
-                for (const auto &row: rows) {
+                auto candidate_rows = candidate.rows();
+                for (auto &candidate_row: candidate_rows) {
+                    std::vector<std::string> row;
+                    row.reserve(1 + candidate_row.size());
+                    row.emplace_back(std::to_string(i));
+                    std::move(candidate_row.begin(), candidate_row.end(), std::back_inserter(row));
+
                     csv << row;
                 }
             }
         }
 
-        [[nodiscard]] std::vector<absl::btree_set<defect>> detect(
-                const track_type &track, bool detect_duplicates = true, bool detect_forward_backward = true) const {
+        [[nodiscard]] std::vector<absl::btree_set < defect>> detect(
+        const track_type &track,
+        bool detect_duplicates = true,
+        bool detect_forward_backward = true
+        ) const {
             return _detector.detect(track, detect_duplicates, detect_forward_backward);
         }
 
-        [[nodiscard]] absl::btree_set<defect> detect(
+        [[nodiscard]] absl::btree_set <defect> detect(
                 const track_type &track, std::size_t from, std::size_t to, bool detect_forward_backward = true) const {
             return _detector.detect(track, from, to, detect_forward_backward);
         }
 
         [[nodiscard]] track_type
-        remove_defects(const track_type &track, const std::vector<absl::btree_set<defect>> &defects) const {
-            absl::btree_set<std::size_t> indices_to_remove;
+        remove_defects(const track_type &track, const std::vector<absl::btree_set < defect>>
+
+        &defects) const {
+            absl::btree_set <std::size_t> indices_to_remove;
             for (std::size_t i = 0; i < defects.size(); ++i) {
-                const absl::btree_set<defect> &defect_set = defects[i];
+                const absl::btree_set <defect> &defect_set = defects[i];
                 if (not defect_set.contains(defect::none)) {
                     indices_to_remove.emplace(i);
                 }
@@ -767,7 +784,7 @@ namespace map_matching_2::matching {
         }
 
         template<typename Learner>
-        void match_all(const absl::flat_hash_map<std::string, multi_track_type> &tracks,
+        void match_all(const absl::flat_hash_map <std::string, multi_track_type> &tracks,
                        const learning::settings &learn_settings = learning::settings{},
                        const matching::settings &match_settings = matching::settings{},
                        const std::function<void(const std::vector<typename Learner::environment_type> &,
@@ -833,7 +850,7 @@ namespace map_matching_2::matching {
             const point_type &point = track.at(index);
 
             bool found = false;
-            absl::btree_set<edge_descriptor> edge_result;
+            absl::btree_set <edge_descriptor> edge_result;
 
             double current_buffer_radius = buffer_radius;
             while (not found) {
@@ -894,7 +911,7 @@ namespace map_matching_2::matching {
             const point_type &point = track.at(index);
 
             // query rtree
-            absl::btree_set<edge_descriptor> edge_result = network.query_segments_unique(
+            absl::btree_set <edge_descriptor> edge_result = network.query_segments_unique(
                     boost::geometry::index::nearest(point, number));
             std::list<edge_descriptor> additions;
 
@@ -957,7 +974,7 @@ namespace map_matching_2::matching {
             const point_type &point = track.at(index);
 
             // query rtree
-            absl::btree_set<edge_descriptor> edge_result = network.query_segments_unique(
+            absl::btree_set <edge_descriptor> edge_result = network.query_segments_unique(
                     boost::geometry::index::nearest(point, number));
             std::list<edge_descriptor> additions;
 
@@ -1060,7 +1077,7 @@ namespace map_matching_2::matching {
         void _process_candidate_query(
                 std::multiset<candidate_edge_type, candidate_edge_distance_comparator_type> &candidate_edge_set,
                 std::size_t round, const track_type &track, std::size_t index,
-                absl::btree_set<edge_descriptor> &edge_result) const {
+                absl::btree_set <edge_descriptor> &edge_result) const {
             assert(index < track.size());
             const point_type &point = track.at(index);
 

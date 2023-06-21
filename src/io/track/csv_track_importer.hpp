@@ -55,8 +55,9 @@ namespace map_matching_2::io::track {
 
         csv_track_importer_settings settings;
 
-        csv_track_importer(std::string filename, absl::flat_hash_map<std::string, MultiTrack> &tracks)
-                : csv_importer{std::move(filename)}, _tracks{tracks} {}
+        csv_track_importer(std::string filename, const std::size_t skip_lines,
+                           absl::flat_hash_map<std::string, MultiTrack> &tracks)
+                : csv_importer{std::move(filename), skip_lines}, _tracks{tracks} {}
 
     protected:
         absl::flat_hash_map<std::string, MultiTrack> &_tracks;

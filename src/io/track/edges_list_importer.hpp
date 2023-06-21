@@ -36,18 +36,15 @@ namespace map_matching_2::io::track {
         using point_type = typename MultiTrack::point_type;
         using line_type = typename MultiTrack::line_type;
 
-        edges_list_importer(std::string filename, const Network &network,
+        edges_list_importer(std::string filename, std::size_t skip_lines, const Network &network,
                             absl::flat_hash_map<std::string, MultiTrack> &tracks)
-                : importer{std::move(filename)}, _network{network}, _tracks{tracks} {}
+                : importer{std::move(filename)}, _skip_lines{skip_lines}, _network{network}, _tracks{tracks} {}
 
         void read() override {
             using edge_type = typename Network::edge_type;
             using edge_rich_line_type = typename edge_type::rich_line_type;
             using rich_line_type = typename MultiTrack::rich_line_type;
             using multi_rich_line_type = typename MultiTrack::multi_rich_line_type;
-
-            std::ifstream route;
-            route.open(this->filename());
 
             absl::flat_hash_map<std::int64_t, std::vector<typename Network::edge_descriptor>> edge_map;
             for (const auto &edge_descriptor: boost::make_iterator_range(boost::edges(_network.graph()))) {
@@ -64,8 +61,14 @@ namespace map_matching_2::io::track {
                 edges->emplace_back(edge_descriptor);
             }
 
+            std::ifstream route;
+            route.open(this->filename());
+
             std::string line;
             std::vector<rich_line_type> edges;
+            for (std::size_t i = 0; i < _skip_lines; ++i) {
+                std::getline(route, line);
+            }
             while (std::getline(route, line)) {
                 std::int64_t edge_id = std::stol(line);
                 const auto &edge_descriptors = edge_map[edge_id];
@@ -83,6 +86,7 @@ namespace map_matching_2::io::track {
         }
 
     private:
+        std::size_t _skip_lines;
         const Network &_network;
         absl::flat_hash_map<std::string, MultiTrack> &_tracks;
 

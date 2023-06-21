@@ -34,6 +34,8 @@
 #include <boost/program_options.hpp>
 
 #include <io/network/arc_node_importer.hpp>
+#include <io/network/seattle_importer.hpp>
+#include <io/network/melbourne_importer.hpp>
 #include <io/network/network_loader.hpp>
 #include <io/network/network_saver.hpp>
 #include <io/network/osm_car_importer.hpp>
@@ -41,6 +43,7 @@
 #include <geometry/network/types.hpp>
 #include <io/track/csv_track_importer.hpp>
 #include <io/track/edges_list_importer.hpp>
+#include <io/track/seattle_ground_truth_importer.hpp>
 #include <io/track/gpx_track_importer.hpp>
 #include <io/track/input_importer.hpp>
 #include <geometry/track/types.hpp>
@@ -584,13 +587,14 @@ int main(int argc, char *argv[]) {
 
     namespace po = boost::program_options;
 
-    std::string network_file, arcs_file, nodes_file, network_srs, network_transform_srs, network_srs_type,
-            network_transform_srs_type, tracks_file_type, tracks_srs, tracks_transform_srs, tracks_srs_type,
-            tracks_transform_srs_type, output_file, candidates_folder, compare_file_type, compare_srs, compare_srs_type,
-            compare_transform_srs, compare_transform_srs_type, compare_output_file, model, candidate_search;
+    std::string network_file, arcs_file, nodes_file, seattle_file, melbourne_vertex_file, melbourne_edges_file,
+            melbourne_streets_file, network_srs, network_transform_srs, network_srs_type, network_transform_srs_type,
+            tracks_file_type, tracks_srs, tracks_transform_srs, tracks_srs_type, tracks_transform_srs_type,
+            output_file, candidates_folder, compare_file_type, compare_srs, compare_srs_type, compare_transform_srs,
+            compare_transform_srs_type, compare_output_file, model, candidate_search;
     std::vector<std::string> tracks_file, compare_file, id, compare_id, selectors, export_network,
             export_simplified_network, export_retained_network, export_transformed_network;
-    std::size_t state_size, k_nearest, episodes;
+    std::size_t skip_lines, compare_skip_lines, state_size, k_nearest, episodes;
     char delimiter, compare_delimiter;
     double routing_max_distance_factor, radius, radius_upper_limit, radius_lower_limit, learning_rate, epsilon,
             discount, threshold, simplify_track_distance_tolerance, median_merge_distance_tolerance,
@@ -599,11 +603,11 @@ int main(int argc, char *argv[]) {
             compare_simplifying_tolerance, compare_simplifying_reverse_tolerance, compare_adoption_distance_tolerance,
             compare_split_distance_tolerance, compare_split_direction_tolerance, early_stop_factor, max_time;
     bool read_line, console, wkt, no_header, no_id, no_parse_time, export_edges, join_merges, compare_only, no_compare,
-            compare_edges_list_mode, compare_wkt, compare_no_header, compare_no_id, filter_duplicates,
-            filter_defects, simplify_track, median_merge, adaptive_median_merge, adaptive_radius, skip_errors,
-            within_edge_turns, candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
-            simplify_network, simplify_network_complete, remove_unconnected, fixed_time, single_threading, quiet,
-            verbose;
+            compare_edges_list_mode, seattle_fix_connections, seattle_ground_truth_mode, compare_wkt,
+            compare_no_header, compare_no_id, filter_duplicates, filter_defects, simplify_track, median_merge,
+            adaptive_median_merge, adaptive_radius, skip_errors, within_edge_turns, candidate_adoption_siblings,
+            candidate_adoption_nearby, candidate_adoption_reverse, simplify_network, simplify_network_complete,
+            remove_unconnected, fixed_time, single_threading, quiet, verbose;
     std::string id_aggregator, compare_id_aggregator, x, y, compare_x, compare_y,
             geometry, compare_geometry, time, time_format, network_output, network_save, network_load,
             export_network_nodes, export_network_edges,
@@ -631,9 +635,21 @@ int main(int argc, char *argv[]) {
                 ("network", po::value<std::string>(&network_file),
                  "path to .osm.pbf network file")
                 ("arcs", po::value<std::string>(&arcs_file),
-                 "path to arcs network file, requires nodes file")
+                 "path to arcs network file from Kubicka et al. paper, requires nodes file")
                 ("nodes", po::value<std::string>(&nodes_file),
-                 "path to nodes network file, requires arcs file")
+                 "path to nodes network file from Kubicka et al. paper, requires arcs file")
+                ("seattle", po::value<std::string>(&seattle_file),
+                 "path to seattle network file from Newson-Krumm paper")
+                ("seattle-fix-connections", po::value<bool>(&seattle_fix_connections)->default_value(true, "on"),
+                 "fix network connections when nodes lie on top of each other but are not connected, "
+                 "is needed for merging the network parts so that a complete track can be matched, "
+                 "however it also creates connections in cases where they are wrong, e.g., under bridges")
+                ("melbourne-vertex", po::value<std::string>(&melbourne_vertex_file),
+                 "path to melbourne vertex network file from Hengfeng paper, requires edges and streets")
+                ("melbourne-edges", po::value<std::string>(&melbourne_edges_file),
+                 "path to melbourne edges network file from Hengfeng paper, requires vertex and streets")
+                ("melbourne-streets", po::value<std::string>(&melbourne_streets_file),
+                 "path to melbourne streets network file from Hengfeng paper, requires vertex and edges")
                 ("network-load", po::value<std::string>(&network_load),
                  "loads network from binary file in deserialized form, works together with network-save;"
                  "is much faster than initial import from original network source files, should be preferred; "
@@ -693,6 +709,10 @@ int main(int argc, char *argv[]) {
                 ("delimiter", po::value<char>(&delimiter)->default_value(','),
                  "delimiter for .csv tracks file, "
                  "only for import, export always uses ',' (because csv is 'comma' separated)")
+                ("skip-lines", po::value<std::size_t>(&skip_lines)->default_value(0),
+                 "skip specified number of lines at the head of the tracks .csv file, "
+                 "works also in combination with no-header, "
+                 "e.g., set to 1 with no-header to skip an existing header to use number indices for columns instead")
                 ("no-header", po::bool_switch(&no_header),
                  "csv has no header, column specifications are interpreted as indices of columns")
                 ("no-id", po::bool_switch(&no_id),
@@ -749,7 +769,10 @@ int main(int argc, char *argv[]) {
                 ("compare-edges-list-mode", po::bool_switch(&compare_edges_list_mode),
                  "in this mode, compare is no .csv file but a file that contains a list of edges that form the ground truth route, "
                  "in this case, the number of the edge is the id of the edge in the network graph, "
-                 "also the network-srs and network-transform-srs as well as the corresponding types are used")
+                 "also the network-srs and network-transform-srs as well as the corresponding types are used, "
+                 "used for Kubicka et al. paper")
+                ("seattle-ground-truth-mode", po::bool_switch(&seattle_ground_truth_mode),
+                 "special mode for the ground truth route file from the Seattle dataset from Newson-Krumm paper")
                 ("compare", po::value<std::vector<std::string>>(&compare_file),
                  "path to compare file for ground truth matches for statistics on results; "
                  "can be specified multiple times for multiple files but all files need the same format per file type")
@@ -778,6 +801,8 @@ int main(int argc, char *argv[]) {
                  "in compare-only mode, this is filled from output parameter if not specified")
                 ("compare-delimiter", po::value<char>(&compare_delimiter)->default_value(','),
                  "see delimiter for tracks .csv")
+                ("compare-skip-lines", po::value<std::size_t>(&compare_skip_lines)->default_value(0),
+                 "see skip-lines for tracks .csv, works also with compare-edges-list-mode")
                 ("compare-no-header", po::bool_switch(&compare_no_header),
                  "see no-header for tracks .csv")
                 ("compare-no-id", po::bool_switch(&compare_no_id),
@@ -1037,12 +1062,20 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (network_file.empty() and nodes_file.empty() and arcs_file.empty() and network_load.empty()) {
+        if (network_file.empty() and nodes_file.empty() and arcs_file.empty() and seattle_file.empty() and
+            melbourne_vertex_file.empty() and melbourne_edges_file.empty() and melbourne_streets_file.empty() and
+            network_load.empty()) {
             throw std::invalid_argument{"Please specify a network."};
         }
 
         if (not nodes_file.empty() and arcs_file.empty() or nodes_file.empty() and not arcs_file.empty()) {
             throw std::invalid_argument{"When specifying nodes and arcs, both files are needed."};
+        }
+
+        if ((not melbourne_vertex_file.empty() and (melbourne_edges_file.empty() or melbourne_streets_file.empty())) or
+            (not melbourne_edges_file.empty() and (melbourne_vertex_file.empty() or melbourne_streets_file.empty())) or
+            (not melbourne_streets_file.empty() and (melbourne_vertex_file.empty() or melbourne_edges_file.empty()))) {
+            throw std::invalid_argument{"When specifying melbourne network files, all are needed."};
         }
 
         if (network_output.empty() and network_save.empty() and tracks_file.empty() and not read_line) {
@@ -1214,7 +1247,7 @@ int main(int argc, char *argv[]) {
     boost::geometry::srs::proj4 *compare_transform_proj;
     bool compare_transform = false;
     if (not compare_file.empty()) {
-        if (compare_edges_list_mode) {
+        if (compare_edges_list_mode or seattle_ground_truth_mode) {
             compare_srs = network_srs;
             compare_transform_srs = network_transform_srs;
         }
@@ -1242,7 +1275,8 @@ int main(int argc, char *argv[]) {
     }
 
     // prepared checks
-    bool import_compare_edge_lists = not no_compare and not compare_file.empty() and compare_edges_list_mode;
+    bool import_compare_edge_lists = not no_compare and not compare_file.empty() and (
+            compare_edges_list_mode or seattle_ground_truth_mode);
 
     if (not quiet) {
         std::cout << "\nStart Preparation ..." << std::endl;
@@ -1270,13 +1304,13 @@ int main(int argc, char *argv[]) {
                 double duration;
                 if (network_srs_type == geographic) {
                     network_geographic_import = new map_matching_2::geometry::network::types_geographic::internal_network_import;
-                    map_matching_2::io::network::osm_car_importer osm_car_importer{network_file,
-                                                                                   *network_geographic_import};
+                    map_matching_2::io::network::osm_car_importer osm_car_importer{
+                            network_file, *network_geographic_import};
                     duration = map_matching_2::util::benchmark([&]() { osm_car_importer.read(); });
                 } else {
                     network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::internal_network_import;
-                    map_matching_2::io::network::osm_car_importer osm_car_importer{network_file,
-                                                                                   *network_cartesian_import};
+                    map_matching_2::io::network::osm_car_importer osm_car_importer{
+                            network_file, *network_cartesian_import};
                     duration = map_matching_2::util::benchmark([&]() { osm_car_importer.read(); });
                 }
 
@@ -1304,6 +1338,51 @@ int main(int argc, char *argv[]) {
                 if (verbose) {
                     std::cout << "done in " << duration << "s" << std::endl;
                 }
+            } else if (not seattle_file.empty()) {
+                if (verbose) {
+                    std::cout << "Import seattle network ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic) {
+                    network_geographic_import = new map_matching_2::geometry::network::types_geographic::internal_network_import;
+                    map_matching_2::io::network::seattle_importer seattle_importer{
+                            seattle_file, seattle_fix_connections, *network_geographic_import};
+                    duration = map_matching_2::util::benchmark([&]() { seattle_importer.read(); });
+                } else {
+                    network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::internal_network_import;
+                    map_matching_2::io::network::seattle_importer seattle_importer{
+                            seattle_file, seattle_fix_connections, *network_cartesian_import};
+                    duration = map_matching_2::util::benchmark([&]() { seattle_importer.read(); });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+                }
+            } else if (not melbourne_edges_file.empty() and not melbourne_vertex_file.empty() and
+                       not melbourne_streets_file.empty()) {
+                if (verbose) {
+                    std::cout << "Import melbourne edges, vertex, and streets ... " << std::flush;
+                }
+
+                double duration;
+                if (network_srs_type == geographic) {
+                    network_geographic_import = new map_matching_2::geometry::network::types_geographic::internal_network_import;
+                    map_matching_2::io::network::melbourne_importer melbourne_importer{
+                            melbourne_edges_file, melbourne_vertex_file, melbourne_streets_file,
+                            *network_geographic_import};
+                    duration = map_matching_2::util::benchmark([&]() { melbourne_importer.read(); });
+                } else {
+                    network_cartesian_import = new map_matching_2::geometry::network::types_cartesian::internal_network_import;
+                    map_matching_2::io::network::melbourne_importer melbourne_importer{
+                            melbourne_edges_file, melbourne_vertex_file, melbourne_streets_file,
+                            *network_cartesian_import};
+                    duration = map_matching_2::util::benchmark([&]() { melbourne_importer.read(); });
+                }
+
+                if (verbose) {
+                    std::cout << "done in " << duration << "s" << std::endl;
+                }
             }
 
             if (verbose) {
@@ -1320,37 +1399,60 @@ int main(int argc, char *argv[]) {
 
             // Compare Edge List Tracks
             if (import_compare_edge_lists) {
-                if (verbose) {
-                    std::cout << "Import edge list ground truth tracks for comparison ... " << std::flush;
-                }
-
-                double duration = 0.0;
-                for (const auto &file: compare_file) {
-                    if (network_srs_type == geographic) {
-                        map_matching_2::io::track::edges_list_importer<
-                                map_matching_2::geometry::network::types_geographic::internal_network_import,
-                                map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
-                                edges_list_importer{file, *network_geographic_import,
-                                                    compare_tracks_geographic};
-                        duration += map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
-                    } else {
-                        map_matching_2::io::track::edges_list_importer<
-                                map_matching_2::geometry::network::types_cartesian::internal_network_import,
-                                map_matching_2::geometry::track::types_cartesian::eager_multi_track_type>
-                                edges_list_importer{file, *network_cartesian_import, compare_tracks_cartesian};
-                        duration += map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                if (compare_edges_list_mode) {
+                    if (verbose) {
+                        std::cout << "Import edge list ground truth tracks for comparison ... " << std::flush;
                     }
-                }
 
-                if (verbose) {
-                    std::cout << "done in " << duration << "s" << std::endl;
+                    double duration = 0.0;
+                    for (const auto &file: compare_file) {
+                        if (network_srs_type == geographic) {
+                            map_matching_2::io::track::edges_list_importer<
+                                    map_matching_2::geometry::network::types_geographic::internal_network_import,
+                                    map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
+                                    edges_list_importer{file, compare_skip_lines,
+                                                        *network_geographic_import, compare_tracks_geographic};
+                            duration += map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                        } else {
+                            map_matching_2::io::track::edges_list_importer<
+                                    map_matching_2::geometry::network::types_cartesian::internal_network_import,
+                                    map_matching_2::geometry::track::types_cartesian::eager_multi_track_type>
+                                    edges_list_importer{file, compare_skip_lines,
+                                                        *network_cartesian_import, compare_tracks_cartesian};
+                            duration += map_matching_2::util::benchmark([&]() { edges_list_importer.read(); });
+                        }
+                    }
 
-                    if (network_srs_type == geographic) {
+                    if (verbose) {
+                        std::cout << "done in " << duration << "s" << std::endl;
+
+                        if (network_srs_type == geographic) {
+                            std::cout << "Number of ground truth tracks for comparison: "
+                                      << compare_tracks_geographic.size() << std::endl;
+                        } else {
+                            std::cout << "Number of ground truth tracks for comparison: "
+                                      << compare_tracks_cartesian.size() << std::endl;
+                        }
+                    }
+                } else if (seattle_ground_truth_mode) {
+                    if (verbose) {
+                        std::cout << "Import seattle ground truth route for comparison ... " << std::flush;
+                    }
+
+                    double duration = 0.0;
+                    for (const auto &file: compare_file) {
+                        map_matching_2::io::track::seattle_ground_truth_importer<
+                                map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
+                                seattle_ground_truth_importer{file, seattle_file, compare_tracks_geographic};
+                        duration += map_matching_2::util::benchmark(
+                                [&]() { seattle_ground_truth_importer.read(); });
+                    }
+
+                    if (verbose) {
+                        std::cout << "done in " << duration << "s" << std::endl;
+
                         std::cout << "Number of ground truth tracks for comparison: "
                                   << compare_tracks_geographic.size() << std::endl;
-                    } else {
-                        std::cout << "Number of ground truth tracks for comparison: "
-                                  << compare_tracks_cartesian.size() << std::endl;
                     }
                 }
             }
@@ -1726,12 +1828,12 @@ int main(int argc, char *argv[]) {
                 if (tracks_file_type == ".csv") {
                     if (tracks_srs_type == geographic) {
                         map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
-                                csv_track_importer{file, tracks_geographic};
+                                csv_track_importer{file, skip_lines, tracks_geographic};
                         csv_track_importer.settings = csv_track_importer_settings;
                         duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
                     } else {
                         map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::eager_multi_track_type>
-                                csv_track_importer{file, tracks_cartesian};
+                                csv_track_importer{file, skip_lines, tracks_cartesian};
                         csv_track_importer.settings = csv_track_importer_settings;
                         duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
                     }
@@ -1830,7 +1932,8 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            if (not compare_file.empty() and not compare_edges_list_mode) {
+            if (not compare_file.empty() and
+                not(compare_edges_list_mode or seattle_ground_truth_mode)) {
                 if (verbose) {
                     std::cout << "Import ground truth tracks for comparison ... " << std::flush;
                 }
@@ -1853,12 +1956,12 @@ int main(int argc, char *argv[]) {
                     if (compare_file_type == ".csv") {
                         if (compare_srs_type == geographic) {
                             map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_geographic::eager_multi_track_type>
-                                    csv_track_importer{file, compare_tracks_geographic};
+                                    csv_track_importer{file, compare_skip_lines, compare_tracks_geographic};
                             csv_track_importer.settings = csv_track_importer_settings;
                             duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
                         } else {
                             map_matching_2::io::track::csv_track_importer<map_matching_2::geometry::track::types_cartesian::eager_multi_track_type>
-                                    csv_track_importer{file, compare_tracks_cartesian};
+                                    csv_track_importer{file, compare_skip_lines, compare_tracks_cartesian};
                             csv_track_importer.settings = csv_track_importer_settings;
                             duration += map_matching_2::util::benchmark([&]() { csv_track_importer.read(); });
                         }

@@ -3,10 +3,28 @@ Available Options:
 
 Network Options:
   --network arg                         path to .osm.pbf network file
-  --arcs arg                            path to arcs network file, requires 
-                                        nodes file
-  --nodes arg                           path to nodes network file, requires 
-                                        arcs file
+  --arcs arg                            path to arcs network file from Kubicka 
+                                        et al. paper, requires nodes file
+  --nodes arg                           path to nodes network file from Kubicka
+                                        et al. paper, requires arcs file
+  --seattle arg                         path to seattle network file from 
+                                        Newson-Krumm paper
+  --seattle-fix-connections arg (=on)   fix network connections when nodes lie 
+                                        on top of each other but are not 
+                                        connected, is needed for merging the 
+                                        network parts so that a complete track 
+                                        can be matched, however it also creates
+                                        connections in cases where they are 
+                                        wrong, e.g., under bridges
+  --melbourne-vertex arg                path to melbourne vertex network file 
+                                        from Hengfeng paper, requires edges and
+                                        streets
+  --melbourne-edges arg                 path to melbourne edges network file 
+                                        from Hengfeng paper, requires vertex 
+                                        and streets
+  --melbourne-streets arg               path to melbourne streets network file 
+                                        from Hengfeng paper, requires vertex 
+                                        and edges
   --network-load arg                    loads network from binary file in 
                                         deserialized form, works together with 
                                         network-save;is much faster than 
@@ -46,7 +64,7 @@ Network Options:
                                         disable this option
   --remove-unconnected arg (=off)       remove weakly unconnected components so
                                         that only the largest subgraph remains
-  --routing-max-distance-factor arg (=10.0)
+  --routing-max-distance-factor arg (=5.0)
                                         max distance factor for upper bound for
                                         routing algorithm, removes all nodes 
                                         from routing that are too far away from
@@ -88,6 +106,12 @@ Track Options:
   --delimiter arg (=,)                  delimiter for .csv tracks file, only 
                                         for import, export always uses ',' 
                                         (because csv is 'comma' separated)
+  --skip-lines arg (=0)                 skip specified number of lines at the 
+                                        head of the tracks .csv file, works 
+                                        also in combination with no-header, 
+                                        e.g., set to 1 with no-header to skip 
+                                        an existing header to use number 
+                                        indices for columns instead
   --no-header                           csv has no header, column 
                                         specifications are interpreted as 
                                         indices of columns
@@ -168,7 +192,11 @@ Compare Options:
                                         the id of the edge in the network 
                                         graph, also the network-srs and 
                                         network-transform-srs as well as the 
-                                        corresponding types are used
+                                        corresponding types are used, used for 
+                                        Kubicka et al. paper
+  --seattle-ground-truth-mode           special mode for the ground truth route
+                                        file from the Seattle dataset from 
+                                        Newson-Krumm paper
   --compare arg                         path to compare file for ground truth 
                                         matches for statistics on results; can 
                                         be specified multiple times for 
@@ -204,6 +232,8 @@ Compare Options:
                                         mode, this is filled from output 
                                         parameter if not specified
   --compare-delimiter arg (=,)          see delimiter for tracks .csv
+  --compare-skip-lines arg (=0)         see skip-lines for tracks .csv, works 
+                                        also with compare-edges-list-mode
   --compare-no-header                   see no-header for tracks .csv
   --compare-no-id                       see no-id for tracks .csv
   --compare-id arg (=id)                see id for tracks .csv
@@ -318,15 +348,15 @@ Track Preparation Options:
                                         detours are taken that could not be 
                                         collapsed without candidate-adoption
   --candidate-adoption-siblings arg (=on)
-                                        for each point, adopt candidates
+                                        for each measurement, adopt candidates 
                                         from preceding and succeeding 
                                         candidate, in other words, each 
-                                        point can choose from at least
+                                        measurement can choose from at least 
                                         three road positions and each road 
                                         position is referenced by three 
                                         candidates, gives much better results 
                                         but has a huge calculation speed impact
-  --candidate-adoption-nearby arg (=on) for each point, adopt candidates
+  --candidate-adoption-nearby arg (=on) for each measurement, adopt candidates 
                                         from searching nearby candidates 
                                         intersecting a search circle with 
                                         distance of the farthest current 
@@ -440,7 +470,7 @@ Model Options:
 
 Markov-Decision-Process Options:
   --mdp-distance-factor arg (=0.8)      distance factor for rewarding distances
-                                        between point point and candidate
+                                        between measurement point and candidate
                                         position
   --mdp-length-factor arg (=0.3)        length factor for rewarding length 
                                         differences between track segments and 
@@ -456,7 +486,7 @@ Markov-Decision-Process Options:
 
 Hidden-Markov-Model Options:
   --hmm-distance-factor arg (=0.8)      distance factor for probability of 
-                                        distances between point point and
+                                        distances between measurement point and
                                         candidate position
   --hmm-length-factor arg (=0.1)        length factor for probability of length
                                         differences between track segments and 

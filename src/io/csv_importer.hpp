@@ -27,6 +27,7 @@ namespace map_matching_2::io {
     class csv_importer : public importer {
 
     private:
+        std::size_t _skip_lines;
         std::vector<std::string> _columns;
 
     protected:
@@ -37,8 +38,8 @@ namespace map_matching_2::io {
         virtual void finish_import() {}
 
     public:
-        explicit csv_importer(std::string filename)
-                : importer{std::move(filename)} {}
+        explicit csv_importer(std::string filename, std::size_t skip_lines)
+                : importer{std::move(filename)}, _skip_lines{skip_lines} {}
 
         void read() override {
             csv::CSVFormat format;
@@ -50,7 +51,10 @@ namespace map_matching_2::io {
 
             std::size_t n = 0;
             for (const auto &row: csv) {
-                process_row(n++, row);
+                if (n >= _skip_lines) {
+                    process_row(n, row);
+                }
+                n++;
             }
 
             finish_import();

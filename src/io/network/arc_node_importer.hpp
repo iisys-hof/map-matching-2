@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2021 Adrian Wöltche
+// Copyright (C) 2021-2023 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -52,16 +52,18 @@ namespace map_matching_2::io::network {
             std::ifstream nodes;
             nodes.open(this->nodes());
 
+            std::vector<std::string> parts;
+
             std::string line;
             osmium::object_id_type id = 0;
             while (std::getline(nodes, line)) {
-                std::vector<std::string> parts;
                 boost::split(parts, line, boost::is_any_of("\t;,| "));
                 point_type point{std::stod(parts[0]), std::stod(parts[1])};
                 node_type node{id++, std::move(point)};
                 const auto vertex_descriptor = _network.add_vertex(node);
                 _node_map.emplace_back(std::move(node));
                 _vertex_map.emplace(_node_map.size() - 1, vertex_descriptor);
+                parts.clear();
             }
 
             std::ifstream arcs;
@@ -69,7 +71,6 @@ namespace map_matching_2::io::network {
 
             id = 0;
             while (std::getline(arcs, line)) {
-                std::vector<std::string> parts;
                 boost::split(parts, line, boost::is_any_of("\t;,| "));
                 const std::size_t index_a = std::stoul(parts[0]);
                 const std::size_t index_b = std::stoul(parts[1]);
@@ -79,6 +80,7 @@ namespace map_matching_2::io::network {
                 const auto vertex_b = _vertex_map[index_b];
                 edge_type edge{id++, {node_a.point, node_b.point}};
                 _network.add_edge(vertex_a, vertex_b, edge);
+                parts.clear();
             }
         }
 
