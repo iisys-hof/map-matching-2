@@ -915,7 +915,7 @@ int main(int argc, char *argv[]) {
                  "this is especially useful when adaptive optimization rounds are enabled, "
                  "new found candidates are then deployed to preceding and following locations around the high error location, "
                  "has the highest calculation speed impact")
-                ("candidate-search", po::value<std::string>(&candidate_search)->default_value("circle"),
+                ("candidate-search", po::value<std::string>(&candidate_search)->default_value("combined"),
                  "candidate search algorithm to use, possible options:\n"
                  "\"circle\"\n"
                  "searches for all edges around a point intersecting a circle with at least given radius\n"

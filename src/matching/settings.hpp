@@ -52,7 +52,7 @@ namespace map_matching_2::matching {
         double hmm_direction_factor = 0.8;
         double hmm_turn_factor = 0.6;
 
-        bool k_nearest_candidate_search = false;
+        bool k_nearest_candidate_search = true;
         bool k_nearest_reverse = false;
         bool k_nearest_adjacent = false;
         std::size_t k_nearest = 16;

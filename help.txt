@@ -376,7 +376,7 @@ Track Preparation Options:
                                         preceding and following locations 
                                         around the high error location, has the
                                         highest calculation speed impact
-  --candidate-search arg (=circle)      candidate search algorithm to use, 
+  --candidate-search arg (=combined)    candidate search algorithm to use, 
                                         possible options:
                                         "circle"
                                         searches for all edges around a point 

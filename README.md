@@ -49,7 +49,7 @@ Various advanced map matching algorithms are implemented, for example:
 * Track sanitation with Douglas-Peucker algorithm
 * Removing of spatially duplicate points
 * Median merging of point clouds, with adaptive distance when the next road is far away
-* Candidate search based on adaptive circle radius or k-nearest neighbor
+* Candidate search based on adaptive circle radius, k-nearest neighbor, and combined mode
 * Candidate adoption of siblings and/or nearby candidates
 * Within edge turn functionality for disabled candidate adoption
 * Matching of tracks with gaps with MDP and skip-errors option (default)
@@ -203,11 +203,13 @@ but this reduces the matching accuracy slightly.
 Instead of regular adaptive circle based candidate search, also k-nearest neighbors (by default 16, but can be changed)
 with `--candidate-search nearest` and a combined method of both by `--candidate-search combined` is possible. The
 combined search first uses the adaptive circle, then only retains the k-nearest candidates. This reduces the amount of
-candidates and combinations drastically, especially in dense areas. The accuracy is slightly reduced.
+candidates and combinations drastically, especially in dense areas. The accuracy is slightly reduced, however the
+computational speed benefits drastically. Therefore, combined candidate search is currently the default method.
 
 If you don't want to use multi-threading for map matching enable \
 `--single-threading`. \
-Without parallel matching, less max memory is needed.
+Without parallel matching, much less max memory is needed. Typically, computers with many cores also (should) have more
+system memory available. If this is not the case, single-threading mode is highly advised.
 
 The follwing examples were run on a dedicated server with 2x AMD EPYC 7742 64-Core Processor with 2x 128 Threads and
 1024 MB DDR4 RAM on a local NVMe SSD. The default settings are the command above. The sanitized track points are after
