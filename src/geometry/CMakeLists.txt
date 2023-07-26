@@ -4,7 +4,7 @@ find_package(Threads REQUIRED)
 find_package(Boost REQUIRED COMPONENTS graph serialization thread)
 
 list(APPEND CMAKE_MODULE_PATH "${OSMIUM_INCLUDE_DIR}/cmake")
-find_package(Osmium REQUIRED COMPONENTS io proj)
+find_package(Osmium REQUIRED COMPONENTS io)
 
 add_library(geometry INTERFACE)
 

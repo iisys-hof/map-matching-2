@@ -365,28 +365,29 @@ the world. For k-nearest neighbors, there is no difference.
 ### Build
 
 If you want to build the software yourself, consult the `Dockerfile` for instructions. \
-You need a recent and up-to-date Linux, for example Ubuntu 20.04 LTS.
+You need a recent and up-to-date Linux, for example Ubuntu 20.04 LTS and newer or Debian 11 and newer. \
+At least GCC 9.4 is required.
 
 Install the following prerequisites:
 
 ```
 sudo apt-get install -y build-essential cmake git
-sudo apt-get install -y zlib1g-dev libbz2-dev libexpat1-dev libproj-dev
+sudo apt-get install -y zlib1g-dev libbz2-dev libexpat1-dev
 ```
 
 You can build the software with the following commands:
 
 ```
-cmake -DCMAKE_BUILD_TYPE=Release -B build
+cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -B build
 cmake --build build --parallel $(nproc) --target install
 ```
 
 Then the built software can be found in the newly created `run/bin` directory. There is nothing installed outside of
 this directory (so nothing is installed system-wide), uninstalling is simply deleting the directory.
 
-For building under Windows you need Ubuntu 20.04 LTS for the Windows Subsystem for Linux (WSL). Building is the same as
-under Linux then. Native build currently is unsupported due to several dependencies currently not building natively
-under Windows.
+For building under Windows you need Ubuntu 20.04 LTS and newer or Debian 11 and newer for the Windows Subsystem for
+Linux (WSL). Building is the same as under Linux then. Native build currently is unsupported due to several dependencies
+currently not building natively under Windows.
 
 ### Examples
 
