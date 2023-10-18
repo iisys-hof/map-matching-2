@@ -65,10 +65,12 @@ Various advanced map matching algorithms are implemented, for example:
 * *More features are in the making ...*
 
 The provided source code is heavily tuned and optimized for fast and accurate map matching. \
-Please read the
-paper [Evolving map matching with markov decision processes](https://opus4.kobv.de/opus4-hof/frontdoor/index/index/docId/119)
-for more information about this open source tool. \
-We are currently working on several new research papers based on this approach.
+
+Please read the official article for more information about this open source tool: \
+**Open source map matching with Markov decision processes: A new method and a detailed benchmark with existing
+approaches** (https://doi.org/10.1111/tgis.13107)
+
+We are currently working on more new research papers based on this approach.
 
 Pull from Docker Hub: \
 `docker pull addy90/map-matching-2`
@@ -630,16 +632,6 @@ and explanations.
 
 *This is the successor to the deprecated repository [Map Matching](https://github.com/iisys-hof/map-matching).*
 
-If you want to cite this work, please feel free to adapt the following Bibtex for your needs:
-
-```
-@article{Woeltche-2021-Evolvingmapmatchin,
-  title     = {{E}volving map matching with markov decision processes},
-  author    = {{W}öltche, {A}drian},
-  year      = {2021},
-  month     = {10},
-  publisher = {{H}of {U}niversity},
-  url       = {https://opus4.kobv.de/opus4-hof/frontdoor/index/index/docId/119},
-  keywords  = {map matching, geospatial information science, hidden markov model, markov decision process}
-}
-```
+If you want to cite this work, please see the official publication: \
+**Open source map matching with Markov decision processes: A new method and a detailed benchmark with existing
+approaches** (https://doi.org/10.1111/tgis.13107)
