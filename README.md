@@ -1,6 +1,10 @@
 # Map Matching 2
 
-**High Performance Map Matching with Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs).**
+### High Performance Map Matching with Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs)
+
+Please read the official article for more information about this open source tool: \
+**Open source map matching with Markov decision processes: A new method and a detailed benchmark with existing
+approaches** (https://doi.org/10.1111/tgis.13107)
 
 Currently the following models are implemented:
 
@@ -65,11 +69,6 @@ Various advanced map matching algorithms are implemented, for example:
 * *More features are in the making ...*
 
 The provided source code is heavily tuned and optimized for fast and accurate map matching. \
-
-Please read the official article for more information about this open source tool: \
-**Open source map matching with Markov decision processes: A new method and a detailed benchmark with existing
-approaches** (https://doi.org/10.1111/tgis.13107)
-
 We are currently working on more new research papers based on this approach.
 
 Pull from Docker Hub: \
