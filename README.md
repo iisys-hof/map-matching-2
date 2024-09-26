@@ -42,7 +42,7 @@ Our software can be downloaded prebuilt for Windows and Linux on the release pag
 **Windows**: Zip-File containing the portable binary `map_matching_2.exe`.\
 **Linux**: portable AppImage containing the binary `map_matching_2` and the necessary shared libraries.\
 Remember to make the AppImage executable (`chmod +x` or right click, settings, make executable).\
-You might also need `libfuse2` installed.\
+You might also need `libfuse2` installed.
 
 Both variants also contain the license information of the used third-party libraries in the `doc` folder.\
 For extracting the AppImage, use on the AppImage binary `--appimage-extract`.
@@ -172,13 +172,13 @@ Our map matching software has a very high accuracy, as is benchmarked thoroughly
     - **Cartesian:** Uses Euclidean distance for fastest but least precise computations.
 - **Performance:** Huge performance improvements concerning computational speed are implemented.
     - **Simplification:** Removes nodes within roads that are no junctions by joining the adjacent edges. Usually
-      reduces the amount of nodes by a factor of three to four without altering the geometric form and routing behavior
+      reduces the number of nodes by a factor of three to four without altering the geometric form and routing behavior
       of the road network. Improves the computational speed of the routing algorithms because fewer nodes need to be
       traversed.
     - **Weakly Unconnected Graphs:** Optional removing of subgraphs that are not connected to the largest main graph.
     - **Graph Models:** Custom graph models adjacency list and compressed sparse row built for memory mapping.
     - **Graph Baking:** The road network is first imported as mutable adjacency list and then converted into an
-      unmutable compressed sparse row for less space and faster graph traversal.
+      immutable compressed sparse row for less space and faster graph traversal.
     - **Spatial indices:** R-Star indices on nodes and edges of the road network
     - **Upper Bound Dijkstra Algorithm:** Custom Dijkstra's Shortest Path implementation with a search radius limit
       using only the memory and computations needed in the actual location with close surroundings of a track.
@@ -194,7 +194,7 @@ Our map matching software has a very high accuracy, as is benchmarked thoroughly
       Precomputation of lengths and azimuths of all road segments of the whole road network and baking into the network
       graph files.\
       Precomputation of lengths and azimuths of all track segments before a matching starts.\
-      Precomputation of lengths and azimuths of subline extracts in found candidates.\
+      Precomputation of lengths and azimuths of subline extracts in found candidates.
     - **Route references:** Route data objects consist of a list of references to existing lines, i.e.,
       a route object points to the existing edges of the road network, the data is not copied.
       The length and direction changes are then computed based on the precomputed data from the edges.
@@ -214,9 +214,9 @@ Our map matching software has a very high accuracy, as is benchmarked thoroughly
     - **Within Edge Turning:** By default, matches do not turn within edges but only at junction. This mode allows to
       turn directly on the road within the edge. This works best without candidate adoption and is automatically applied
       in this case.
-    - **Export Edges mode:** By default a match starts and ends (and might turn as seen above) within an edge, because
+    - **Export Edges mode:** By default, a match starts and ends (and might turn as seen above) within an edge, because
       the track does the same. Typically, tracks do not start or end exactly in a junction but somewhere in the middle
-      of a road, from the parking space. In case this is not wanted and the match should contain the complete edge and
+      of a road, from the parking space. In case this is not wanted, and the match should contain the complete edge and
       not only part of it, this mode allows for this. With this mode enabled, only complete edges are exported.
     - **Edge ID output:** Not only the route but also the edge IDs are outputted in case they are of interest. You might
       want to use the osm-aware simplification mode when you are interested in this output.
@@ -237,7 +237,7 @@ The basic usage is a two- or three-step approach:
 1. Prepare the network graph (only once).
 2. Match your tracks on the prepared network graph (and repeat as often as needed).
 3. Optional: Compare your matches to any given comparison matches or ground truth (if available).
-   You can also compare the matches of different runs of this software with different settings with each other and
+   You can also compare the matches from different runs of this software with different settings with each other and
    review the differences.
 
 In case you used an older version of this software, all steps could be combined into one run.
@@ -318,12 +318,12 @@ For the dependency on Boost to build correctly, you might need to enable long pa
 You might need to enable the registry setting if you receive "failed" messages in the Boost build log.
 Alternatively, you can try to move the build directory of the whole project to an upper directory, for example
 `C:\map-matching-2`.
-This is because Boost internally uses quite some long paths during build and depending on the file system position of
+This is because Boost internally uses quite some long paths during build, and depending on the file system position of
 this repository on your computer, it might lead to errors without long paths enabled.
 
 </details>
 
-Building and installing when the prerequisites are fulfilled is then straightforward:
+Building and installing, when the prerequisites are fulfilled, are then straightforward:
 
 ```shell
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -B build
@@ -370,7 +370,7 @@ MB.
 When disabling the intermediate MMap files (`--memory-mapped-preparation off`), the "Max RAM" usage looks lower, but in
 fact, there is less "shared memory" used.
 So the actual RAM usage during preparation is higher, because less memory is mapped on disk.
-However, less "shared memory" means less overhead, and thus the total memory is less and the computational speed is
+However, less "shared memory" means less overhead, and thus the total memory is less, and the computational speed is
 much higher. Even faster than the old version.
 
 This is a bit difficult to understand, but try it out for yourself and watch the actual memory usage of both variants
