@@ -25,7 +25,7 @@ rapid.
 By applying stochastic models, this software evaluates a huge number of alternating paths between all points of a GPS
 track for finding the best representation of the given track overlapping exactly with the given road network.
 "Best" in terms of the optimal solution concerning the defined models and metrics.
-In other words, with this software, you can match recorded GPS tracks to the roads of the exising street network.
+In other words, with this software, you can match recorded GPS tracks to the roads of the existing street network.
 For example, when you record driving from A to B and the recorded track is not exactly lying on the roads or there are
 outliers, this software resolves the differences between the record and the roads.
 
