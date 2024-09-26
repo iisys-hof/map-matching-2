@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2021 Adrian Wöltche
+// Copyright (C) 2021-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -13,55 +13,52 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#ifndef MAP_MATCHING_2_MATCHER_FIXTURE_HPP
-#define MAP_MATCHING_2_MATCHER_FIXTURE_HPP
+#ifndef MAP_MATCHING_2_TESTS_HELPER_MATCHER_FIXTURE_HPP
+#define MAP_MATCHING_2_TESTS_HELPER_MATCHER_FIXTURE_HPP
 
 #include <string>
 #include <initializer_list>
 
-#include <matching/types.hpp>
+#include "types/matching/matcher.hpp"
 
 #include "network_fixture.hpp"
 
-using matcher_geographic = map_matching_2::matching::types_geographic;
-using matcher_metric = map_matching_2::matching::types_cartesian;
+using matcher_geographic = MM2_MATCHER(network_geographic);
+using matcher_metric = MM2_MATCHER(network_metric);
 
 template<typename Types>
 struct matcher_fixture {
 
-    typename Types::internal_matcher::track_type
+    using matcher_type = Types;
+
+    typename matcher_type::track_type
     create_track(std::string id,
-                 std::initializer_list<typename Types::internal_matcher::track_type::measurement_type> measurements) {
-        typename Types::internal_matcher::track_type::line_type line;
+            std::initializer_list<typename matcher_type::track_type::measurement_type> measurements) {
+        typename matcher_type::track_type::line_type line;
         line.reserve(measurements.size());
-        for (const auto &measurement: measurements) {
+        for (const auto &measurement : measurements) {
             line.emplace_back(measurement.point);
         }
 
-        return typename Types::internal_matcher::track_type{std::move(id), std::move(line)};
+        return typename matcher_type::track_type{std::move(id), std::move(line)};
     }
 
     template<typename Network>
-    typename Types::internal_matcher::network_type prepare_network(Network &network) {
-        typename Types::internal_matcher::network_type matcher_network;
-        network.simplify();
-        network.convert(matcher_network);
-        matcher_network.rebuild_spatial_indices();
-        return matcher_network;
+    typename matcher_type::network_type prepare_network(Network &network_import) {
+        typename matcher_type::network_type network;
+        network_import.simplify();
+        network.graph_helper().from_adjacency_list(network_import.graph_helper(), network_import.tag_helper());
+        network.build_spatial_indices();
+        return network;
     }
 
-    typename Types::internal_matcher create_matcher(typename Types::internal_matcher::network_type &network) {
-        return typename Types::internal_matcher{network, true};
-    }
-
-    std::int64_t get_candidate_position(typename Types::internal_matcher::network_type &network,
-                                        std::vector<typename Types::internal_matcher::candidate_type> &candidates,
-                                        std::size_t candidate_index,
-                                        std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
+    std::int64_t get_candidate_position(typename matcher_type::network_type &network,
+            auto &candidates, std::size_t candidate_index,
+            std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
         for (std::int64_t i = 0; i < candidates.at(candidate_index).edges.size(); ++i) {
             const auto &candidate_edge = candidates.at(candidate_index).edges.at(i);
-            const auto source = boost::source(candidate_edge.edge_descriptor, network.graph());
-            const auto target = boost::target(candidate_edge.edge_descriptor, network.graph());
+            const auto source = network.graph().source(candidate_edge.edge_desc);
+            const auto target = network.graph().target(candidate_edge.edge_desc);
 
             if (network.vertex(source).id == node_pair.first and network.vertex(target).id == node_pair.second) {
                 return i;
@@ -73,4 +70,4 @@ struct matcher_fixture {
 
 };
 
-#endif //MAP_MATCHING_2_MATCHER_FIXTURE_HPP
+#endif //MAP_MATCHING_2_TESTS_HELPER_MATCHER_FIXTURE_HPP

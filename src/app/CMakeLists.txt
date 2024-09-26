@@ -1,21 +1,39 @@
-find_package(Boost REQUIRED COMPONENTS program_options)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
-add_library(app INTERFACE)
+find_package(Threads REQUIRED)
+find_package(Boost REQUIRED COMPONENTS thread program_options)
 
-target_precompile_headers(app
-        INTERFACE
-        <boost/program_options.hpp>)
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/app/version.hpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/include/app/version.hpp
+        @ONLY)
+
+add_library(app STATIC)
+
+target_sources(app
+        PRIVATE
+        src/app/compare.cpp
+        src/app/general.cpp
+        src/app/global.cpp
+        src/app/match.cpp
+        src/app/match_cli.cpp
+        src/app/network.cpp
+        src/app/options.cpp
+        src/app/prepare.cpp
+        src/app/settings.cpp)
 
 target_compile_definitions(app
-        INTERFACE
+        PUBLIC
+        BOOST_THREAD_VERSION=5
         BOOST_ALLOW_DEPRECATED_HEADERS
-        BOOST_THREAD_VERSION=5)
+        BOOST_GEOMETRY_INDEX_DETAIL_EXPERIMENTAL)
 
 target_include_directories(app
-        INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/..)
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 target_link_libraries(app
-        INTERFACE
-        Boost::boost
+        PUBLIC
+        library
         Boost::program_options)

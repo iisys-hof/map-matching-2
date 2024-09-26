@@ -1,111 +1,766 @@
+# ./map_matching_2 --help
 Available Options:
-  --help                                show this help
+  --help                              show this help, can be combined with an 
+                                      application mode for more help
+  --version                           show the version of this software
+  -c [ --config ] arg (=options.conf) configuration file, can contain settings 
+                                      for all options;
+                                      explicitly specified command line options
+                                      override configuration file settings;
+                                      if explicitly specified, file needs to 
+                                      exist
+  --verbose                           show more output during operation
+  --quiet                             silent mode, deactivates any output, 
+                                      overrides verbose
 
-Network Options:
-  --network arg                         path to .osm.pbf network file
-  --arcs arg                            path to arcs network file from Kubicka 
-                                        et al. paper, requires nodes file
-  --nodes arg                           path to nodes network file from Kubicka
-                                        et al. paper, requires arcs file
-  --seattle arg                         path to seattle network file from 
-                                        Newson-Krumm paper
-  --seattle-fix-connections arg (=on)   fix network connections when nodes lie 
-                                        on top of each other but are not 
-                                        connected, is needed for merging the 
-                                        network parts so that a complete track 
-                                        can be matched, however it also creates
-                                        connections in cases where they are 
-                                        wrong, e.g., under bridges
-  --melbourne-vertex arg                path to melbourne vertex network file 
-                                        from Hengfeng paper, requires edges and
-                                        streets
-  --melbourne-edges arg                 path to melbourne edges network file 
-                                        from Hengfeng paper, requires vertex 
-                                        and streets
-  --melbourne-streets arg               path to melbourne streets network file 
-                                        from Hengfeng paper, requires vertex 
-                                        and edges
-  --network-load arg                    loads network from binary file in 
-                                        deserialized form, works together with 
-                                        network-save;is much faster than 
-                                        initial import from original network 
-                                        source files, should be preferred; 
-                                        network is seen as ready and is not 
-                                        processed, transformed or changed in 
-                                        any way any further; with 
-                                        compare-edge-lists-mode an input 
-                                        network is still needed but only used 
-                                        for import of compare tracks
-  --network-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
-                                        network spatial reference system (srs) 
-                                        as PROJ string, default is WGS84, 
-                                        tracks and compare tracks if given need
-                                        to be in the same reference system as 
-                                        the network
-  --network-srs-type arg                network srs type, can be set to 
-                                        'geographic' or 'cartesian'; by default
-                                        automatically detects type depending on
-                                        set srs
-  --network-transform-srs arg           network transform spatial reference 
-                                        system (srs) as PROJ string; when 
-                                        defined, network is transformed to 
-                                        given srs, tracks and compare tracks if
-                                        given need to be in the same reference 
-                                        system as the network
-  --network-transform-srs-type arg      network transform srs type, can be set 
-                                        to 'geographic' or 'cartesian'; by 
-                                        default automatically detects type 
-                                        depending on set transform srs
-  --simplify-network arg (=on)          simplify network graph
-  --simplify-network-complete arg (=on) simplify as much as possible in network
-                                        graph, osm ids and tags are not 
-                                        seperated, if only edges with same osm 
-                                        id and tags should be simplified, 
-                                        disable this option
+Application Modes:
+  --prepare                           prepare mode for importing and converting
+                                      network data into the application 
+                                      specific network format; usually, this 
+                                      mode needs to be run first at once, since
+                                      all other modes need the resulting binary
+                                      files from this mode.
+  --match                             map matching mode for command line 
+                                      operation for fitting GNSS tracks to the 
+                                      prepared road network.
+  --server                            map matching server mode for running the 
+                                      map matching interface as a HTTP web 
+                                      service.
+                                      (NOT YET IMPLEMENTED)
+  --compare                           compare mode for computing the accuracy, 
+                                      similarities, and differences from two 
+                                      different map matching runs;
+                                      a typical use case is evaluating map 
+                                      matching results against given ground 
+                                      truth routes.
+
+# ./map_matching_2 --prepare --help
+Available Options:
+  --help                                show this help, can be combined with an
+                                        application mode for more help
+  --version                             show the version of this software
+  -c [ --config ] arg (=options.conf)   configuration file, can contain 
+                                        settings for all options;
+                                        explicitly specified command line 
+                                        options override configuration file 
+                                        settings;
+                                        if explicitly specified, file needs to 
+                                        exist
+  --verbose                             show more output during operation
+  --quiet                               silent mode, deactivates any output, 
+                                        overrides verbose
+
+Application Modes:
+  --prepare                             prepare mode for importing and 
+                                        converting network data into the 
+                                        application specific network format; 
+                                        usually, this mode needs to be run 
+                                        first at once, since all other modes 
+                                        need the resulting binary files from 
+                                        this mode.
+  --match                               map matching mode for command line 
+                                        operation for fitting GNSS tracks to 
+                                        the prepared road network.
+  --server                              map matching server mode for running 
+                                        the map matching interface as a HTTP 
+                                        web service.
+                                        (NOT YET IMPLEMENTED)
+  --compare                             compare mode for computing the 
+                                        accuracy, similarities, and differences
+                                        from two different map matching runs;
+                                        a typical use case is evaluating map 
+                                        matching results against given ground 
+                                        truth routes.
+
+Prepare Network Options:
+  -i [ --file ] arg                     paths to input network files, can be 
+                                        specified multiple times for multiple 
+                                        files;
+                                        for OSM files, imports all files one 
+                                        after another, strips duplicate 
+                                        entries,
+                                        and tries to combine the networks, if 
+                                        possible, else contains them as 
+                                        individual isles;
+                                        in arc-node file format, first file is 
+                                        the arcs file, second file is the nodes
+                                        file,
+                                        can also be specified in pairs multiple
+                                        times for importing all arc-node files 
+                                        at once
+                                        into a large network, duplicates are 
+                                        removed by spatial location
+  -o [ --output ] arg                   output folder for the prepared network 
+                                        data in binary files and the 
+                                        configuration
+  --format arg (=osm)                   input network format, see the following
+                                        options:
+                                        "osm"
+                                          OpenStreetMap (OSM) file format, for 
+                                          example for .osm.pbf, .osm.bz2, and 
+                                          others
+                                          multiple OSM files via --file can be 
+                                          imported at once, if they overlap, 
+                                          use --remove-duplicate-edges.
+                                        "arc-node"
+                                          arc-node file format for the map 
+                                          matching dataset from Kubicka, M. et 
+                                          al. (2016)
+                                          "Dataset for testing and training 
+                                          map-matching methods"
+                                          first --file needs to be the nodes 
+                                          file, second --file the arcs file, 
+                                          because nodes are imported in advance
+                                          of arcs
+                                          this pair-wise declaration can be 
+                                          repeated multiple times for importing
+                                          all arc-node files at once.
+                                        "seattle"
+                                          seattle file format for the ground 
+                                          truth dataset from Newson and Krumm 
+                                          (2009)
+                                          "Hidden Markov Map Matching through 
+                                          Noise and Sparseness"
+                                          multiple --file can be imported in 
+                                          case it is needed.
+                                          automatically enables 
+                                          --remove-duplicate-nodes due to the 
+                                          original data containing such.
+                                        "melbourne"
+                                          melbourne file format for the ground 
+                                          truth dataset from Li, Hengfeng 
+                                          (2014)
+                                          "Spatio-temporal trajectory 
+                                          simplification for inferring travel 
+                                          paths"
+                                          first --file needs to be the vertex 
+                                          file, second --file the edges file, 
+                                          third --file the streets file
+                                          this triple-wise declaration can be 
+                                          repeated multiple times in case it is
+                                          needed.
+                                        "giscup"
+                                          giscup file format for the map 
+                                          matching dataset from Ali, M. et al. 
+                                          (2012)
+                                          "ACM SIGSPATIAL GIS Cup 2012"
+                                          first --file needs to be the nodes 
+                                          file, second --file the edges file, 
+                                          third --file the edge-geometry file
+                                          this triple-wise declaration can be 
+                                          repeated multiple times in case it is
+                                          needed.
+                                        default is "osm"
+
+Prepare OSM Import Options:
+  --osm-profile arg (=car)              profile for osm import, default is car 
+                                        road network, can be set to:
+                                          "car": car road network profile
+                                          "manual": manual profile with tags 
+                                          explicitely specified
+  --osm-query arg (=true)               osm tag specification string for ways 
+                                        that are kept when they match the 
+                                        specified filter
+                                        filter specification in Backus-Naur 
+                                        Form (BNF):
+                                        
+                                        <SPEC> ::= <DEFAULT> { "|" <RULE> }*
+                                        <DEFAULT> ::= "true" | "false"
+                                        <RULE> ::= <DEFAULT> "," <TAG> [ "=" 
+                                        <VALUE> ]
+                                        <TAG> ::= <string>
+                                        <VALUE> ::= <string>
+                                        
+                                        Examples:
+                                          "true"
+                                          accepts all tags
+                                          "false|true,highway"
+                                          accepts only highway tags
+                                          "false|false,highway=construction|tru
+                                          e,highway"
+                                          accepts only highways that are not 
+                                          construction (the order is important)
+  --osm-filter arg (=true)              osm tag specification string for ways 
+                                        that are filtered after they were 
+                                        queried, so this removes ways in a 
+                                        second pass that were previously loaded
+                                        see osm-query for filter specification
+                                        Example:
+                                          "true|false,access=no|false,access=pr
+                                          ivate"
+                                          accept all tags except ways that are 
+                                          not accessible or private
+  --osm-oneway arg (=false)             osm tag specification string for oneway
+                                        description, a queried and not filtered
+                                        way is set to a directed oneway edge in
+                                        the graph if it matches this filter, 
+                                        all non-oneway ways become two-way 
+                                        edges, i.e., two directed edges in both
+                                        directions in the graph
+                                        see osm-query for filter specification
+                                        Example:
+                                          "false|true,oneway=yes|true,oneway=tr
+                                          ue"
+                                          all ways tagged with oneway=yes or 
+                                          oneway=true become directed edges
+  --osm-oneway-reverse arg (=false)     osm tag specification string for oneway
+                                        reverse description, some oneways are 
+                                        tagged reversed, so if this filter 
+                                        matches, only the opposing directed 
+                                        edge is kept in the same manner as if 
+                                        it had a normal oneway tag initially
+                                        see osm-query for filter specification
+                                        Example:
+                                          "false|true,oneway=reverse"
+                                          all ways tagged with oneway=reverse 
+                                          become directed edges in the opposing
+                                          direction
+
+Prepare Spatial Reference System Options:
+
+Spatial Reference System Options:
+  --srs arg (=4326)                     spatial reference system (srs) as EPSG 
+                                        code, default is WGS84 (EPSG 4326)
+  --srs-type arg                        srs type, can be set to 'geographic', 
+                                        'spherical-equatorial', or 'cartesian';
+                                        by default automatically detects 
+                                        'geographic' for srs with latitude and 
+                                        longitude
+                                        and 'cartesian' for srs with x and y 
+                                        coordinates;
+                                        'spherical-equatorial' can be set for 
+                                        coordinates in latitude and longitude 
+                                        for faster
+                                        but less accurate length and angle 
+                                        calculations (using haversine) than 
+                                        'geographic'
+
+Spatial Reference System Reprojection Options:
+  --transform-srs arg                   transform spatial reference system 
+                                        (srs) as EPSG code;
+                                        when defined, data is transformed to 
+                                        given srs;
+                                        use EPSG code 3857 as recommendation 
+                                        for cartesian WGS84 Pseudo-Mercator 
+                                        projected coordinate system
+  --transform-srs-type arg              transform srs type, can be set to 
+                                        'geographic', 'spherical-equatorial', 
+                                        or 'cartesian';
+                                        by default automatically detects type, 
+                                        see '--srs-type' for details
+
+Prepare Files Options:
+  --graph-file arg (=graph.bin)         memory mapped or binary persistent file
+                                        for graph storage;
+                                        used for storing the finalized 
+                                        compressed sparse row road network 
+                                        after modifications are made
+  --tags-file arg (=tags.bin)           memory mapped or binary persistent file
+                                        for tags storage;
+                                        used for storing the final tags that 
+                                        are actually referenced from the final 
+                                        graph road network
+  --index-file arg (=index.bin)         memory mapped or binary persistent file
+                                        for spatial index storage;
+                                        used for storing the spatial points and
+                                        segments indices for the graph road 
+                                        network
+  --graph-import-file arg (=tmp_graph.bin)
+                                        memory mapped temporary file for graph 
+                                        storage during import;
+                                        used for storing the mutable adjacency 
+                                        list road network, needed for making 
+                                        modifications to the graph, (e.g., 
+                                        simplify, remove-unconnected), 
+                                        automatically deleted when no longer 
+                                        needed;
+                                        is only used when memory-mapped-graph-i
+                                        mport is on
+  --tags-import-file arg (=tmp_tags.bin)
+                                        memory mapped temporary file for osm 
+                                        tags storage during graph import;
+                                        used for storing the osm tags that are 
+                                        actually imported from the osm data, 
+                                        depending on the tag filters used,
+                                        automatically deleted when no longer 
+                                        needed;
+                                        is only used when memory-mapped-tags-im
+                                        port is on
+  --index-build-file arg (=tmp_index_build.bin)
+                                        memory mapped temporary file for 
+                                        spatial index build storage;
+                                        used for storing the spatial points and
+                                        segments data extracted from the final 
+                                        graph that are then used to pack-build 
+                                        the spatial indices, automatically 
+                                        deleted when no longer needed;
+                                        is only used when memory-mapped-index-b
+                                        uild is on
+  --osm-vertices-file arg (=tmp_osm_vertices.bin)
+                                        memory mapped temporary file for osm 
+                                        vertices storage;
+                                        used for storing the point geometries 
+                                        that the osm ways reference to, 
+                                        automatically deleted when no longer 
+                                        needed;
+                                        is only used when memory-mapped-osm-ver
+                                        tices is on
+  --osm-tags-file arg (=tmp_osm_tags.bin)
+                                        memory mapped temporary file for osm 
+                                        tags storage;
+                                        used for storing the osm tags that are 
+                                        seen during osm import, which are later
+                                        used as reference for the graph, 
+                                        automatically deleted when no longer 
+                                        needed;
+                                        is only used when memory-mapped-osm-tag
+                                        s is on
+  --initial-file-size arg (=134217728)  initial file size in bytes for sparse 
+                                        memory mapped files;
+                                        the higher the value the less often a 
+                                        file needs to be flushed, closed, 
+                                        grown, and reopened during import,
+                                        the sparse files do not actually 
+                                        consume the whole space, only the used 
+                                        part is actually consumed,
+                                        the files are deleted if no longer 
+                                        needed or shrunken to the actual size 
+                                        after the import is finished;
+                                        default value is 128 MiB = 128 * 1024 *
+                                        1024 bytes;
+                                        in some memory-mapping configurations, 
+                                        the initial-file-size is automatically 
+                                        set to the disk limit,
+                                        because some data structures cannot be 
+                                        resized and need a large enough target 
+                                        space in advance,
+                                        therefore, memory-mapping should be 
+                                        used with caution on filesystems that 
+                                        don't support sparse files
+
+Prepare Export Options:
+  --export-nodes-csv-file arg           filename for exporting the finalized 
+                                        network nodes in CSV-format;
+                                        the file (for example "nodes.csv") is 
+                                        created in the output folder.
+  --export-edges-csv-file arg           filename for exporting the finalized 
+                                        network edges in CSV-format;
+                                        the file (for example "edges.csv") is 
+                                        created in the output folder.
+  --export-network-osm-file arg         export final network to .osm.pbf file 
+                                        format;
+                                        might contain the data in different 
+                                        order than the import file;
+                                        in case of third-party input networks 
+                                        without tags, the ways are given the 
+                                        highway tag
+
+Prepare Process Options:
+  --simplify arg (=all)                 simplify network graph, highly 
+                                        recommended for improving routing and 
+                                        matching speed drastically;
+                                        initially the osm data needs to be 
+                                        imported with graph nodes for every 
+                                        straight segment,
+                                        simplify merges adjacent straight 
+                                        segments to lines and remains only the 
+                                        graph nodes needed for routing,
+                                        for example at junctions; the spatial 
+                                        information (for example curves) of the
+                                        graph is not altered;
+                                        the following options can be used:
+                                        "all"
+                                          simplify as much as possible, even 
+                                          combine roads with different osm ids 
+                                          and tags, recommended
+                                        "none"
+                                          do not simplify, road network remains
+                                          bigger and slower, but might be 
+                                          needed to improve accuracy
+                                          in special cases, e.g., when 
+                                          comparing the results to ground-truth
+                                          that is based on the original edges
+                                        "osm-aware"
+                                          simplify, but don't combine roads 
+                                          with different osm ids and tags,
+                                          this mode is usually not recommended,
+                                          except special .csv extracts are of 
+                                          interest
+                                          or when the map matching metrics 
+                                          later down the line respect the osm 
+                                          tags,
+                                          which they do not by design currently
+                                        default is "all"
   --remove-unconnected arg (=off)       remove weakly unconnected components so
-                                        that only the largest subgraph remains
-  --routing-max-distance-factor arg (=5.0)
-                                        max distance factor for upper bound for
-                                        routing algorithm, removes all nodes 
-                                        from routing that are too far away from
-                                        the search area between a start and end
-                                        node, dramatically reduces routing 
-                                        duration in networks significantly 
-                                        larger than the given track
+                                        that only the largest subgraph remains;
+                                        when multiple isle networks are 
+                                        imported, only the largest isle 
+                                        remains;
+                                        usually is only interesting for 
+                                        removing tiny network isles in large 
+                                        networks
+  --remove-duplicate-nodes arg (=off)   remove duplicate nodes by comparing 
+                                        exact coordinates;
+                                        usually is needed if networks were 
+                                        split in multiple parts with 
+                                        overlapping nodes on the outer border
+  --remove-duplicate-edges arg (=off)   remove duplicate edges by comparing id,
+                                        geometric line, and tags;
+                                        usually is needed if multiple networks 
+                                        with overlapping parts are imported at 
+                                        once
 
-Track Options:
-  --tracks arg                          path to tracks file; can be specified 
-                                        multiple times for multiple files but 
-                                        all files need the same format per file
-                                        type
-  --tracks-file-type arg                tracks file type; by default is 
-                                        automatically detected from filename 
-                                        extensionfalls back to .csv 
-                                        automatically if no other supported 
-                                        extension is detected; see remaining 
-                                        options for processing possibilities; 
-                                        can be manually overridden to supported
-                                        file types:
-                                        ".csv"
-                                        ".gpx"
-  --tracks-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
-                                        tracks spatial reference system (srs) 
-                                        as PROJ string, default is WGS84
-  --tracks-srs-type arg                 tracks srs type, can be set to 
-                                        'geographic' or 'cartesian'; by default
-                                        automatically detects type depending on
-                                        set srs
-  --tracks-transform-srs arg            tracks transform spatial reference 
-                                        system (srs) as PROJ string; when 
-                                        defined, tracks are transformed to 
-                                        given srs
-  --tracks-transform-srs-type arg       tracks transform srs type, can be set 
-                                        to 'geographic' or 'cartesian'; by 
-                                        default automatically detects type 
-                                        depending on set transform srs
+Memory Options:
+  --memory-mapping arg (=on)            this tool uses memory-mapped files for 
+                                        graph, index, and OSM import storage by
+                                        default, by disabling memory-mapping, 
+                                        the data can be processed completely in
+                                        the main memory (RAM), in this case 
+                                        binary files consisting of memory dumps
+                                        of the graph and indices are used, 
+                                        during the memory mapped preparation, 
+                                        some files are only temporary and 
+                                        discarded after;
+                                        the later steps of this tool suite need
+                                        to have the same memory-mode 
+                                        configuration
+                                        for example, non-memory-mapped graph 
+                                        and indices files cannot be used in 
+                                        memory-mapped mode;
+                                        starting up from a memory dump is 
+                                        slower than starting up from 
+                                        memory-mapped files, but processing 
+                                        speed is faster with in-memory 
+                                        configuration compared to memory-mapped
+                                        files;
+                                        we recommend using memory-mapped files,
+                                        especially when the underlying storage 
+                                        is of SSD or NVMe type, because the 
+                                        main memory usage grows very large when
+                                        using in-memory configuration
+  --memory-mapped-graph arg (=on)       option for disabling memory mapping for
+                                        the final graph;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+  --memory-mapped-indices arg (=on)     option for disabling memory mapping for
+                                        the final indices;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+  --memory-mapped-tags arg (=on)        option for disabling memory mapping for
+                                        the final tags;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+
+Prepare Memory Options:
+  --memory-mapped-preparation arg (=on) option for disabling memory mapping for
+                                        the intermediate temporary preparation 
+                                        files;
+                                        the final memory mapped files needed 
+                                        for the map matching software will be 
+                                        created, but the intermediate temporary
+                                        ones, which would automatically be 
+                                        deleted after import, are not used;
+                                        this drastically increases the 
+                                        importing speed and drastically reduces
+                                        the disk writes, also the resulting 
+                                        files are the same, but a lot more main
+                                        memory is needed during preparation 
+                                        compared to this option disabled, so 
+                                        use only wich enough main memory;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+  --memory-mapped-graph-import arg (=on)
+                                        option for disabling memory mapping for
+                                        the temporary graph import file;
+                                        when specified overrides global 
+                                        memory-mapping-preparation 
+                                        configuration
+  --memory-mapped-tags-import arg (=on) option for disabling memory mapping for
+                                        the temporary import tags file;
+                                        when specified overrides global 
+                                        memory-mapping-preparation 
+                                        configuration
+  --memory-mapped-index-build arg (=on) option for disabling memory mapping for
+                                        the temporary index build file;
+                                        when specified overrides global 
+                                        memory-mapping-preparation 
+                                        configuration
+  --memory-mapped-osm-vertices arg (=on)
+                                        option for disabling memory mapping for
+                                        the temporary OSM vertices file;
+                                        when specified overrides global 
+                                        memory-mapping-preparation 
+                                        configuration
+  --memory-mapped-osm-tags arg (=on)    option for disabling memory mapping for
+                                        the temporary OSM tags file;
+                                        when specified overrides global 
+                                        memory-mapping-preparation 
+                                        configuration
+
+# ./map_matching_2 --match --help
+Available Options:
+  --help                                show this help, can be combined with an
+                                        application mode for more help
+  --version                             show the version of this software
+  -c [ --config ] arg (=options.conf)   configuration file, can contain 
+                                        settings for all options;
+                                        explicitly specified command line 
+                                        options override configuration file 
+                                        settings;
+                                        if explicitly specified, file needs to 
+                                        exist
+  --verbose                             show more output during operation
+  --quiet                               silent mode, deactivates any output, 
+                                        overrides verbose
+
+Application Modes:
+  --prepare                             prepare mode for importing and 
+                                        converting network data into the 
+                                        application specific network format; 
+                                        usually, this mode needs to be run 
+                                        first at once, since all other modes 
+                                        need the resulting binary files from 
+                                        this mode.
+  --match                               map matching mode for command line 
+                                        operation for fitting GNSS tracks to 
+                                        the prepared road network.
+  --server                              map matching server mode for running 
+                                        the map matching interface as a HTTP 
+                                        web service.
+                                        (NOT YET IMPLEMENTED)
+  --compare                             compare mode for computing the 
+                                        accuracy, similarities, and differences
+                                        from two different map matching runs;
+                                        a typical use case is evaluating map 
+                                        matching results against given ground 
+                                        truth routes.
+
+Console Options:
+  --read-line                           read-line mode, read WKT track from 
+                                        console input, overrides track input 
+                                        files
+  --console                             console output mode, write WKT match 
+                                        result to console, overrides output 
+                                        files and enables quiet mode for log 
+                                        messages
+
+Performance Options:
+  --threads arg (=128)                  threads that are used for parallel 
+                                        (i.e., multi-threading) matching or 
+                                        comparing;
+                                        set to 1 for disabling multi-threading,
+                                        by default uses the available system 
+                                        threads
+
+Input Options:
+  -i [ --input ] arg                    input folder with the prepared network 
+                                        data binary files
+
+Spatial Reference System Options:
+  --network-srs arg (=4326)             spatial reference system (srs) as EPSG 
+                                        code, default is WGS84 (EPSG 4326)
+  --network-srs-type arg                srs type, can be set to 'geographic', 
+                                        'spherical-equatorial', or 'cartesian';
+                                        by default automatically detects 
+                                        'geographic' for srs with latitude and 
+                                        longitude
+                                        and 'cartesian' for srs with x and y 
+                                        coordinates;
+                                        'spherical-equatorial' can be set for 
+                                        coordinates in latitude and longitude 
+                                        for faster
+                                        but less accurate length and angle 
+                                        calculations (using haversine) than 
+                                        'geographic'
+
+Files Options:
+  --graph-file arg (=graph.bin)         memory mapped or binary persistent 
+                                        graph file
+  --tags-file arg (=tags.bin)           memory mapped or binary persistent tags
+                                        file
+  --index-file arg (=index.bin)         memory mapped or binary persistent 
+                                        index file
+
+Memory Options:
+  --memory-mapping arg (=on)            this tool uses memory-mapped files for 
+                                        graph, index, and OSM import storage by
+                                        default, by disabling memory-mapping, 
+                                        the data can be processed completely in
+                                        the main memory (RAM), in this case 
+                                        binary files consisting of memory dumps
+                                        of the graph and indices are used, 
+                                        during the memory mapped preparation, 
+                                        some files are only temporary and 
+                                        discarded after;
+                                        the later steps of this tool suite need
+                                        to have the same memory-mode 
+                                        configuration
+                                        for example, non-memory-mapped graph 
+                                        and indices files cannot be used in 
+                                        memory-mapped mode;
+                                        starting up from a memory dump is 
+                                        slower than starting up from 
+                                        memory-mapped files, but processing 
+                                        speed is faster with in-memory 
+                                        configuration compared to memory-mapped
+                                        files;
+                                        we recommend using memory-mapped files,
+                                        especially when the underlying storage 
+                                        is of SSD or NVMe type, because the 
+                                        main memory usage grows very large when
+                                        using in-memory configuration
+  --memory-mapped-graph arg (=on)       option for disabling memory mapping for
+                                        the final graph;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+  --memory-mapped-indices arg (=on)     option for disabling memory mapping for
+                                        the final indices;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+  --memory-mapped-tags arg (=on)        option for disabling memory mapping for
+                                        the final tags;
+                                        when specified overrides global 
+                                        memory-mapping configuration
+
+Output Options:
+  -o [ --output ] arg                   output folder for the application 
+                                        results
+  -f [ --filename ] arg (=matches.csv)  output filename in the output folder 
+                                        for the application results
+
+Match Output Options:
+  --columns arg (=id,duration,track,prepared,match,track_length,prepared_length,match_length,edge_ids)
+                                        output columns in order for the 
+                                        application results, separated by 
+                                        comma;
+                                          id: id of the track, aggregated in 
+                                          case of multiple ids were specified
+                                          duration: matching duration in 
+                                          seconds
+                                          track: original track as it was 
+                                          imported as WKT
+                                          prepared: prepared track as WKT after
+                                          track sanitation, i.e., remove 
+                                          duplicates, median-merge
+                                          match: map matching result as WKT
+                                          track_length: track length in meter
+                                          prepared_length: prepared track 
+                                          length in meter
+                                          match_length: match length in meter
+                                          edge_ids: list of original edge IDs
+  --export-edges arg (=off)             export matched routes based on the 
+                                        complete network edges instead of the 
+                                        actual parts, this is only useful if 
+                                        the routes are later compared to 
+                                        matches that come from a list of edge 
+                                        IDs, it returns routes with parts in 
+                                        the beginning and ending of the track, 
+                                        and at turns, that have no equivalent 
+                                        part in the track, however, the 
+                                        resulting routes overlap the network 
+                                        edges perfectly since they do not 
+                                        start, end, and turn within the edges 
+                                        at new points matching the track
+  --join-merges arg (=on)               by default, the routes between 
+                                        candidates are concatenated, this 
+                                        parameter removes additional joint 
+                                        points when possible, so all joint 
+                                        points are removed except when reverse 
+                                        movements within an edge happen
+
+Tracks Options:
+  --tracks arg                          path to track(s) file;
+                                        can be specified multiple times for 
+                                        multiple track files
+  --tracks-file-type arg                track file type;
+                                        by default is automatically detected 
+                                        from (the first) filename extension;
+                                        can be manually overridden to the 
+                                        following supported file types:
+                                          "csv"
+                                          "gpx"
+                                          "list" (only for matching)
+                                          "seattle" (only for matching)
+                                        the "list" and "seattle" file types are
+                                        special extensions, they are meant to 
+                                        be specified manually with specific 
+                                        input files, and they only work in 
+                                        matching mode, not in comparison mode;
+                                        the "list" type awaits as input a list 
+                                        of network edge IDs, it then exports 
+                                        the track as WKT, based on the given 
+                                        network, used for route files from Li, 
+                                        Hengfeng (2014), Kubicka, M. et al. 
+                                        (2016), and Ali, M. et al. (2012), 
+                                        automatically resolves gaps, duplicate 
+                                        node ids, and duplicate edge ids, if 
+                                        there are multiple columns, use 
+                                        --delimiter and --id with a number for 
+                                        the edge ID column, --skip-lines is 
+                                        also supported for skipping headers as 
+                                        they are not needed and unsupported
+                                        the "seattle" type is for exporting the
+                                        ground truth route as WKT track from 
+                                        the seattle dataset from Newson and 
+                                        Krumm (2009), the first file is the 
+                                        road network file, the second file the 
+                                        ground truth file, the additional 
+                                        option is because the "seattle" format 
+                                        needs a special handling for the 
+                                        direction
+
+Spatial Reference System Options:
+  --tracks-srs arg (=4326)              spatial reference system (srs) as EPSG 
+                                        code, default is WGS84 (EPSG 4326)
+  --tracks-srs-type arg                 srs type, can be set to 'geographic', 
+                                        'spherical-equatorial', or 'cartesian';
+                                        by default automatically detects 
+                                        'geographic' for srs with latitude and 
+                                        longitude
+                                        and 'cartesian' for srs with x and y 
+                                        coordinates;
+                                        'spherical-equatorial' can be set for 
+                                        coordinates in latitude and longitude 
+                                        for faster
+                                        but less accurate length and angle 
+                                        calculations (using haversine) than 
+                                        'geographic'
+
+Spatial Reference System Reprojection Options:
+  --tracks-transform-srs arg            transform spatial reference system 
+                                        (srs) as EPSG code;
+                                        when defined, data is transformed to 
+                                        given srs;
+                                        use EPSG code 3857 as recommendation 
+                                        for cartesian WGS84 Pseudo-Mercator 
+                                        projected coordinate system
+  --tracks-transform-srs-type arg       transform srs type, can be set to 
+                                        'geographic', 'spherical-equatorial', 
+                                        or 'cartesian';
+                                        by default automatically detects type, 
+                                        see '--srs-type' for details
+
+CSV Options:
   --delimiter arg (=,)                  delimiter for .csv tracks file, only 
                                         for import, export always uses ',' 
-                                        (because csv is 'comma' separated)
+                                        (because csv means 'comma' separated);
+                                        for tabulator you can also use '\t', 
+                                        and for space '\s', they are replaced 
+                                        with the true characters before being 
+                                        applied
+  --grouped arg (=yes)                  whether the .csv file is grouped by id,
+                                        which is beneficial in coordinates read
+                                        mode (non-WKT mode) for faster parsing 
+                                        of tracks with reduced memory 
+                                        footprint; grouped means that the id 
+                                        column is sorted in such a way that all
+                                        rows with the same id are put together,
+                                        not mixed or interrupted by rows with 
+                                        different ids; in case grouped is 
+                                        disabled, the whole .csv file needs to 
+                                        be parsed and grouped by id before the 
+                                        matching starts; this setting is 
+                                        ignored in WKT read mode
   --skip-lines arg (=0)                 skip specified number of lines at the 
                                         head of the tracks .csv file, works 
                                         also in combination with no-header, 
@@ -115,17 +770,24 @@ Track Options:
   --no-header                           csv has no header, column 
                                         specifications are interpreted as 
                                         indices of columns
-  --no-id                               csv has no id column, in this case, an 
-                                        id of 0 is used and all points are 
-                                        asumed to be one track, except when WKT
-                                        read mode and linestrings are given, 
-                                        then the row index is used as id
-  --id arg (=id)                        id column of tracks .csv file, can be 
-                                        specified multiple times for composite 
-                                        primary keys over multiple columns, 
-                                        internally, the id-aggregator field is 
-                                        then used for concatenation of the 
-                                        values
+  --no-id                               csv has no id column, in this case, the
+                                        id is an incrementing integer starting 
+                                        from 0, see also --no-id-whole-file 
+                                        setting
+  --no-id-whole-file                    when active, the whole file, i.e., all 
+                                        rows get the same id, when disabled 
+                                        (default), the id is incremented with 
+                                        each row of data; use this setting with
+                                        x,y coordinate points when --no-id is 
+                                        specified so that the whole file 
+                                        becomes one track, i.e., combine all 
+                                        points or the whole file into one track
+  --id arg (=id)                        id column(s) of tracks .csv file, can 
+                                        be specified multiple times for 
+                                        composite primary keys over multiple 
+                                        columns, internally, the id-aggregator 
+                                        field is then used for concatenation of
+                                        the values
   --id-aggregator arg (=_)              used for aggregating the values of 
                                         composite primary keys, see id
   --wkt                                 use WKT read mode for .csv tracks file 
@@ -143,172 +805,72 @@ Track Options:
                                         appearance, in LINESTRING mode, 
                                         timestamp is just an incremented value 
                                         for each point
-  --time arg (=time)                    time column of tracks .csv file, is 
+  --selector arg                        track selector for matching a specific 
+                                        track from the tracks file, can be 
+                                        specified multiple times
+
+CSV/GPX Time Options:
+  --time arg (=time)                    time column(s) of tracks .csv file, is 
                                         optional if no such column exists, for 
                                         example in WKT LINESTRING read mode, 
-                                        currently, the time column is only used
-                                        for sorting points while reading tracks
-                                        .csv file
+                                        currently, the time column(s) are only 
+                                        used for sorting points while reading 
+                                        tracks .csv file, is ignored for .gpx 
+                                        files; can be specified multiple times 
+                                        similarly as --id, the time columns are
+                                        first aggregated by --time--aggregator 
+                                        and then parsed by the --time-format, 
+                                        so the aggregator must be part of the 
+                                        format, if multiple time columns exist
+  --time-aggregator arg (=_)            used for aggregating the values of 
+                                        composite time keys, see time
   --time-format arg (=%FT%T%Oz)         time format for parsing the time value 
                                         in the time column into unix timestamp 
                                         format, please review 
                                         std::chrono::parse documentation for 
                                         syntax, default reads ISO 8601 date and
                                         time with time zone
-  --no-parse-time                       do not parse time, is needed when the 
-                                        time is given in seconds only
-  --selector arg                        track selector for matching a specific 
-                                        track from the tracks file, can be 
-                                        specified multiple times
+  --no-parse-time                       do not parse time, for example when the
+                                        time is already in unix timestamp 
+                                        format (seconds), or when the time is 
+                                        not parsable at all (in this case, 
+                                        increments 1 per second starting from 
+                                        0), or with .gpx files with invalid 
+                                        time attribute
 
-Output Options:
-  --output arg                          path to .csv output file for matched 
-                                        results
-  --export-edges arg (=off)             export matched routes based on original
-                                        edges from the network graph, this 
-                                        gives route segments that are exactly 
-                                        comparable to the underlying road 
-                                        network
-  --join-merges arg (=on)               by default or when export-edges is off,
-                                        the routes between candidates are 
-                                        concatenated, this parameter removes 
-                                        additional joint points when possible, 
-                                        so all joint points are removed except 
-                                        when reverse movements within an edge 
-                                        happen
-  --console                             output WKT to console
+Export Options:
+  --candidates arg                      export candidates to the given 
+                                        filename, if no filename is given, no 
+                                        candidates are exported;
+                                        filename is appended to output folder
+  --candidates-columns arg (=id,part_index,set_index,candidate_index,projection,distance,from,to,edge_id,is_result)
+                                        output columns in order for the 
+                                        candidate exports, separated by comma;
+                                          id: id of the track, aggregated in 
+                                          case of multiple ids were specified
+                                          part_index: index of the track part 
+                                          (i.e., for multi-line tracks)
+                                          set_index: index of the candidate set
+                                          candidate_index: index of the 
+                                          candidate within a candidate set
+                                          projection: candidate projection from
+                                          track point to road network point
+                                          distance: distance in meter
+                                          from: route from start of the road 
+                                          network edge to the candidate point 
+                                          as WKT
+                                          to: route from the candidate point to
+                                          the end of the road network edge as 
+                                          WKT
+                                          edge_id: original edge ID the 
+                                          candidate lies on
+                                          is_result: true if this candidate is 
+                                          part of the resulting match
 
-Compare Options:
-  --compare-only                        disables map-matching, uses tracks only
-                                        for comparing with given ground truth 
-                                        matches, you can for example input 
-                                        pre-matched tracks for comparing them 
-                                        to given ground truth matches
-  --no-compare                          disables comparison completely
-  --compare-edges-list-mode             in this mode, compare is no .csv file 
-                                        but a file that contains a list of 
-                                        edges that form the ground truth route,
-                                        in this case, the number of the edge is
-                                        the id of the edge in the network 
-                                        graph, also the network-srs and 
-                                        network-transform-srs as well as the 
-                                        corresponding types are used, used for 
-                                        Kubicka et al. paper
-  --seattle-ground-truth-mode           special mode for the ground truth route
-                                        file from the Seattle dataset from 
-                                        Newson-Krumm paper
-  --compare arg                         path to compare file for ground truth 
-                                        matches for statistics on results; can 
-                                        be specified multiple times for 
-                                        multiple files but all files need the 
-                                        same format per file type
-  --compare-file-type arg               compare file type; by default is 
-                                        automatically detected from filename 
-                                        extension; falls back to .csv 
-                                        automatically if no other supported 
-                                        extension is detected; see remaining 
-                                        options for processing possibilities; 
-                                        can be manually overridden to supported
-                                        file types:
-                                        ".csv"
-                                        ".gpx"
-  --compare-srs arg (=+proj=longlat +datum=WGS84 +no_defs)
-                                        compare spatial reference system (srs) 
-                                        as PROJ string, default is WGS84
-  --compare-srs-type arg                compare srs type, can be set to 
-                                        'geographic' or 'cartesian'; by default
-                                        automatically detects type depending on
-                                        set srs
-  --compare-transform-srs arg           compare transform spatial reference 
-                                        system (srs) as PROJ string; when 
-                                        defined, compare tracks are transformed
-                                        to given srs
-  --compare-transform-srs-type arg      compare transform srs type, can be set 
-                                        to 'geographic' or 'cartesian'; by 
-                                        default automatically detects type 
-                                        depending on set transform srs
-  --compare-output arg                  path to .csv compare output file for 
-                                        results of comparison, in compare-only 
-                                        mode, this is filled from output 
-                                        parameter if not specified
-  --compare-delimiter arg (=,)          see delimiter for tracks .csv
-  --compare-skip-lines arg (=0)         see skip-lines for tracks .csv, works 
-                                        also with compare-edges-list-mode
-  --compare-no-header                   see no-header for tracks .csv
-  --compare-no-id                       see no-id for tracks .csv
-  --compare-id arg (=id)                see id for tracks .csv
-  --compare-id-aggregator arg (=_)      see id-aggregator for tracks .csv
-  --compare-wkt                         see wkt for tracks .csv
-  --compare-x arg (=x)                  see x for tracks .csv
-  --compare-y arg (=y)                  see y for tracks .csv
-  --compare-geometry arg (=geometry)    see geometry for tracks .csv
-  --compare-simplify-distance-tolerance arg (=0.1)
-                                        compare simplify distance tolerance in 
-                                        meters around comparison lines for 
-                                        Douglas-Peucker algorithm
-  --compare-simplify-reverse-tolerance arg (=0.1)
-                                        compare reverse detection azimuth 
-                                        tolerance in degrees for splitting 
-                                        simplifications
-  --compare-adoption-distance-tolerance arg (=0.1)
-                                        compare adoption distance tolerance in 
-                                        meters around a point for merging close
-                                        points to remove tiny differences
-  --compare-split-distance-tolerance arg (=1.0)
-                                        compare split distance tolerance in 
-                                        meters for splitting lines at closest 
-                                        points between lines
-  --compare-split-direction-tolerance arg (=90.0)
-                                        compare split direction tolerance in 
-                                        degrees for allowing only splits at 
-                                        points that have no more direction 
-                                        change degrees than specified
-
-Network Export Options:
-  --network-save arg                    saves network in serialized form in 
-                                        binary file, works together with 
-                                        network-load
-  --export-candidates arg               export candidates to the folder given, 
-                                        if no folder is given, no candidates 
-                                        are exported
-  --network-output arg                  output final network to .osm.pbf file 
-                                        for faster reimport on next run
-  --export-network arg                  apply two times for exporting nodes.csv
-                                        and edges.csv of network graph
-  --export-simplified-network arg       apply two times for exporting nodes.csv
-                                        and edges.csv of simplified network 
-                                        graph
-  --export-retained-network arg         apply two times for exporting nodes.csv
-                                        and edges.csv of retained network graph
-                                        after removal of weakly unconnected 
-                                        components
-  --export-transformed-network arg      apply two times for exporting nodes.csv
-                                        and edges.csv of transformed network 
-                                        graph
-
-Console Options:
-  --readline                            read WKT track from console input
-  --quiet                               do not output anything except if 
-                                        console output is activated, 
-                                        deactivates verbose
-  --verbose                             show more output during matching
-
-Performance Options:
-  --single-threading                    disable multi-threading and use a 
-                                        single thread for all map matching 
-                                        algorithms, multi-threading is enabled 
-                                        by default, which allows to map match 
-                                        multiple tracks simultaneously
-
-Track Preparation Options:
+Matching Options:
   --filter-duplicates arg (=on)         filter duplicate (adjacent spatially 
                                         equal) points in tracks before 
                                         matching, is recommended
-  --filter-defects arg (=off)           filter defects in tracks before 
-                                        matching, currently removes zig-zag 
-                                        curves manually, not recommended, 
-                                        better use simplify-track which is on 
-                                        by default
   --simplify-track arg (=on)            simplify track with Douglas-Peucker 
                                         algorithm
   --simplify-track-distance-tolerance arg (=5.0)
@@ -347,6 +909,14 @@ Track Preparation Options:
                                         correctness of the results as no larger
                                         detours are taken that could not be 
                                         collapsed without candidate-adoption
+  --routing-max-distance-factor arg (=5.0)
+                                        max distance factor for upper bound for
+                                        routing algorithm, removes all nodes 
+                                        from routing that are too far away from
+                                        the search area between a start and end
+                                        node, dramatically reduces routing 
+                                        duration in networks significantly 
+                                        larger than the given track
   --candidate-adoption-siblings arg (=on)
                                         for each measurement, adopt candidates 
                                         from preceding and succeeding 
@@ -379,23 +949,23 @@ Track Preparation Options:
   --candidate-search arg (=combined)    candidate search algorithm to use, 
                                         possible options:
                                         "circle"
-                                        searches for all edges around a point 
-                                        intersecting a circle with at least 
-                                        given radius
+                                          searches for all edges around a point
+                                          intersecting a circle with at least 
+                                          given radius
                                         "nearest"
-                                        searches the k-nearest edges around a 
-                                        point
+                                          searches the k-nearest edges around a
+                                          point
                                         "combined"
-                                        searches with a combination of 
-                                        k-nearest and circle, so that only the 
-                                        k-nearest points within the circle 
-                                        radius are retained
+                                          searches with a combination of 
+                                          k-nearest and circle, so that only 
+                                          the k-nearest points within the 
+                                          circle radius are retained
                                         "next"
-                                        searches only the next nearest edge 
-                                        (within the nearest and adjacent as 
-                                        well as reversed edges), very fast but 
-                                        often inaccurate except for high 
-                                        precision tracks
+                                          searches only the next nearest edge 
+                                          (within the nearest and adjacent as 
+                                          well as reversed edges),
+                                          very fast but often inaccurate except
+                                          for high precision tracks
   --radius arg (=200.0)                 radius in meters for candidate search 
                                         when circle or combined algorithm is 
                                         selected, is automatically doubled each
@@ -431,17 +1001,17 @@ Track Preparation Options:
 Model Options:
   --model arg (=value-iteration)        model to use, possible options:
                                         "policy-iteration"
-                                        uses policy iteration algorithm with 
-                                        markov decision process
+                                          uses policy iteration algorithm with 
+                                          markov decision process
                                         "value-iteration"
-                                        uses value iteration algorithm with 
-                                        markov decision process
+                                          uses value iteration algorithm with 
+                                          markov decision process
                                         "q-learning"
-                                        uses Q-learning algorithm with markov 
-                                        decision process
+                                          uses Q-learning algorithm with markov
+                                          decision process
                                         "viterbi"
-                                        uses Viterbi algorithm with hidden 
-                                        markov model
+                                          uses Viterbi algorithm with hidden 
+                                          markov model
   --skip-errors arg (=on)               enable skipping high error situations 
                                         in markov decision processes, leads to 
                                         gaps in the exported track, but this is
@@ -468,7 +1038,7 @@ Model Options:
                                         state, defaults to 0.99 for making sure
                                         that loops eventually unroll
 
-Markov-Decision-Process Options:
+MDP Weight Options:
   --mdp-distance-factor arg (=0.8)      distance factor for rewarding distances
                                         between measurement point and candidate
                                         position
@@ -484,7 +1054,7 @@ Markov-Decision-Process Options:
                                         differences between track segments and 
                                         routes in network
 
-Hidden-Markov-Model Options:
+HMM Weight Options:
   --hmm-distance-factor arg (=0.8)      distance factor for probability of 
                                         distances between measurement point and
                                         candidate position
@@ -506,7 +1076,7 @@ Dynamic Programming Options:
                                         previous round improvement was below 
                                         the given threshold
 
-Q-Learning Options:
+Learning Options:
   --learning-rate arg (=0.9)            learning rate for q-learning, only 
                                         applies if q-learning model is 
                                         selected, higher learning-rate means 
@@ -569,4 +1139,466 @@ Q-Learning Options:
                                         calculated from the found candidates, 
                                         the more possible candidates, the 
                                         longer the training
+
+# ./map_matching_2 --compare --help
+Available Options:
+  --help                                show this help, can be combined with an
+                                        application mode for more help
+  --version                             show the version of this software
+  -c [ --config ] arg (=options.conf)   configuration file, can contain 
+                                        settings for all options;
+                                        explicitly specified command line 
+                                        options override configuration file 
+                                        settings;
+                                        if explicitly specified, file needs to 
+                                        exist
+  --verbose                             show more output during operation
+  --quiet                               silent mode, deactivates any output, 
+                                        overrides verbose
+
+Application Modes:
+  --prepare                             prepare mode for importing and 
+                                        converting network data into the 
+                                        application specific network format; 
+                                        usually, this mode needs to be run 
+                                        first at once, since all other modes 
+                                        need the resulting binary files from 
+                                        this mode.
+  --match                               map matching mode for command line 
+                                        operation for fitting GNSS tracks to 
+                                        the prepared road network.
+  --server                              map matching server mode for running 
+                                        the map matching interface as a HTTP 
+                                        web service.
+                                        (NOT YET IMPLEMENTED)
+  --compare                             compare mode for computing the 
+                                        accuracy, similarities, and differences
+                                        from two different map matching runs;
+                                        a typical use case is evaluating map 
+                                        matching results against given ground 
+                                        truth routes.
+
+Console Options:
+  --read-line                           read-line mode, read WKT track from 
+                                        console input, overrides track input 
+                                        files
+  --console                             console output mode, write WKT match 
+                                        result to console, overrides output 
+                                        files and enables quiet mode for log 
+                                        messages
+
+Performance Options:
+  --threads arg (=128)                  threads that are used for parallel 
+                                        (i.e., multi-threading) matching or 
+                                        comparing;
+                                        set to 1 for disabling multi-threading,
+                                        by default uses the available system 
+                                        threads
+
+Output Options:
+  -o [ --output ] arg                   output folder for the application 
+                                        results
+  -f [ --filename ] arg (=comparison.csv)
+                                        output filename in the output folder 
+                                        for the application results
+
+Comparison Output Options:
+  --columns arg (=id,duration,match,ground_truth,match_length,ground_truth_length,correct_fraction,error_fraction,correct,error_added,error_missed,corrects,error_adds,error_misses)
+                                        output columns in order for the 
+                                        application results, separated by 
+                                        comma;
+                                          id: id of the track, aggregated in 
+                                          case of multiple ids were specified
+                                          duration: matching duration in 
+                                          seconds
+                                          match: map matching result as WKT
+                                          ground_truth: ground truth route as 
+                                          WKT
+                                          match_length: match length in meter
+                                          ground_truth_length: ground truth 
+                                          length in meter
+                                          correct_fraction: fraction of 
+                                          correctly matched line parts as 
+                                          percentage
+                                          error_fraction: error fraction after 
+                                          formula from Newson-Krumm paper
+                                          correct: correct matching length in 
+                                          meter
+                                          error_added: erroneously added match 
+                                          parts length not present in ground 
+                                          truth in meter
+                                          error_missed: erroneously missed 
+                                          ground truth parts length not present
+                                          in match in meter
+                                          corrects: correct overlapping 
+                                          segments as WKT
+                                          error_adds: erroneously added 
+                                          segments from match not present in 
+                                          ground truth as WKT
+                                          error_misses: erroneously missed 
+                                          segments from ground truth not 
+                                          present in mach as WKT
+
+Tracks Options:
+  --match-tracks arg                    path to track(s) file;
+                                        can be specified multiple times for 
+                                        multiple track files
+  --match-tracks-file-type arg          track file type;
+                                        by default is automatically detected 
+                                        from (the first) filename extension;
+                                        can be manually overridden to the 
+                                        following supported file types:
+                                          "csv"
+                                          "gpx"
+                                          "list" (only for matching)
+                                          "seattle" (only for matching)
+                                        the "list" and "seattle" file types are
+                                        special extensions, they are meant to 
+                                        be specified manually with specific 
+                                        input files, and they only work in 
+                                        matching mode, not in comparison mode;
+                                        the "list" type awaits as input a list 
+                                        of network edge IDs, it then exports 
+                                        the track as WKT, based on the given 
+                                        network, used for route files from Li, 
+                                        Hengfeng (2014), Kubicka, M. et al. 
+                                        (2016), and Ali, M. et al. (2012), 
+                                        automatically resolves gaps, duplicate 
+                                        node ids, and duplicate edge ids, if 
+                                        there are multiple columns, use 
+                                        --delimiter and --id with a number for 
+                                        the edge ID column, --skip-lines is 
+                                        also supported for skipping headers as 
+                                        they are not needed and unsupported
+                                        the "seattle" type is for exporting the
+                                        ground truth route as WKT track from 
+                                        the seattle dataset from Newson and 
+                                        Krumm (2009), the first file is the 
+                                        road network file, the second file the 
+                                        ground truth file, the additional 
+                                        option is because the "seattle" format 
+                                        needs a special handling for the 
+                                        direction
+
+Spatial Reference System Options:
+  --match-srs arg (=4326)               spatial reference system (srs) as EPSG 
+                                        code, default is WGS84 (EPSG 4326)
+  --match-srs-type arg                  srs type, can be set to 'geographic', 
+                                        'spherical-equatorial', or 'cartesian';
+                                        by default automatically detects 
+                                        'geographic' for srs with latitude and 
+                                        longitude
+                                        and 'cartesian' for srs with x and y 
+                                        coordinates;
+                                        'spherical-equatorial' can be set for 
+                                        coordinates in latitude and longitude 
+                                        for faster
+                                        but less accurate length and angle 
+                                        calculations (using haversine) than 
+                                        'geographic'
+
+Spatial Reference System Reprojection Options:
+  --match-transform-srs arg             transform spatial reference system 
+                                        (srs) as EPSG code;
+                                        when defined, data is transformed to 
+                                        given srs;
+                                        use EPSG code 3857 as recommendation 
+                                        for cartesian WGS84 Pseudo-Mercator 
+                                        projected coordinate system
+  --match-transform-srs-type arg        transform srs type, can be set to 
+                                        'geographic', 'spherical-equatorial', 
+                                        or 'cartesian';
+                                        by default automatically detects type, 
+                                        see '--srs-type' for details
+
+CSV Options:
+  --match-delimiter arg (=,)            delimiter for .csv tracks file, only 
+                                        for import, export always uses ',' 
+                                        (because csv means 'comma' separated);
+                                        for tabulator you can also use '\t', 
+                                        and for space '\s', they are replaced 
+                                        with the true characters before being 
+                                        applied
+  --match-grouped arg (=yes)            whether the .csv file is grouped by id,
+                                        which is beneficial in coordinates read
+                                        mode (non-WKT mode) for faster parsing 
+                                        of tracks with reduced memory 
+                                        footprint; grouped means that the id 
+                                        column is sorted in such a way that all
+                                        rows with the same id are put together,
+                                        not mixed or interrupted by rows with 
+                                        different ids; in case grouped is 
+                                        disabled, the whole .csv file needs to 
+                                        be parsed and grouped by id before the 
+                                        matching starts; this setting is 
+                                        ignored in WKT read mode
+  --match-skip-lines arg (=0)           skip specified number of lines at the 
+                                        head of the tracks .csv file, works 
+                                        also in combination with no-header, 
+                                        e.g., set to 1 with no-header to skip 
+                                        an existing header to use number 
+                                        indices for columns instead
+  --match-no-header                     csv has no header, column 
+                                        specifications are interpreted as 
+                                        indices of columns
+  --match-no-id                         csv has no id column, in this case, the
+                                        id is an incrementing integer starting 
+                                        from 0, see also --no-id-whole-file 
+                                        setting
+  --match-no-id-whole-file              when active, the whole file, i.e., all 
+                                        rows get the same id, when disabled 
+                                        (default), the id is incremented with 
+                                        each row of data; use this setting with
+                                        x,y coordinate points when --no-id is 
+                                        specified so that the whole file 
+                                        becomes one track, i.e., combine all 
+                                        points or the whole file into one track
+  --match-id arg (=id)                  id column(s) of tracks .csv file, can 
+                                        be specified multiple times for 
+                                        composite primary keys over multiple 
+                                        columns, internally, the id-aggregator 
+                                        field is then used for concatenation of
+                                        the values
+  --match-id-aggregator arg (=_)        used for aggregating the values of 
+                                        composite primary keys, see id
+  --match-wkt                           use WKT read mode for .csv tracks file 
+                                        instead of default x,y coordinates read
+                                        mode
+  --match-x arg (=x)                    x column (or longitude) of tracks .csv 
+                                        file in coordinates read mode
+  --match-y arg (=y)                    y column (or latitude) of tracks .csv 
+                                        file in coordinates read mode
+  --match-geometry arg (=geometry)      geometry column of tracks .csv file in 
+                                        WKT read mode can either be of type 
+                                        POINT or LINESTRING, in POINT mode, 
+                                        points are sorted ascending by time 
+                                        column, if available, else by 
+                                        appearance, in LINESTRING mode, 
+                                        timestamp is just an incremented value 
+                                        for each point
+  --match-selector arg                  track selector for matching a specific 
+                                        track from the tracks file, can be 
+                                        specified multiple times
+
+CSV/GPX Time Options:
+  --match-time arg (=time)              time column(s) of tracks .csv file, is 
+                                        optional if no such column exists, for 
+                                        example in WKT LINESTRING read mode, 
+                                        currently, the time column(s) are only 
+                                        used for sorting points while reading 
+                                        tracks .csv file, is ignored for .gpx 
+                                        files; can be specified multiple times 
+                                        similarly as --id, the time columns are
+                                        first aggregated by --time--aggregator 
+                                        and then parsed by the --time-format, 
+                                        so the aggregator must be part of the 
+                                        format, if multiple time columns exist
+  --match-time-aggregator arg (=_)      used for aggregating the values of 
+                                        composite time keys, see time
+  --match-time-format arg (=%FT%T%Oz)   time format for parsing the time value 
+                                        in the time column into unix timestamp 
+                                        format, please review 
+                                        std::chrono::parse documentation for 
+                                        syntax, default reads ISO 8601 date and
+                                        time with time zone
+  --match-no-parse-time                 do not parse time, for example when the
+                                        time is already in unix timestamp 
+                                        format (seconds), or when the time is 
+                                        not parsable at all (in this case, 
+                                        increments 1 per second starting from 
+                                        0), or with .gpx files with invalid 
+                                        time attribute
+
+Tracks Options:
+  --compare-tracks arg                  path to track(s) file;
+                                        can be specified multiple times for 
+                                        multiple track files
+  --compare-tracks-file-type arg        track file type;
+                                        by default is automatically detected 
+                                        from (the first) filename extension;
+                                        can be manually overridden to the 
+                                        following supported file types:
+                                          "csv"
+                                          "gpx"
+                                          "list" (only for matching)
+                                          "seattle" (only for matching)
+                                        the "list" and "seattle" file types are
+                                        special extensions, they are meant to 
+                                        be specified manually with specific 
+                                        input files, and they only work in 
+                                        matching mode, not in comparison mode;
+                                        the "list" type awaits as input a list 
+                                        of network edge IDs, it then exports 
+                                        the track as WKT, based on the given 
+                                        network, used for route files from Li, 
+                                        Hengfeng (2014), Kubicka, M. et al. 
+                                        (2016), and Ali, M. et al. (2012), 
+                                        automatically resolves gaps, duplicate 
+                                        node ids, and duplicate edge ids, if 
+                                        there are multiple columns, use 
+                                        --delimiter and --id with a number for 
+                                        the edge ID column, --skip-lines is 
+                                        also supported for skipping headers as 
+                                        they are not needed and unsupported
+                                        the "seattle" type is for exporting the
+                                        ground truth route as WKT track from 
+                                        the seattle dataset from Newson and 
+                                        Krumm (2009), the first file is the 
+                                        road network file, the second file the 
+                                        ground truth file, the additional 
+                                        option is because the "seattle" format 
+                                        needs a special handling for the 
+                                        direction
+
+Comparison Options:
+  --compare-simplify-distance-tolerance arg (=0.1)
+                                        compare simplify distance tolerance in 
+                                        meters around comparison lines for 
+                                        Douglas-Peucker algorithm
+  --compare-simplify-reverse-tolerance arg (=0.1)
+                                        compare reverse detection azimuth 
+                                        tolerance in degrees for splitting 
+                                        simplifications
+  --compare-adoption-distance-tolerance arg (=0.1)
+                                        compare adoption distance tolerance in 
+                                        meters around a point for merging close
+                                        points to remove tiny differences
+  --compare-split-distance-tolerance arg (=1.0)
+                                        compare split distance tolerance in 
+                                        meters for splitting lines at closest 
+                                        points between lines
+  --compare-split-direction-tolerance arg (=90.0)
+                                        compare split direction tolerance in 
+                                        degrees for allowing only splits at 
+                                        points that have no more direction 
+                                        change degrees than specified
+
+Spatial Reference System Options:
+  --compare-srs arg (=4326)             spatial reference system (srs) as EPSG 
+                                        code, default is WGS84 (EPSG 4326)
+  --compare-srs-type arg                srs type, can be set to 'geographic', 
+                                        'spherical-equatorial', or 'cartesian';
+                                        by default automatically detects 
+                                        'geographic' for srs with latitude and 
+                                        longitude
+                                        and 'cartesian' for srs with x and y 
+                                        coordinates;
+                                        'spherical-equatorial' can be set for 
+                                        coordinates in latitude and longitude 
+                                        for faster
+                                        but less accurate length and angle 
+                                        calculations (using haversine) than 
+                                        'geographic'
+
+Spatial Reference System Reprojection Options:
+  --compare-transform-srs arg           transform spatial reference system 
+                                        (srs) as EPSG code;
+                                        when defined, data is transformed to 
+                                        given srs;
+                                        use EPSG code 3857 as recommendation 
+                                        for cartesian WGS84 Pseudo-Mercator 
+                                        projected coordinate system
+  --compare-transform-srs-type arg      transform srs type, can be set to 
+                                        'geographic', 'spherical-equatorial', 
+                                        or 'cartesian';
+                                        by default automatically detects type, 
+                                        see '--srs-type' for details
+
+CSV Options:
+  --compare-delimiter arg (=,)          delimiter for .csv tracks file, only 
+                                        for import, export always uses ',' 
+                                        (because csv means 'comma' separated);
+                                        for tabulator you can also use '\t', 
+                                        and for space '\s', they are replaced 
+                                        with the true characters before being 
+                                        applied
+  --compare-grouped arg (=yes)          whether the .csv file is grouped by id,
+                                        which is beneficial in coordinates read
+                                        mode (non-WKT mode) for faster parsing 
+                                        of tracks with reduced memory 
+                                        footprint; grouped means that the id 
+                                        column is sorted in such a way that all
+                                        rows with the same id are put together,
+                                        not mixed or interrupted by rows with 
+                                        different ids; in case grouped is 
+                                        disabled, the whole .csv file needs to 
+                                        be parsed and grouped by id before the 
+                                        matching starts; this setting is 
+                                        ignored in WKT read mode
+  --compare-skip-lines arg (=0)         skip specified number of lines at the 
+                                        head of the tracks .csv file, works 
+                                        also in combination with no-header, 
+                                        e.g., set to 1 with no-header to skip 
+                                        an existing header to use number 
+                                        indices for columns instead
+  --compare-no-header                   csv has no header, column 
+                                        specifications are interpreted as 
+                                        indices of columns
+  --compare-no-id                       csv has no id column, in this case, the
+                                        id is an incrementing integer starting 
+                                        from 0, see also --no-id-whole-file 
+                                        setting
+  --compare-no-id-whole-file            when active, the whole file, i.e., all 
+                                        rows get the same id, when disabled 
+                                        (default), the id is incremented with 
+                                        each row of data; use this setting with
+                                        x,y coordinate points when --no-id is 
+                                        specified so that the whole file 
+                                        becomes one track, i.e., combine all 
+                                        points or the whole file into one track
+  --compare-id arg (=id)                id column(s) of tracks .csv file, can 
+                                        be specified multiple times for 
+                                        composite primary keys over multiple 
+                                        columns, internally, the id-aggregator 
+                                        field is then used for concatenation of
+                                        the values
+  --compare-id-aggregator arg (=_)      used for aggregating the values of 
+                                        composite primary keys, see id
+  --compare-wkt                         use WKT read mode for .csv tracks file 
+                                        instead of default x,y coordinates read
+                                        mode
+  --compare-x arg (=x)                  x column (or longitude) of tracks .csv 
+                                        file in coordinates read mode
+  --compare-y arg (=y)                  y column (or latitude) of tracks .csv 
+                                        file in coordinates read mode
+  --compare-geometry arg (=geometry)    geometry column of tracks .csv file in 
+                                        WKT read mode can either be of type 
+                                        POINT or LINESTRING, in POINT mode, 
+                                        points are sorted ascending by time 
+                                        column, if available, else by 
+                                        appearance, in LINESTRING mode, 
+                                        timestamp is just an incremented value 
+                                        for each point
+  --compare-selector arg                track selector for matching a specific 
+                                        track from the tracks file, can be 
+                                        specified multiple times
+
+CSV/GPX Time Options:
+  --compare-time arg (=time)            time column(s) of tracks .csv file, is 
+                                        optional if no such column exists, for 
+                                        example in WKT LINESTRING read mode, 
+                                        currently, the time column(s) are only 
+                                        used for sorting points while reading 
+                                        tracks .csv file, is ignored for .gpx 
+                                        files; can be specified multiple times 
+                                        similarly as --id, the time columns are
+                                        first aggregated by --time--aggregator 
+                                        and then parsed by the --time-format, 
+                                        so the aggregator must be part of the 
+                                        format, if multiple time columns exist
+  --compare-time-aggregator arg (=_)    used for aggregating the values of 
+                                        composite time keys, see time
+  --compare-time-format arg (=%FT%T%Oz) time format for parsing the time value 
+                                        in the time column into unix timestamp 
+                                        format, please review 
+                                        std::chrono::parse documentation for 
+                                        syntax, default reads ISO 8601 date and
+                                        time with time zone
+  --compare-no-parse-time               do not parse time, for example when the
+                                        time is already in unix timestamp 
+                                        format (seconds), or when the time is 
+                                        not parsable at all (in this case, 
+                                        increments 1 per second starting from 
+                                        0), or with .gpx files with invalid 
+                                        time attribute
 

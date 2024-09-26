@@ -6,6 +6,3 @@ cmake-*
 cmake.lock
 data
 run
-tests
-Dockerfile
-README.md

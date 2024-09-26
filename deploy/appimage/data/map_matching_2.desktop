@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=map_matching_2
+Exec=map_matching_2
+Icon=map_matching_2
+Categories=Utility
+Terminal=true

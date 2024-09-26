@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2021 Adrian Wöltche
+// Copyright (C) 2021-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -13,45 +13,59 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#ifndef MAP_MATCHING_2_NETWORK_FIXTURE_HPP
-#define MAP_MATCHING_2_NETWORK_FIXTURE_HPP
+#ifndef MAP_MATCHING_2_TESTS_HELPER_NETWORK_FIXTURE_HPP
+#define MAP_MATCHING_2_TESTS_HELPER_NETWORK_FIXTURE_HPP
 
 #include <vector>
 #include <initializer_list>
 
-#include <absl/container/flat_hash_map.h>
+#include <boost/unordered/unordered_flat_map.hpp>
 
-#include <geometry/types.hpp>
-#include <geometry/network/types.hpp>
+#include "types/geometry/network/network.hpp"
+#include "types/geometry/network/network_import.hpp"
+
+#include "geometry/network/traits/network.hpp"
+
+#include "io/allocator/counting_allocator.hpp"
 
 #include "geometry_helper.hpp"
 
-using network_import_geographic = map_matching_2::geometry::network::types_geographic::internal_network_import;
-using network_import_metric = map_matching_2::geometry::network::types_cartesian::internal_network_import;
+using network_import_geographic = MM2_NETWORK_IMPORT(
+        MM2_GRAPH_HELPER_IMPORT(MM2_GEOGRAPHIC, MM2_MEMORY_TYPES, MM2_TAG_HELPER(MM2_MEMORY_TYPES)));
+using network_import_metric = MM2_NETWORK_IMPORT(
+        MM2_GRAPH_HELPER_IMPORT(MM2_CARTESIAN, MM2_MEMORY_TYPES, MM2_TAG_HELPER(MM2_MEMORY_TYPES)));
 
-using network_geographic = map_matching_2::geometry::network::types_geographic::internal_network;
-using network_metric = map_matching_2::geometry::network::types_cartesian::internal_network;
+using network_geographic = MM2_NETWORK(
+        MM2_GRAPH_HELPER(MM2_GEOGRAPHIC, MM2_MEMORY_TYPES, MM2_TAG_HELPER(MM2_MEMORY_TYPES)),
+        MM2_INDEX_HELPER(MM2_GEOGRAPHIC, MM2_MEMORY_TYPES, MM2_MEMORY_TYPES));
+using network_metric = MM2_NETWORK(
+        MM2_GRAPH_HELPER(MM2_CARTESIAN, MM2_MEMORY_TYPES, MM2_TAG_HELPER(MM2_MEMORY_TYPES)),
+        MM2_INDEX_HELPER(MM2_CARTESIAN, MM2_MEMORY_TYPES, MM2_MEMORY_TYPES));
 
 template<typename Network>
 struct network_fixture {
 
-    using point_type = typename Network::point_type;
-    using line_type = typename Network::line_type;
-    using node_type = typename Network::node_type;
-    using edge_type = typename Network::edge_type;
-    using vertex_descriptor = typename Network::vertex_descriptor;
-    using edge_descriptor = typename Network::edge_descriptor;
+    using point_type = typename map_matching_2::geometry::network::network_traits<Network>::point_type;
+    using line_type = typename map_matching_2::geometry::network::network_traits<Network>::line_type;
+    using rich_line_type = typename map_matching_2::geometry::network::network_traits<Network>::rich_line_type;
+    using node_type = typename map_matching_2::geometry::network::network_traits<Network>::vertex_data_type;
+    using edge_type = typename map_matching_2::geometry::network::network_traits<Network>::edge_data_type;
+    using vertex_descriptor = typename map_matching_2::geometry::network::network_traits<Network>::vertex_descriptor;
+    using edge_descriptor = typename map_matching_2::geometry::network::network_traits<Network>::edge_descriptor;
 
-    absl::flat_hash_map<osmium::object_id_type, vertex_descriptor> nodes_map;
-    absl::flat_hash_map<osmium::object_id_type, edge_descriptor> edges_map;
+    map_matching_2::io::allocator::counting_allocator<std::byte,
+        map_matching_2::io::allocator::allocation_counter> allocator;
 
-    map_matching_2::geometry::network::tag_helper tag_helper;
+    boost::unordered::unordered_flat_map<osmium::object_id_type, vertex_descriptor> nodes_map;
+    boost::unordered::unordered_flat_map<osmium::object_id_type, edge_descriptor> edges_map;
+
+    map_matching_2::io::helper::tag_helper_type<> tag_helper;
 
     node_type create_node(osmium::object_id_type id, point_type point,
-                          std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
-        std::vector<std::uint64_t> tag_ids;
+            std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
+        typename node_type::tags_container_type tag_ids(allocator);
         tag_ids.reserve(tags.size());
-        for (const auto &tag_pair: tags) {
+        for (const auto &tag_pair : tags) {
             tag_ids.emplace_back(tag_helper.id(tag_pair.first, tag_pair.second));
         }
 
@@ -59,31 +73,33 @@ struct network_fixture {
     }
 
     edge_type create_edge(osmium::object_id_type id, const line_type &line,
-                          std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
-        std::vector<std::uint64_t> tag_ids;
+            std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
+        typename edge_type::tags_container_type tag_ids(allocator);
         tag_ids.reserve(tags.size());
-        for (const auto &tag_pair: tags) {
+        for (const auto &tag_pair : tags) {
             tag_ids.emplace_back(tag_helper.id(tag_pair.first, tag_pair.second));
         }
 
-        return edge_type{id, line, std::move(tag_ids)};
+        return edge_type{id, rich_line_type{line}, std::move(tag_ids)};
     }
 
-    vertex_descriptor add_vertex(Network &network, const osmium::object_id_type node_id, const point_type point) {
-        auto node = create_node(node_id, point);
-        auto vertex = network.add_vertex(node);
+    vertex_descriptor add_node(Network &network, const osmium::object_id_type node_id, node_type node) {
+        auto vertex_index = network.graph_helper().add_vertex_with_index_mapping(node);
+        auto vertex = network.graph_helper().get_vertex_descriptor_for_index(vertex_index);
         nodes_map.emplace(node_id, vertex);
         return vertex;
     }
 
-    edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
-                             const std::initializer_list<const std::pair<osmium::object_id_type, osmium::object_id_type>> node_pairs) {
-        using rich_line_type = typename edge_type::rich_line_type;
-        using rich_segment_type = typename rich_line_type::rich_segment_type;
-        using segment_type = typename rich_segment_type::segment_type;
+    vertex_descriptor add_vertex(Network &network, const osmium::object_id_type node_id, const point_type point) {
+        return add_node(network, node_id, create_node(node_id, point));
+    }
 
-        std::vector<rich_segment_type> rich_segments;
-        rich_segments.reserve(node_pairs.size() * 2 - 1);
+
+    edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
+            const std::initializer_list<const std::pair<
+                osmium::object_id_type, osmium::object_id_type>> node_pairs) {
+        line_type line;
+        line.reserve(node_pairs.size() * 2 - 1);
 
         vertex_descriptor start, end;
         for (auto it = node_pairs.begin(); it != node_pairs.end(); ++it) {
@@ -94,7 +110,10 @@ struct network_fixture {
             const auto &node_a = network.vertex(vertex_a);
             const auto &node_b = network.vertex(vertex_b);
 
-            rich_segments.emplace_back(rich_segment_type{segment_type{node_a.point, node_b.point}});
+            if (line.empty()) {
+                line.emplace_back(node_a.point);
+            }
+            line.emplace_back(node_b.point);
 
             if (it == node_pairs.begin()) {
                 start = vertex_a;
@@ -104,14 +123,17 @@ struct network_fixture {
             }
         }
 
-        edge_type edge{edge_id, rich_line_type{std::move(rich_segments)}};
-        auto edge_descriptor = network.add_edge(start, end, edge).first;
+        edge_type edge{edge_id, rich_line_type{std::move(line)}};
+        auto edge_descriptor = network.graph_helper().add_edge(
+                network.graph().vertex_index(start),
+                network.graph().vertex_index(end),
+                std::move(edge));
         edges_map.emplace(edge_id, edge_descriptor);
         return edge_descriptor;
     }
 
     edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
-                             const std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
+            const std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
         return add_edge(network, edge_id, {node_pair});
     }
 
@@ -203,4 +225,4 @@ struct network_fixture {
 
 };
 
-#endif //MAP_MATCHING_2_NETWORK_FIXTURE_HPP
+#endif //MAP_MATCHING_2_TESTS_HELPER_NETWORK_FIXTURE_HPP

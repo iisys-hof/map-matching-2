@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Adrian Wöltche
+// Copyright (C) 2022-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#ifndef MAP_MATCHING_2_GEOMETRY_HELPER_HPP
-#define MAP_MATCHING_2_GEOMETRY_HELPER_HPP
+#ifndef MAP_MATCHING_2_TESTS_HELPER_GEOMETRY_HELPER_HPP
+#define MAP_MATCHING_2_TESTS_HELPER_GEOMETRY_HELPER_HPP
 
 #include <initializer_list>
 
@@ -24,7 +24,7 @@
 template<typename Point, typename Line = boost::geometry::model::linestring<Point>>
 Line add_to_line(Line &line, const std::initializer_list<Point> &points) {
     line.reserve(line.size() + points.size());
-    for (const auto &point: points) {
+    for (const auto &point : points) {
         line.emplace_back(point);
     }
 
@@ -33,7 +33,7 @@ Line add_to_line(Line &line, const std::initializer_list<Point> &points) {
 
 template<typename Point, typename Line = boost::geometry::model::linestring<Point>>
 Line add_to_line(Line &line,
-                 const std::initializer_list<typename boost::geometry::traits::coordinate_type<Point>::type> &coordinates) {
+        const std::initializer_list<typename boost::geometry::traits::coordinate_type<Point>::type> &coordinates) {
     assert(coordinates.size() % 2 == 0);
 
     line.reserve(line.size() + coordinates.size() / 2);
@@ -60,4 +60,4 @@ Line create_line(
     return add_to_line<Point>(line, coordinates);
 }
 
-#endif //MAP_MATCHING_2_GEOMETRY_HELPER_HPP
+#endif //MAP_MATCHING_2_TESTS_HELPER_GEOMETRY_HELPER_HPP

@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2021 Adrian Wöltche
+// Copyright (C) 2021-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -12,8 +12,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
-
-#define BOOST_TEST_DYN_LINK
 
 #include <boost/test/unit_test.hpp>
 
@@ -29,16 +27,15 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
-#define POINTS 100 // crash
+#define POINTS 100 // crashed in Boost until 1.78, fixed in https://github.com/boostorg/geometry/issues/962
 // #define POINTS 200 // works
 
 BOOST_AUTO_TEST_SUITE(serialization_tests)
 
-    BOOST_AUTO_TEST_CASE(rtree_points_serialization)
-    {
+    BOOST_AUTO_TEST_CASE(rtree_points_serialization) {
         using point_type = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
         using rtree_points_type = boost::geometry::index::rtree<
-                std::pair<point_type, std::size_t>, boost::geometry::index::rstar<16>>;
+            std::pair<point_type, std::size_t>, boost::geometry::index::rstar<16>>;
 
         std::vector<std::pair<point_type, std::size_t>> points;
 
@@ -86,12 +83,11 @@ BOOST_AUTO_TEST_SUITE(serialization_tests)
         BOOST_CHECK_EQUAL(points_index.size(), points_index_read.size());
     }
 
-    BOOST_AUTO_TEST_CASE(rtree_segments_serialization)
-    {
+    BOOST_AUTO_TEST_CASE(rtree_segments_serialization) {
         using point_type = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
         using segment_type = boost::geometry::model::segment<point_type>;
         using rtree_segments_type = boost::geometry::index::rtree<
-                std::pair<segment_type, std::size_t>, boost::geometry::index::rstar<16>>;
+            std::pair<segment_type, std::size_t>, boost::geometry::index::rstar<16>>;
 
         std::vector<std::pair<segment_type, std::size_t>> segments;
 

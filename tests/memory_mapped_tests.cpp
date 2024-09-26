@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Adrian Wöltche
+// Copyright (C) 2022-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -13,12 +13,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#define BOOST_TEST_DYN_LINK
-
 #include <boost/test/unit_test.hpp>
 
 #include <boost/interprocess/managed_mapped_file.hpp>
-#include <boost/interprocess/allocators/private_node_allocator.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 
 BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
@@ -30,7 +28,8 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             std::string filename;
 
             mmap_remover(std::string filename) : filename{
-                    std::move(filename)} { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
+                    std::move(filename)
+            } { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
 
             ~mmap_remover() { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
         } remover{filename};
@@ -93,7 +92,8 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             std::string filename;
 
             mmap_remover(std::string filename) : filename{
-                    std::move(filename)} { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
+                    std::move(filename)
+            } { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
 
             ~mmap_remover() { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
         } remover{filename};
@@ -162,7 +162,8 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             std::string filename;
 
             mmap_remover(std::string filename) : filename{
-                    std::move(filename)} { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
+                    std::move(filename)
+            } { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
 
             ~mmap_remover() { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
         } remover{filename};
@@ -170,8 +171,10 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
         using point_type = std::pair<double, double>;
 
         {
-            boost::interprocess::managed_mapped_file file{boost::interprocess::open_or_create, filename.c_str(),
-                                                          100 * 1024};
+            boost::interprocess::managed_mapped_file file{
+                    boost::interprocess::open_or_create, filename.c_str(),
+                    100 * 1024
+            };
 
             BOOST_CHECK_GE(file.get_size(), 0);
             BOOST_CHECK_GE(file.get_free_memory(), 0);
@@ -189,7 +192,7 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             BOOST_CHECK_GE(file.get_free_memory(), 0);
 
             for (std::size_t i = 0; i < received_size; ++i) {
-                data[i] = point_type{i, i * i};
+                data[i] = point_type{static_cast<double>(i), static_cast<double>(i * i)};
             }
 
             BOOST_CHECK_EQUAL(data[received_size - 1].first, received_size - 1);
@@ -207,7 +210,7 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             BOOST_CHECK_GE(file.get_free_memory(), 0);
 
             for (std::size_t i = received_size; i < expanded_size; ++i) {
-                data[i] = point_type{i, i * i};
+                data[i] = point_type{static_cast<double>(i), static_cast<double>(i * i)};
             }
 
             BOOST_CHECK_EQUAL(data[expanded_size - 1].first, expanded_size - 1);
@@ -226,21 +229,24 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             std::string filename;
 
             mmap_remover(std::string filename) : filename{
-                    std::move(filename)} { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
+                    std::move(filename)
+            } { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
 
             ~mmap_remover() { boost::interprocess::file_mapping::remove(this->filename.c_str()); }
         } remover{filename};
 
         using point_type = std::pair<double, double>;
 
-        using allocator_type = boost::interprocess::private_node_allocator<point_type,
-                boost::interprocess::managed_mapped_file::segment_manager>;
+        using allocator_type = boost::interprocess::allocator<point_type,
+            boost::interprocess::managed_mapped_file::segment_manager>;
 
         using vector_type = boost::interprocess::vector<point_type, allocator_type>;
 
         {
-            boost::interprocess::managed_mapped_file file{boost::interprocess::open_or_create, filename.c_str(),
-                                                          100 * 1024};
+            boost::interprocess::managed_mapped_file file{
+                    boost::interprocess::open_or_create, filename.c_str(),
+                    100 * 1024
+            };
 
             allocator_type allocator{file.get_segment_manager()};
 
@@ -252,7 +258,7 @@ BOOST_AUTO_TEST_SUITE(memory_mapped_tests)
             BOOST_CHECK_GE(file.get_free_memory(), 0);
 
             for (std::size_t i = 0; i < 1000; ++i) {
-                vector->emplace_back(point_type{i, i * i});
+                vector->emplace_back(point_type{static_cast<double>(i), static_cast<double>(i * i)});
             }
 
             BOOST_CHECK_EQUAL(vector->size(), 1000);

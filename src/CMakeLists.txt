@@ -1,70 +1,111 @@
-include(GNUInstallDirs)
+option(BUILD_ONLY_LIBRARY "Build only library" OFF)
+cmake_dependent_option(INSTALL_ALL_SHARED_LIBS "Install all shared libraries to install directory" ON "NOT MSVC" OFF)
 
-set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/run" CACHE PATH "install location" FORCE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+message(STATUS "Build only library: ${BUILD_ONLY_LIBRARY}")
+message(STATUS "Install all shared libraries: ${INSTALL_ALL_SHARED_LIBS}")
 
-option(INSTALL_ALL_SHARED_LIBS "Install all shared libraries to install directory" OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_subdirectory(app)
-add_subdirectory(environment)
-add_subdirectory(geometry)
-add_subdirectory(io)
-add_subdirectory(learning)
-add_subdirectory(matching)
-add_subdirectory(util)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+if (MSVC)
+    if (USE_STATIC_MSVC_RUNTIME_LIBRARY)
+        set(Boost_USE_STATIC_RUNTIME ON)
+    endif ()
+endif ()
 
-find_package(Boost REQUIRED COMPONENTS program_options)
+add_subdirectory(library)
 
-add_executable(map_matching_2)
+if (NOT BUILD_ONLY_LIBRARY)
+    include(GNUInstallDirs)
 
-target_sources(map_matching_2
-        PRIVATE
-        main.cpp)
+    if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/run" CACHE PATH "base install dir" FORCE)
 
-target_compile_definitions(map_matching_2
-        PRIVATE
-        BOOST_ALLOW_DEPRECATED_HEADERS)
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            set(COMPILER_SUBDIR "gcc")
+        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            set(COMPILER_SUBDIR "clang")
+        elseif (MSVC)
+            set(COMPILER_SUBDIR "msvc")
+        else ()
+            set(COMPILER_SUBDIR "unknown")
+        endif ()
 
-target_link_libraries(map_matching_2
-        PRIVATE
-        util
-        environment
-        geometry
-        io
-        learning
-        matching
-        app
-        rpmalloc
-        absl::flat_hash_set
-        absl::flat_hash_map
-        Boost::boost
-        Boost::program_options)
+        if (CMAKE_BUILD_TYPE STREQUAL "Release")
+            set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/${COMPILER_SUBDIR}/release" CACHE PATH "release install dir" FORCE)
+        elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/${COMPILER_SUBDIR}/debug" CACHE PATH "debug install dir" FORCE)
+        endif ()
 
-install(TARGETS map_matching_2
-        CONFIGURATIONS Release)
+        message(STATUS "Set default install prefix: ${CMAKE_INSTALL_PREFIX}")
+    else ()
+        message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
+    endif ()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    install(CODE "set(INSTALL_ALL_SHARED_LIBS \"${INSTALL_ALL_SHARED_LIBS}\")")
-    install(CODE "set(CMAKE_INSTALL_RPATH \"${CMAKE_INSTALL_RPATH}\")")
+    add_subdirectory(app)
 
-    install(CODE [[
+    add_executable(map_matching_2)
+
+    target_sources(map_matching_2
+            PRIVATE
+            main.cpp)
+
+    if (ENABLE_RPMALLOC)
+        target_link_libraries(map_matching_2
+                PRIVATE
+                rpmalloc)
+    endif ()
+
+    target_link_libraries(map_matching_2
+            PRIVATE
+            app)
+
+    if (OVERRIDE_RPATH)
+        set_target_properties(
+                map_matching_2
+                PROPERTIES
+                INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+        message(STATUS "Rpath set to: \$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    endif ()
+
     if (INSTALL_ALL_SHARED_LIBS)
         message(STATUS "Install all libraries")
     else ()
         message(STATUS "Install only necessary libraries")
-        set(POST_INCLUDE_REGEXES "^${CMAKE_BINARY_DIR}")
-        set(POST_EXCLUDE_REGEXES ".*")
+        set(_POST_INCLUDE_REGEXES "^${CMAKE_BINARY_DIR}")
+        set(_POST_EXCLUDE_REGEXES ".*")
     endif ()
 
-    file(GET_RUNTIME_DEPENDENCIES
-            RESOLVED_DEPENDENCIES_VAR missing
-            EXECUTABLES "$<TARGET_FILE:map_matching_2>"
-            POST_INCLUDE_REGEXES "${POST_INCLUDE_REGEXES}"
-            POST_EXCLUDE_REGEXES "${POST_EXCLUDE_REGEXES}")
+    if (MSVC)
+        set(_PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-")
+        set(_POST_EXCLUDE_REGEXES ".*system32/.*\\.dll")
+    endif ()
 
-    file(INSTALL ${missing}
-            DESTINATION "${CMAKE_INSTALL_RPATH}"
-            TYPE SHARED_LIBRARY
-            FOLLOW_SYMLINK_CHAIN)
-    ]])
+    install(TARGETS
+            map_matching_2
+            RUNTIME_DEPENDENCIES
+            PRE_EXCLUDE_REGEXES "${_PRE_EXCLUDE_REGEXES}"
+            POST_INCLUDE_REGEXES "${_POST_INCLUDE_REGEXES}"
+            POST_EXCLUDE_REGEXES "${_POST_EXCLUDE_REGEXES}")
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        install(FILES
+                "${PROJECT_SOURCE_DIR}/external/libstdc++/COPYING3"
+                "${PROJECT_SOURCE_DIR}/external/libstdc++/COPYING3.LIB"
+                "${PROJECT_SOURCE_DIR}/external/libstdc++/COPYING.RUNTIME"
+                DESTINATION doc/libstdc++)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        install(FILES
+                "${PROJECT_SOURCE_DIR}/external/libc++/LICENSE.TXT"
+                DESTINATION doc/libc++)
+    elseif (MSVC)
+        install(FILES
+                "${PROJECT_SOURCE_DIR}/external/STL/LICENSE.txt"
+                DESTINATION doc/STL)
+    endif ()
+
+    install(FILES
+            "${PROJECT_SOURCE_DIR}/LICENSE.md"
+            DESTINATION doc/map_matching_2)
 endif ()

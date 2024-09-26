@@ -1,188 +1,72 @@
+# library options
+option(ENABLE_ZLIB "Enable adding library zlib" ON)
+option(ENABLE_BZ2 "Enable adding library bz2" ON)
+option(ENABLE_EXPAT "Enable adding library expat" ON)
+option(ENABLE_PROTOBUF "Enable adding library protobuf" ON)
+option(ENABLE_PROTOZERO "Enable adding library protozero" ON)
+option(ENABLE_DATE "Enable adding library date" ON)
+option(ENABLE_CSV_PARSER "Enable adding library csv-parser" ON)
+option(ENABLE_GPX "Enable adding library gpx" ON)
+option(ENABLE_RPMALLOC "Enable adding library rpmalloc" ON)
+option(ENABLE_BOOST "Enable adding library Boost" ON)
+option(ENABLE_LIBOSMIUM "Enable adding library libosmium" ON)
+
 include(FetchContent)
+message(STATUS "Adding external libraries")
 
-# date
-FetchContent_Declare(date
-        GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-        GIT_TAG v3.0.1)
-
-FetchContent_GetProperties(date)
-if (NOT date_POPULATED)
-    FetchContent_Populate(date)
+if (ENABLE_ZLIB)
+    message(STATUS "Adding library: zlib")
+    include(zlib/CMakeLists.txt)
 endif ()
 
-add_subdirectory("${date_SOURCE_DIR}" "${date_BINARY_DIR}" EXCLUDE_FROM_ALL)
-
-# csv parser
-FetchContent_Declare(csv_parser
-        GIT_REPOSITORY https://github.com/vincentlaucsb/csv-parser.git
-        GIT_TAG 2.1.3)
-
-FetchContent_GetProperties(csv_parser)
-if (NOT csv_parser_POPULATED)
-    FetchContent_Populate(csv_parser)
+if (ENABLE_BZ2)
+    message(STATUS "Adding library: bz2")
+    include(bz2/CMakeLists.txt)
 endif ()
 
-add_subdirectory("${csv_parser_SOURCE_DIR}" "${csv_parser_BINARY_DIR}" EXCLUDE_FROM_ALL)
-set(CSV_PARSER_INCLUDE_DIRS "${csv_parser_SOURCE_DIR}/single_include" CACHE PATH "csv parser include dir" FORCE)
-
-# gpx
-FetchContent_Declare(gpx
-        GIT_REPOSITORY https://github.com/irdvo/gpxlib.git)
-
-FetchContent_GetProperties(gpx)
-if (NOT gpx_POPULATED)
-    FetchContent_Populate(gpx)
+if (ENABLE_EXPAT)
+    message(STATUS "Adding library: expat")
+    include(expat/CMakeLists.txt)
 endif ()
 
-set(BUILD_EXAMPLES OFF CACHE BOOL "do not build gpx examples" FORCE)
-set(BUILD_TESTS OFF CACHE BOOL "do not build gpx tests" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "disable shared libs" FORCE)
-
-# fix for wrong directory in library when using as subdirectory
-FILE(READ "${gpx_SOURCE_DIR}/CMakeLists.txt" gpx_CMAKE_LISTS)
-STRING(REGEX REPLACE "{CMAKE_SOURCE_DIR}" "{CMAKE_CURRENT_SOURCE_DIR}" gpx_CMAKE_LISTS_MOD "${gpx_CMAKE_LISTS}")
-STRING(REGEX REPLACE "{CMAKE_BINARY_DIR}" "{CMAKE_CURRENT_BINARY_DIR}" gpx_CMAKE_LISTS_MOD "${gpx_CMAKE_LISTS_MOD}")
-FILE(WRITE "${gpx_SOURCE_DIR}/CMakeLists.txt" "${gpx_CMAKE_LISTS_MOD}")
-
-add_subdirectory("${gpx_SOURCE_DIR}" "${gpx_BINARY_DIR}" EXCLUDE_FROM_ALL)
-set(GPX_INCLUDE_DIRS "${gpx_SOURCE_DIR}" CACHE PATH "gpx include dir" FORCE)
-
-# rpmalloc
-FetchContent_Declare(rpmalloc
-        GIT_REPOSITORY https://github.com/mjansson/rpmalloc.git
-        GIT_TAG 1.4.4)
-
-FetchContent_GetProperties(rpmalloc)
-if (NOT rpmalloc_POPULATED)
-    FetchContent_Populate(rpmalloc)
+if (ENABLE_PROTOBUF)
+    message(STATUS "Adding library: protobuf")
+    include(protobuf/CMakeLists.txt)
 endif ()
 
-file(WRITE "${rpmalloc_SOURCE_DIR}/CMakeLists.txt"
-        [[
-project(rpmalloc
-        VERSION 1.4.4
-        DESCRIPTION "rpmalloc"
-        LANGUAGES C)
-
-add_library(rpmalloc STATIC)
-
-target_compile_definitions(rpmalloc
-        PRIVATE
-        _GNU_SOURCE
-        ENABLE_PRELOAD=1
-        ENABLE_OVERRIDE=1
-        DEFAULT_SPAN_MAP_COUNT=256)
-
-target_sources(rpmalloc
-        PRIVATE
-        rpmalloc/rpmalloc.c)
-
-target_include_directories(rpmalloc
-        PUBLIC
-        rpmalloc)
-
-target_link_libraries(rpmalloc
-        PRIVATE
-        ${CMAKE_DL_LIBS})
-]])
-
-add_subdirectory("${rpmalloc_SOURCE_DIR}" "${rpmalloc_BINARY_DIR}" EXCLUDE_FROM_ALL)
-set(RPMALLOC_INCLUDE_DIRS "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc include dir" FORCE)
-
-# abseil
-FetchContent_Declare(abseil
-        GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-        GIT_TAG 20220623.1)
-
-FetchContent_GetProperties(abseil)
-if (NOT abseil_POPULATED)
-    FetchContent_Populate(abseil)
+if (ENABLE_PROTOZERO)
+    message(STATUS "Adding library: protozero")
+    include(protozero/CMakeLists.txt)
 endif ()
 
-set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "enable abseil propagate CXX standard" FORCE)
-
-add_subdirectory("${abseil_SOURCE_DIR}" "${abseil_BINARY_DIR}" EXCLUDE_FROM_ALL)
-
-# boost
-FetchContent_Declare(boost
-        URL https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
-        URL_HASH SHA256=4b2136f98bdd1f5857f1c3dea9ac2018effe65286cf251534b6ae20cc45e1847)
-
-FetchContent_GetProperties(boost)
-if (NOT boost_POPULATED)
-    FetchContent_Populate(boost)
+if (ENABLE_DATE)
+    message(STATUS "Adding library: date")
+    include(date/CMakeLists.txt)
 endif ()
 
-if (WIN32)
-    set(_boost_b2 "${boost_SOURCE_DIR}/b2.exe")
-else ()
-    set(_boost_b2 "${boost_SOURCE_DIR}/b2")
+if (ENABLE_CSV_PARSER)
+    message(STATUS "Adding library: csv_parser")
+    include(csv_parser/CMakeLists.txt)
 endif ()
 
-if (NOT EXISTS "${_boost_b2}")
-    IF (WIN32)
-        set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.bat)
-    ELSE ()
-        set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.sh)
-    ENDIF ()
-    execute_process(COMMAND ${_bootstrap_path} --prefix="${boost_BINARY_DIR}"
-            WORKING_DIRECTORY "${boost_SOURCE_DIR}")
+if (ENABLE_GPX)
+    message(STATUS "Adding library: gpx")
+    include(gpx/CMakeLists.txt)
 endif ()
 
-set(BOOST_ROOT "${boost_BINARY_DIR}" CACHE PATH "Boost root" FORCE)
-set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "Boost no system paths" FORCE)
-if (WIN32)
-    set(Boost_USE_STATIC_LIBS OFF CACHE BOOL "Boost shared on Windows" FORCE)
+if (ENABLE_RPMALLOC)
+    message(STATUS "Adding library: rpmalloc")
+    include(rpmalloc/CMakeLists.txt)
 endif ()
 
-find_package(Boost QUIET CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
-
-if (NOT Boost_FOUND)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(_variant "variant=debug")
-    else ()
-        set(_variant "variant=release")
-    endif ()
-    message(STATUS "Set boost variant to ${_variant}")
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(_toolset "toolset=gcc")
-        message(STATUS "Set boost toolset to ${_toolset}")
-    endif ()
-
-    execute_process(COMMAND ./b2 install link=shared threading=multi ${_variant} ${_toolset} --without-python --prefix=${boost_BINARY_DIR}
-            WORKING_DIRECTORY "${boost_SOURCE_DIR}")
+if (ENABLE_BOOST)
+    message(STATUS "Adding library: boost")
+    include(boost/CMakeLists.txt)
 endif ()
 
-find_package(Boost QUIET REQUIRED CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
-
-# protozero
-FetchContent_Declare(protozero
-        GIT_REPOSITORY https://github.com/mapbox/protozero.git
-        GIT_TAG v1.7.1)
-
-FetchContent_GetProperties(protozero)
-if (NOT protozero_POPULATED)
-    FetchContent_Populate(protozero)
+if (ENABLE_LIBOSMIUM)
+    message(STATUS "Adding library: libosmium")
+    include(libosmium/CMakeLists.txt)
 endif ()
 
-set(PROTOZERO_INCLUDE_DIR "${protozero_SOURCE_DIR}/include" CACHE PATH "protozero include dir" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "do not build protozero tests" FORCE)
-add_subdirectory("${protozero_SOURCE_DIR}" "${protozero_BINARY_DIR}" EXCLUDE_FROM_ALL)
-
-# libosmium
-FetchContent_Declare(libosmium
-        GIT_REPOSITORY https://github.com/osmcode/libosmium.git
-        GIT_TAG v2.18.0)
-
-FetchContent_GetProperties(libosmium)
-if (NOT libosmium_POPULATED)
-    FetchContent_Populate(libosmium)
-endif ()
-
-list(APPEND CMAKE_MODULE_PATH "${libosmium_SOURCE_DIR}/cmake")
-set(OSMIUM_INCLUDE_DIR "${libosmium_SOURCE_DIR}" CACHE PATH "osmium include dir" FORCE)
-set(BUILD_EXAMPLES OFF CACHE BOOL "do not build libosmium examples" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "do not build libosmium tests" FORCE)
-
-find_package(Osmium QUIET REQUIRED MODULE)
+message(STATUS "Adding external libraries - SUCCESS")

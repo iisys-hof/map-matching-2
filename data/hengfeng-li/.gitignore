@@ -1,0 +1,10 @@
+gps_track.txt
+groundtruth.txt
+melbourne.osm
+melbourne.osm.zip
+complete-osm-map.zip
+complete-osm-map/
+network/
+network_ground_truth/
+network_osm/
+results/
