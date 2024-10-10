@@ -92,7 +92,7 @@ fi
 
 # build appimage
 VERSION="$version" "./$appimagetool" "$appdir" || exit 1
-appimage=$(ls map_matching_2*.AppImage)
+appimage=$(ls -rt map_matching_2*.AppImage | tail -n 1)
 chmod +x "$appimage"
 
 # clean up

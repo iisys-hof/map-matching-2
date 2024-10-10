@@ -724,7 +724,8 @@ namespace map_matching_2::graph {
         }
 
         [[nodiscard]] vertex_descriptor _add_vertex(vertex_type &&vertex) {
-            return try_add(vertices, std::move(vertex));
+            const auto &additional_tidy = []() constexpr -> void {};
+            return try_add(vertices, additional_tidy, std::move(vertex));
         }
 
         edge_descriptor add_edge(const vertex_descriptor &source_desc, const vertex_descriptor &target_desc) requires
@@ -756,7 +757,8 @@ namespace map_matching_2::graph {
             const auto index = vertex_index(source_desc);
             // std::cout << "From " << vertex_index(source_desc) << " to " << vertex_index(target_desc) << std::endl;
             // std::cout << "Size Before: " << get_vertex(source_desc).out_edges.size() << std::endl;
-            edge_descriptor edge_desc = try_add(edges, std::move(edge));
+            const auto &additional_tidy = []() constexpr -> void {};
+            edge_descriptor edge_desc = try_add(edges, additional_tidy, std::move(edge));
 
             edge_type &edge_r = get_edge(edge_desc);
             auto edges_tidy = [&]() {
@@ -767,7 +769,7 @@ namespace map_matching_2::graph {
             };
 
             vertex_type &source_vertex = get_vertex(source_desc);
-            try_add(source_vertex.out_edges, edge_descriptor{edge_desc}, edges_tidy);
+            try_add(source_vertex.out_edges, edges_tidy, edge_descriptor{edge_desc});
 
             if constexpr (is_undirected_v or is_bidirectional_v) {
                 auto source_out_edges_tidy = [&]() {
@@ -782,7 +784,7 @@ namespace map_matching_2::graph {
 
                 if constexpr (is_undirected_v) {
                     if (std::addressof(source_vertex) != std::addressof(target_vertex)) {
-                        try_add(target_vertex.out_edges, edge_descriptor{edge_desc}, source_out_edges_tidy);
+                        try_add(target_vertex.out_edges, source_out_edges_tidy, edge_descriptor{edge_desc});
                     }
                 }
 
@@ -797,7 +799,7 @@ namespace map_matching_2::graph {
                         source_out_edges_tidy();
                     };
 
-                    try_add(target_vertex.in_edges, edge_descriptor{edge_desc}, target_out_edges_tidy);
+                    try_add(target_vertex.in_edges, target_out_edges_tidy, edge_descriptor{edge_desc});
                 }
             }
 
@@ -936,29 +938,23 @@ namespace map_matching_2::graph {
             }
         }
 
-        template<typename Container, typename AdditionalTidy> requires
-            requires(Container container, typename Container::value_type value) {
-                { container.emplace_back(value) };
+        template<typename Container, typename AdditionalTidy, typename... Args> requires
+            requires(Container container, Args &&... args) {
+                { container.emplace_back(std::forward<Args>(args)...) };
                 { container.pop_back() };
             }
         std::conditional_t<util::is_random_access_v<Container>,
             typename Container::size_type, typename Container::iterator>
-        try_add(Container &container, typename Container::value_type &&value, const AdditionalTidy &additional_tidy) {
-            std::exception_ptr eptr = nullptr;
-
+        try_add(Container &container, const AdditionalTidy &additional_tidy, Args &&... args) {
             typename Container::size_type current_size = container.size();
             try {
-                container.emplace_back(std::move(value));
+                container.emplace_back(std::forward<Args>(args)...);
             } catch (...) {
-                eptr = std::current_exception();
                 while (container.size() > current_size) {
                     container.pop_back();
                 }
                 additional_tidy();
-            }
-
-            if (eptr) {
-                std::rethrow_exception(eptr);
+                throw;
             }
 
             if constexpr (util::is_random_access_v<Container>) {
@@ -966,19 +962,6 @@ namespace map_matching_2::graph {
             } else {
                 return std::prev(std::end(container));
             }
-        }
-
-        template<typename Container> requires
-            requires(Container container, typename Container::value_type value) {
-                { container.emplace_back(value) };
-                { container.pop_back() };
-            }
-        std::conditional_t<util::is_random_access_v<Container>,
-            typename Container::size_type, typename Container::iterator>
-        try_add(Container &container, typename Container::value_type &&value) {
-            const auto &additional_tidy = []() constexpr -> void {};
-
-            return try_add(container, std::move(value), additional_tidy);
         }
 
         void reindex() requires

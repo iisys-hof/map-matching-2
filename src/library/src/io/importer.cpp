@@ -17,7 +17,7 @@
 
 #include <cassert>
 
-// __clang_major__ >= 18 # chrono not yet supported
+// __clang_major__ >= 19 # chrono parse not yet supported
 #if (__cplusplus >= 202002L and (defined(__GNUC__) and __GNUC__ >= 14)) or \
     (defined(_MSC_VER) and _MSC_VER >= 1939)
 #define HAS_CHRONO_PARSE 1
@@ -31,7 +31,9 @@ namespace map_matching_2::io {
 
     [[nodiscard]] bool importer::is_number(const std::string &str) {
         if (not str.empty()) {
-            for (char c : str) {
+            for (auto it = std::cbegin(str); it != std::cend(str); ++it) {
+                const char c = *it;
+
                 if (not std::isdigit(c)) {
                     return false;
                 }
@@ -45,7 +47,9 @@ namespace map_matching_2::io {
         std::vector<char> delimiters;
         delimiters.reserve(delimiter.size());
         bool escaped = false;
-        for (const char &c : delimiter) {
+        for (auto it = std::cbegin(delimiter); it != std::cend(delimiter); ++it) {
+            const char c = *it;
+
             if (escaped) {
                 if (c == 't') {
                     delimiters.emplace_back('\t');
@@ -68,9 +72,12 @@ namespace map_matching_2::io {
 
     [[nodiscard]] static std::vector<char> parse_delimiter(const std::string &delimiter) {
         std::vector<char> delimiters;
-        delimiters.reserve(delimiter.size());
+        delimiters.reserve(delimiter.length());
+
         bool escaped = false;
-        for (const char &c : delimiter) {
+        for (auto it = std::cbegin(delimiter); it != std::cend(delimiter); ++it) {
+            const char c = *it;
+
             if (c == '\\') {
                 escaped = true;
                 continue;

@@ -54,3 +54,13 @@ Also given is an example on how to use custom tags for OpenStreetMap, for exampl
 ```
 
 The results will be in the `results` folder that is automatically created.
+
+Results on our test system (accuracy is the weighted mean correct fraction in percent):
+
+| Mode          | Time (s) | Max RAM (MiB) | Accuracy (%) |
+|:--------------|---------:|--------------:|-------------:|
+| Prepare       |    39.41 |         2,508 |          N/A |
+| Match         |     0.67 |           488 |          N/A |
+| Compare       |     0.46 |            32 |        99.58 |
+| Match (RAW)   |     5.70 |         1,692 |          N/A |
+| Prepare (All) |    47.84 |         2,899 |          N/A |

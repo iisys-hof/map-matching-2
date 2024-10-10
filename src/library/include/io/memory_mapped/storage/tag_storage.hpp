@@ -34,6 +34,84 @@
 
 namespace map_matching_2::io::memory_mapped::storage {
 
+    template<typename StringA, typename StringB>
+    struct tag_comparator;
+
+    template<typename StringA, typename StringB> requires
+        (std::same_as<StringA, StringB>)
+    struct tag_comparator<StringA, StringB> {
+
+        using is_transparent = void;
+
+        using string_type_a = StringA;
+        using string_type_b = StringB;
+
+        constexpr bool operator()(const string_type_a &left, const string_type_b &right) const {
+            return left == right;
+        }
+
+    };
+
+    template<typename StringA, typename StringB> requires
+        (not std::same_as<StringA, StringB>)
+    struct tag_comparator<StringA, StringB> {
+
+        using is_transparent = void;
+
+        using string_type_a = StringA;
+        using string_type_b = StringB;
+
+        constexpr bool operator()(const string_type_a &left, const string_type_a &right) const {
+            return left == right;
+        }
+
+        constexpr bool operator()(const string_type_b &left, const string_type_b &right) const {
+            return left == right;
+        }
+
+        constexpr bool operator()(const string_type_a &left, const string_type_b &right) const {
+            return left == right.c_str();
+        }
+
+        constexpr bool operator()(const string_type_b &left, const string_type_a &right) const {
+            return left == right.c_str();
+        }
+
+    };
+
+    template<typename StringA, typename StringB>
+    struct tag_hash;
+
+    template<typename StringA, typename StringB> requires
+        (std::same_as<StringA, StringB>)
+    struct tag_hash<StringA, StringB> {
+        using is_transparent = void;
+
+        using string_type_a = StringA;
+        using string_type_b = StringB;
+
+        constexpr std::size_t operator()(const string_type_a &str) const {
+            return boost::hash_value(str);
+        }
+    };
+
+    template<typename StringA, typename StringB> requires
+        (not std::same_as<StringA, StringB>)
+    struct tag_hash<StringA, StringB> {
+        using is_transparent = void;
+
+        using string_type_a = StringA;
+        using string_type_b = StringB;
+
+        constexpr std::size_t operator()(const string_type_a &str) const {
+            return boost::hash_value(str);
+        }
+
+        constexpr std::size_t operator()(const string_type_b &str) const {
+            return boost::hash_value(str);
+        }
+    };
+
     template<typename Types, typename Allocator>
     class tag_storage;
 
@@ -66,7 +144,7 @@ namespace map_matching_2::io::memory_mapped::storage {
         using key_map_type = boost::unordered_flat_map<std::uint64_t, string_type,
             boost::hash<std::uint64_t>, std::equal_to<>, key_allocator_type>;
         using value_map_type = boost::unordered_flat_map<string_type, std::uint64_t,
-            boost::hash<string_type>, std::equal_to<>, value_allocator_type>;
+            tag_hash<std::string, string_type>, tag_comparator<std::string, string_type>, value_allocator_type>;
         using tags_map_type = boost::unordered_flat_map<std::uint64_t, pair_type,
             boost::hash<std::uint64_t>, std::equal_to<>, tags_allocator_type>;
         using ids_map_type = boost::unordered_flat_map<pair_type, std::uint64_t,
@@ -286,7 +364,7 @@ namespace map_matching_2::io::memory_mapped::storage {
         using key_map_type = boost::unordered_flat_map<std::uint64_t, string_type,
             boost::hash<std::uint64_t>, std::equal_to<>, key_allocator_type>;
         using value_map_type = boost::unordered_flat_map<string_type, std::uint64_t,
-            boost::hash<string_type>, std::equal_to<>, value_allocator_type>;
+            tag_hash<std::string, string_type>, tag_comparator<std::string, string_type>, value_allocator_type>;
         using tags_map_type = boost::unordered_flat_map<std::uint64_t, pair_type,
             boost::hash<std::uint64_t>, std::equal_to<>, tags_allocator_type>;
         using ids_map_type = boost::unordered_flat_map<pair_type, std::uint64_t,

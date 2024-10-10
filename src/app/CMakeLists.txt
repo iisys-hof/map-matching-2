@@ -3,11 +3,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread program_options)
 
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/app/version.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/include/app/version.hpp
-        @ONLY)
-
 add_library(app STATIC)
 
 target_sources(app

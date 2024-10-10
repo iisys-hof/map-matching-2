@@ -25,6 +25,7 @@
 
 #include "util/macros.hpp"
 #include "util/compiler.hpp"
+#include "util/version.hpp"
 
 #include "../concepts.hpp"
 #include "../utils.hpp"
@@ -58,7 +59,43 @@ namespace map_matching_2::io::memory_mapped::storage {
         using types = Types;
         using mmap_type = typename types::mmap_type;
 
-        constexpr static const char *compiler_info_identifier = "compiler_info";
+        constexpr static const char *info_identifier = "info";
+
+        class info {
+
+        public:
+            using allocator_type = typename types::template allocator_type<char>;
+            using string_type = boost::interprocess::basic_string<char, std::char_traits<char>, allocator_type>;
+
+            info(const std::string &compiler, const std::string &version, const allocator_type &allocator)
+                : _compiler(std::cbegin(compiler), std::cend(compiler), allocator),
+                _version(std::cbegin(version), std::cend(version), allocator) {}
+
+            void assign(const std::string &compiler, const std::string &version) {
+                _compiler.assign(std::cbegin(compiler), std::cend(compiler));
+                _version.assign(std::cbegin(version), std::cend(version));
+            }
+
+            constexpr const string_type &compiler() const {
+                return _compiler;
+            }
+
+            constexpr const string_type &version() const {
+                return _version;
+            }
+
+            [[nodiscard]] std::string compiler_str() const {
+                return {std::cbegin(_compiler), std::cend(_compiler)};
+            }
+
+            [[nodiscard]] std::string version_str() const {
+                return {std::cbegin(_version), std::cend(_version)};
+            }
+
+        private:
+            string_type _compiler;
+            string_type _version;
+        };
 
         constexpr mmap_base_container() = default;
 
@@ -87,7 +124,7 @@ namespace map_matching_2::io::memory_mapped::storage {
             open(name);
 #else
             _storage = new mmap_type{boost::interprocess::create_only, name.c_str(), size};
-            process_compiler_info(boost::interprocess::create_only, *_storage, name);
+            process_info(boost::interprocess::create_only, *_storage, name);
 #endif
         }
 
@@ -99,106 +136,112 @@ namespace map_matching_2::io::memory_mapped::storage {
             open(name);
 #else
             _storage = new mmap_type{boost::interprocess::open_or_create, name.c_str(), size};
-            process_compiler_info(boost::interprocess::open_or_create, *_storage, name);
+            process_info(boost::interprocess::open_or_create, *_storage, name);
 #endif
         }
 
         void open_read_only(const std::string &name) {
             _storage = new mmap_type{boost::interprocess::open_read_only, name.c_str()};
-            process_compiler_info(boost::interprocess::open_read_only, *_storage, name);
+            process_info(boost::interprocess::open_read_only, *_storage, name);
         }
 
         void open(const std::string &name) {
             _storage = new mmap_type{boost::interprocess::open_only, name.c_str()};
-            process_compiler_info(boost::interprocess::open_only, *_storage, name);
+            process_info(boost::interprocess::open_only, *_storage, name);
         }
 
         void open_copy_on_write(const std::string &name) {
             _storage = new mmap_type{boost::interprocess::open_copy_on_write, name.c_str()};
-            process_compiler_info(boost::interprocess::open_copy_on_write, *_storage, name);
+            process_info(boost::interprocess::open_copy_on_write, *_storage, name);
         }
 
-        [[nodiscard]] static auto *find_compiler_info(mmap_type &storage) {
-            using allocator_type = typename types::template allocator_type<char>;
-            using string_type = boost::interprocess::basic_string<char, std::char_traits<char>, allocator_type>;
-
-            return storage.template find<string_type>(compiler_info_identifier).first;
+        [[nodiscard]] static auto *find_info(mmap_type &storage) {
+            return storage.template find<info>(info_identifier).first;
         }
 
-        static auto *construct_compiler_info(mmap_type &storage, const std::string &compiler_info) {
-            using allocator_type = typename types::template allocator_type<char>;
-            using string_type = boost::interprocess::basic_string<char, std::char_traits<char>, allocator_type>;
-
-            allocator_type allocator{storage.get_segment_manager()};
-            return storage.template construct<string_type>(compiler_info_identifier)
-                    (compiler_info.cbegin(), compiler_info.cend(), allocator);
+        static auto *construct_info(mmap_type &storage, const std::string &compiler, const std::string &version) {
+            typename info::allocator_type allocator{storage.get_segment_manager()};
+            return storage.template construct<info>(info_identifier)(compiler, version, allocator);
         }
 
-        static auto *write_compiler_info(mmap_type &storage) {
-            const auto compiler_info = util::get_compiler_info();
-            auto *saved_compiler_info = find_compiler_info(storage);
-            if (saved_compiler_info) {
-                saved_compiler_info->assign(compiler_info.cbegin(), compiler_info.cend());
+        static auto *write_info(mmap_type &storage) {
+            const auto compiler = util::get_compiler_info();
+            const auto version = util::version();
+
+            auto *saved_info = find_info(storage);
+            if (saved_info) {
+                saved_info->assign(compiler, version);
             } else {
-                return construct_compiler_info(storage, compiler_info);
+                return construct_info(storage, compiler, version);
             }
-            return saved_compiler_info;
+            return saved_info;
         }
 
-        static auto *write_and_compare_compiler_info(mmap_type &storage, const std::string &name) {
-            write_compiler_info(storage);
-            return compare_compiler_info(storage, name);
+        static auto *write_and_compare_info(mmap_type &storage, const std::string &name) {
+            write_info(storage);
+            return compare_info(storage, name);
         }
 
-        static auto *contains_compiler_info(mmap_type &storage, const std::string &name) {
-            auto *saved_compiler_info = find_compiler_info(storage);
+        static auto *contains_info(mmap_type &storage, const std::string &name) {
+            auto *saved_info = find_info(storage);
 
-            if (not saved_compiler_info) {
-                const auto compiler_info = util::get_compiler_info();
+            if (not saved_info) {
+                const auto compiler = util::get_compiler_info();
+                const auto version = util::version();
 
                 throw std::runtime_error{
-                        std::format("storage '{}' does not contain compiler info '{}', please rebuild storage",
-                                name, compiler_info)
+                        std::format(
+                                "storage '{}' does not contain compiler info '{}' and version number '{}', please rebuild storage",
+                                name, compiler, version)
                 };
             }
 
-            return saved_compiler_info;
+            return saved_info;
         }
 
-        static auto *compare_compiler_info(mmap_type &storage, const std::string &name) {
-            auto *saved_compiler_info = contains_compiler_info(storage, name);
+        static auto *compare_info(mmap_type &storage, const std::string &name) {
+            auto *saved_info = contains_info(storage, name);
 
-            const auto compiler_info = util::get_compiler_info();
-
-            const std::string converted_compiler_info{saved_compiler_info->cbegin(), saved_compiler_info->cend()};
-            if (compiler_info != converted_compiler_info) {
+            const auto compiler = util::get_compiler_info();
+            const std::string converted_compiler = saved_info->compiler_str();
+            if (compiler != converted_compiler) {
                 throw std::runtime_error{
                         std::format(
                                 "storage '{}' was built with compiler '{}' but current compiler is '{}', please rebuild storage",
-                                name, converted_compiler_info, compiler_info)
+                                name, converted_compiler, compiler)
                 };
             }
 
-            return saved_compiler_info;
+            const auto version = util::version();
+            const std::string converted_version = saved_info->version_str();
+            if (version != converted_version) {
+                throw std::runtime_error{
+                        std::format(
+                                "storage '{}' was built with software version '{}' but current version is '{}', please rebuild storage",
+                                name, converted_version, version)
+                };
+            }
+
+            return saved_info;
         }
 
         template<typename CreationTag>
-        static auto *process_compiler_info(CreationTag creation_tag, mmap_type &storage, const std::string &name) {
+        static auto *process_info(CreationTag creation_tag, mmap_type &storage, const std::string &name) {
             if constexpr (std::same_as<CreationTag, boost::interprocess::create_only_t>) {
-                return write_and_compare_compiler_info(storage, name);
+                return write_and_compare_info(storage, name);
             } else if constexpr (std::same_as<CreationTag, boost::interprocess::open_only_t>) {
-                return compare_compiler_info(storage, name);
+                return compare_info(storage, name);
             } else if constexpr (std::same_as<CreationTag, boost::interprocess::open_read_only_t>) {
-                return compare_compiler_info(storage, name);
+                return compare_info(storage, name);
             } else if constexpr (std::same_as<CreationTag, boost::interprocess::open_read_private_t>) {
-                return compare_compiler_info(storage, name);
+                return compare_info(storage, name);
             } else if constexpr (std::same_as<CreationTag, boost::interprocess::open_copy_on_write_t>) {
-                return compare_compiler_info(storage, name);
+                return compare_info(storage, name);
             } else if constexpr (std::same_as<CreationTag, boost::interprocess::open_or_create_t>) {
-                if (const auto *saved_compiler_info = find_compiler_info(storage); saved_compiler_info) {
-                    return compare_compiler_info(storage, name);
+                if (const auto *saved_info = find_info(storage); saved_info) {
+                    return compare_info(storage, name);
                 } else {
-                    return write_and_compare_compiler_info(storage, name);
+                    return write_and_compare_info(storage, name);
                 }
             } else {
                 throw std::invalid_argument{"unknown creation_tag"};
@@ -247,7 +290,7 @@ namespace map_matching_2::io::memory_mapped::storage {
         static void _make_sparse_file(CreationTag creation_tag, const std::string &filename, const std::size_t init) {
             {
                 mmap_type storage{creation_tag, filename.c_str(), init};
-                process_compiler_info(creation_tag, storage, filename);
+                process_info(creation_tag, storage, filename);
             }
             make_sparse_file(filename);
         }
@@ -256,7 +299,7 @@ namespace map_matching_2::io::memory_mapped::storage {
             if (size > offset) {
                 grow_file(filename, size);
                 mmap_type storage{boost::interprocess::open_only, filename.c_str()};
-                process_compiler_info(boost::interprocess::open_only, storage, filename);
+                process_info(boost::interprocess::open_only, storage, filename);
                 storage.get_segment_manager()->grow(size - offset);
             }
         }

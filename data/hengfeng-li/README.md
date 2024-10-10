@@ -31,7 +31,7 @@ for MSVC: `run\msvc\release\bin\map_matching_2.exe`.
 # prepare osm network
 ./map_matching_2 --conf data/hengfeng-li/conf/prepare_osm.conf
 
-# prepare ground truth network
+# prepare ground truth network (not simplified!)
 ./map_matching_2 --conf data/hengfeng-li/conf/prepare_ground_truth.conf
 
 # convert ground truth route
@@ -51,3 +51,16 @@ for MSVC: `run\msvc\release\bin\map_matching_2.exe`.
 ```
 
 The results will be in the `results` folder that is automatically created.
+
+Results on our test system (accuracy is the weighted mean correct fraction in percent):
+
+| Mode                   | Time (s) | Max RAM (MiB) | Accuracy (%) |
+|:-----------------------|---------:|--------------:|-------------:|
+| Prepare                |     1.65 |           160 |          N/A |
+| Prepare (OSM)          |     3.07 |           261 |          N/A |
+| Prepare (Ground Truth) |     1.51 |           166 |          N/A |
+| Convert Ground Truth   |     0.22 |            84 |          N/A |
+| Match                  |     0.49 |            72 |          N/A |
+| Match (OSM)            |     0.79 |            84 |          N/A |
+| Compare                |     0.23 |            26 |        99.80 |
+| Compare (OSM)          |     0.23 |            24 |        99.86 |

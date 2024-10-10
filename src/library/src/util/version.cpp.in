@@ -13,17 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#ifndef MAP_MATCHING_2_APP_VERSION_HPP
-#define MAP_MATCHING_2_APP_VERSION_HPP
+#include "util/version.hpp"
 
-#include <string>
+namespace map_matching_2::util {
 
-namespace map_matching_2::app {
-
-    [[nodiscard]] const std::string version() {
+    const std::string version() {
         return "@PROJECT_VERSION@";
     }
 
 }
-
-#endif //MAP_MATCHING_2_APP_VERSION_HPP

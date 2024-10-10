@@ -36,23 +36,17 @@ namespace map_matching_2::io::memory_mapped::storage {
         constexpr explicit osm_vertex(vertex_type vertex)
             : vertex{std::move(vertex)} {}
 
+        template<typename... Args>
+        constexpr explicit osm_vertex(Args &&... args)
+            : vertex{std::forward<Args>(args)...} {}
+
         constexpr osm_vertex(const osm_vertex &other) = delete;
 
-        constexpr osm_vertex(osm_vertex &&other) noexcept
-            : vertex{std::move(other.vertex)},
-            vertex_index{std::move(other.vertex_index)},
-            added{std::move(other.added)} {}
+        constexpr osm_vertex(osm_vertex &&other) noexcept = default;
 
         constexpr osm_vertex &operator=(const osm_vertex &other) = delete;
 
-        constexpr osm_vertex &operator=(osm_vertex &&other) noexcept {
-            if (this != &other) {
-                vertex = std::move(other.vertex);
-                vertex_index = std::move(other.vertex_index);
-                added = std::move(other.added);
-            }
-            return *this;
-        }
+        constexpr osm_vertex &operator=(osm_vertex &&other) noexcept = default;
 
         constexpr ~osm_vertex() = default;
 

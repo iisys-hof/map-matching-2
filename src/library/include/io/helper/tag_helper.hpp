@@ -71,19 +71,19 @@ namespace map_matching_2::io::helper {
             }
 
             const auto &_id = [this, &key, &value]() -> std::uint64_t {
-                key_type _key = _tag_storage.string(key);
-                value_type _value = _tag_storage.string(value);
+                // key_type _key = _tag_storage.string(key);
+                // value_type _value = _tag_storage.string(value);
 
                 std::uint64_t key_id, value_id, tag_id;
 
-                auto key_search = _tag_storage.key_id_map().find(_key);
+                auto key_search = _tag_storage.key_id_map().find(key);
                 if (key_search == _tag_storage.key_id_map().end()) {
                     key_id = _tag_storage.key_id_map().size();
                     try {
-                        _tag_storage.key_id_map().emplace(_key, key_id);
-                        _tag_storage.id_key_map().emplace(key_id, _key);
+                        _tag_storage.key_id_map().emplace(_tag_storage.string(key), key_id);
+                        _tag_storage.id_key_map().emplace(key_id, _tag_storage.string(key));
                     } catch (...) {
-                        _tag_storage.key_id_map().erase(_key);
+                        _tag_storage.key_id_map().erase(key);
                         _tag_storage.id_key_map().erase(key_id);
                         std::rethrow_exception(std::current_exception());
                     }
@@ -91,14 +91,14 @@ namespace map_matching_2::io::helper {
                     key_id = key_search->second;
                 }
 
-                auto value_search = _tag_storage.value_id_map().find(_value);
+                auto value_search = _tag_storage.value_id_map().find(value);
                 if (value_search == _tag_storage.value_id_map().end()) {
                     value_id = _tag_storage.value_id_map().size();
                     try {
-                        _tag_storage.value_id_map().emplace(_value, value_id);
-                        _tag_storage.id_value_map().emplace(value_id, _value);
+                        _tag_storage.value_id_map().emplace(_tag_storage.string(value), value_id);
+                        _tag_storage.id_value_map().emplace(value_id, _tag_storage.string(value));
                     } catch (...) {
-                        _tag_storage.value_id_map().erase(_value);
+                        _tag_storage.value_id_map().erase(value);
                         _tag_storage.id_value_map().erase(value_id);
                         std::rethrow_exception(std::current_exception());
                     }

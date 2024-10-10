@@ -118,10 +118,8 @@ namespace map_matching_2::io::helper {
                 const auto node_location = osm_node.location();
                 const std::size_t index = vertices().size();
                 vertices().emplace_back(osm_vertex_type{
-                        vertex_type{
-                                osm_node.id(), osm_point_type{node_location.lon(), node_location.lat()},
-                                reprojector_variant, tags(osm_node.tags())
-                        }
+                        osm_node.id(), osm_point_type{node_location.lon(), node_location.lat()},
+                        reprojector_variant, tags(osm_node.tags())
                 });
                 return index;
             };

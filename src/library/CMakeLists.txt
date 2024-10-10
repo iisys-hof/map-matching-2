@@ -4,6 +4,11 @@ find_package(Threads REQUIRED)
 find_package(Boost REQUIRED COMPONENTS serialization thread chrono)
 find_package(Osmium REQUIRED COMPONENTS io)
 
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/util/version.cpp.in
+        ${CMAKE_CURRENT_BINARY_DIR}/src/util/version.cpp
+        @ONLY)
+
 add_library(library STATIC)
 
 target_sources(library
@@ -23,7 +28,8 @@ target_sources(library
         src/io/importer.cpp
         src/matching/matcher/match_task.cpp
         src/matching/defect.cpp
-        src/util/compiler.cpp)
+        src/util/compiler.cpp
+        src/util/version.cpp)
 
 if (EXPLICIT_TEMPLATES)
     target_sources(library
@@ -134,7 +140,8 @@ endif ()
 
 target_include_directories(library
         PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 target_include_directories(library SYSTEM
         PUBLIC

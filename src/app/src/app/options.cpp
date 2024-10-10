@@ -15,7 +15,6 @@
 
 #include "app/options.hpp"
 #include "app/general.hpp"
-#include "app/version.hpp"
 
 #include <format>
 #include <thread>
@@ -28,6 +27,7 @@
 #include "io/network/osm_pattern.hpp"
 #include "compare/comparator/compare_output_settings.hpp"
 #include "matching/matcher/matcher_output_settings.hpp"
+#include "util/version.hpp"
 
 namespace map_matching_2::app {
 
@@ -468,7 +468,7 @@ namespace map_matching_2::app {
                         "  \ttrack_length: track length in meter\n"
                         "  \tprepared_length: prepared track length in meter\n"
                         "  \tmatch_length: match length in meter\n"
-                        "  \tedge_ids: list of original edge IDs")
+                        "  \tedge_ids: list of original edge IDs (off by default; if used, combine with simplify osm-aware")
                 ("export-edges", po::value<bool>(&data.export_edges)->default_value(false, "off"),
                         "export matched routes based on the complete network edges instead of the actual parts, "
                         "this is only useful if the routes are later compared to matches that come from a list of edge IDs, "
@@ -793,7 +793,9 @@ namespace map_matching_2::app {
                         "  \tsimplify, but don't combine roads with different osm ids and tags,\n"
                         "  \tthis mode is usually not recommended, except special .csv extracts are of interest\n"
                         "  \tor when the map matching metrics later down the line respect the osm tags,\n"
-                        "  \twhich they do not by design currently\n"
+                        "  \twhich they do not by design currently;\n"
+                        "  \thowever, use this when you export edge_ids with the matches later,\n"
+                        "  \tas only then the ids are correctly preserved during simplification\n"
                         "default is \"all\"")
                 ("remove-unconnected", po::value<bool>(&data.remove_unconnected)->default_value(false, "off"),
                         "remove weakly unconnected components so that only the largest subgraph remains;\n"
@@ -1371,7 +1373,7 @@ namespace map_matching_2::app {
 
     bool show_version(const po::variables_map &vm) {
         if (vm.count("version")) {
-            std::cout << "Version: " << version() << std::endl;
+            std::cout << "Version: " << util::version() << std::endl;
             return true;
         }
         return false;

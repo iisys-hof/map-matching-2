@@ -234,11 +234,21 @@ Note: For any advanced usage, consider the [help.txt](help.txt) or add `--help` 
 
 The basic usage is a two- or three-step approach:
 
-1. Prepare the network graph (only once).
-2. Match your tracks on the prepared network graph (and repeat as often as needed).
+1. Prepare the network graph (only once). Base command:\
+   `./map_matching_2 --prepare --file openstreetmap.osm.pbf --output data/network/`
+2. Match your tracks on the prepared network graph (and repeat as often as needed). Base command:\
+   `./map_matching_2 --match --input data/network --tracks data/tracks.csv --output data/results`
 3. Optional: Compare your matches to any given comparison matches or ground truth (if available).
    You can also compare the matches from different runs of this software with different settings with each other and
-   review the differences.
+   review the differences. Base command:\
+   `./map_matching_2 --compare --match-tracks data/results/matches.csv --compare-tracks data/ground_truth.csv --output data/results`
+
+#### More details and in-depth explanation
+
+Please note that a new release might render the prepared network graph invalid, you might need to re-prepare the network
+graph again if you download a new version.
+The prepared binary network graph files are not compatible between compilers.
+They are individual for each compiler and thus also not compatible between Linux and Windows.
 
 In case you used an older version of this software, all steps could be combined into one run.
 However, now with memory mapped files available, this is not practical anymore.
@@ -298,26 +308,42 @@ different folders.
 
 If you want a prebuilt binary, please see the [Download](#download) section.
 
-Building the software is straightforward. You need the following prerequisites:
+Building the software is straightforward. The following tools and versions are tested to work:
 
-- **CMake:** Version 3.28.6 or higher
-- **On Linux:** either one of
-    - **GCC:** Version 14.2 or higher, or
-    - **Clang:** Version 18 or higher
+- **CMake:** Version 3.28.6
+- **Ninja:** Version 1.12.1
+- **On Linux:**
+    - **GCC:** Version 14.2
+    - **Clang:** Version 18
 - **On Windows:**
-    - **Visual Studio C++:** Version 17.11.4 or higher (equivalent to MSVC 1940 or higher)
+    - **Visual Studio C++:** Version 17.11.5 (equivalent to MSVC 1940)
+- **Architecture:** Only 64-bit compiler and operating system are supported
 
 We provide for Linux various Dockerfiles in the `docker` folder. They contain all necessary information for
 building the software with these recent versions even on older operating systems.
 
 <details>
-<summary>Hint for Windows building</summary>
+<summary>Hints for Linux building</summary>
+
+There currently is an issue to build this software with Boost 1.86 and Clang 19:
+https://github.com/boostorg/thread/issues/402
+
+Therefore, we currently only recommend building this software with the compiler versions that we tested during
+development.
+</details>
+
+<details>
+<summary>Hints for Windows building</summary>
+
+Please make sure that you use the 64-bit MSVC compiler by applying `-A x64` to the cmake command.
 
 For the dependency on Boost to build correctly, you might need to enable long paths in Windows, see
 [Windows help](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry).
-You might need to enable the registry setting if you receive "failed" messages in the Boost build log.
+We recommend enabling the registry setting if you receive "failed" messages in the Boost build log during CMake
+configuration.
 Alternatively, you can try to move the build directory of the whole project to an upper directory, for example
 `C:\map-matching-2`.
+
 This is because Boost internally uses quite some long paths during build, and depending on the file system position of
 this repository on your computer, it might lead to errors without long paths enabled.
 
@@ -325,9 +351,21 @@ this repository on your computer, it might lead to errors without long paths ena
 
 Building and installing, when the prerequisites are fulfilled, are then straightforward:
 
+Run the build commands from the `map-matching-2` base directory as the working directory.
+
 ```shell
+# Linux
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -B build
 cmake --build build --parallel $(nproc) --target install
+```
+
+```shell
+# Windows cmd.exe (in PowerShell first enter: cmd)
+# Initialize compiler environment
+"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+# Now build the program
+"C:\path\to\cmake.exe" -DCMAKE_MAKE_PROGRAM="C:\path\to\ninja.exe" -G Ninja -DCMAKE_BUILD_TYPE=Release -B build
+"C:\path\to\cmake.exe" --build build --parallel %NUMBER_OF_PROCESSORS% --target install
 ```
 
 Building needs multiple GB of disk space and needs several minutes even on fast systems.
@@ -379,11 +417,11 @@ with full and without intermediate MMap in the operating system activity monitor
 The size of the new MMap binaries is a bit larger than the old memory dump format because it contains a bit more
 overhead, however, it can be opened near instantaneously.
 
-| Mode                              | Time (s) | CPU resources (s) | Max RAM (MB) | `.osm.pbf` size (MB) | binary size (MB) |
-|:----------------------------------|---------:|------------------:|-------------:|---------------------:|-----------------:|
-| Prepare (Old Version 0.3)         |    17.20 |             19.42 |         1816 |                   74 |              283 |
-| Prepare with full MMap (Default)  |    42.16 |             44.31 |         2529 |                   74 |              527 |
-| Prepare without intermediate MMap |    15.28 |             17.33 |         2054 |                   74 |              527 |
+| Mode                              | Time (s) | CPU resources (s) | Max RAM (MiB) | `.osm.pbf` size (MiB) | binary size (MiB) |
+|:----------------------------------|---------:|------------------:|--------------:|----------------------:|------------------:|
+| Prepare (Old Version 0.3)         |    17.03 |             19.21 |         1,824 |                    74 |               283 |
+| Prepare with full MMap (Default)  |    39.41 |             41.51 |         2,508 |                    74 |               527 |
+| Prepare without intermediate MMap |    14.66 |             16.72 |         2,052 |                    74 |               527 |
 
 <details>
 <summary>Prepare Commands</summary>
@@ -398,14 +436,14 @@ overhead, however, it can be opened near instantaneously.
 
 ```shell
 # Prepare with full MMap (Default)
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/prepare.conf \
   --verbose
 ```
 
 ```shell
 # Prepare without intermediate MMap
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/prepare.conf \
   --memory-mapped-preparation off \
   --verbose
@@ -421,16 +459,16 @@ publication (https://doi.org/10.1111/tgis.13107).
 The benchmarks are based on the `data/floating-car-data/conf/match.conf` and the
 `data/floating-car-data/conf/match_raw.conf` files.
 
-| Mode                        | Threads | Track points | Sanitized track points | Candidates | Combinations | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MB) |
-|:----------------------------|--------:|-------------:|-----------------------:|-----------:|-------------:|---------------:|------------------:|-------------------------:|-------------:|
-| Match (Old Version 0.3)     |     256 |       14,651 |                  5,745 |    135,088 |    3,713,118 |           7.33 |            118.56 |                     0.79 |        3,453 |
-| Match (New Version 1.0)     |     256 |       14,651 |                  5,745 |    135,123 |    3,715,146 |           0.70 |             16.88 |                     0.33 |          466 |
-| Match (Old Version 0.3)     |       1 |       14,651 |                  5,745 |    135,088 |    3,713,118 |          20.75 |             20.73 |                    14.57 |          924 |
-| Match (New Version 1.0)     |       1 |       14,651 |                  5,745 |    135,123 |    3,715,146 |          11.40 |             11.45 |                    11.28 |          134 |
-| Match RAW (Old Version 0.3) |     256 |       88,807 |                 32,599 |    811,417 |   27,835,497 |          12.32 |            944.05 |                     4.87 |        5,459 |
-| Match RAW (New Version 1.0) |     256 |       88,825 |                 32,617 |    811,700 |   27,840,536 |           5.46 |            120.10 |                     4.73 |        1,678 |
-| Match RAW (Old Version 0.3) |       1 |       88,807 |                 32,599 |    811,417 |   27,835,497 |          94.44 |             93.39 |                    86.53 |          959 |
-| Match RAW (New Version 1.0) |       1 |       88,825 |                 32,617 |    811,700 |   27,840,536 |          68.23 |             68.76 |                    68.07 |          370 |
+| Mode                        | Threads | Track points | Sanitized track points | Candidates | Combinations | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
+|:----------------------------|--------:|-------------:|-----------------------:|-----------:|-------------:|---------------:|------------------:|-------------------------:|--------------:|
+| Match (Old Version 0.3)     |     256 |       14,651 |                  5,745 |    135,088 |    3,713,118 |           7.31 |            108.28 |                     0.71 |         3,447 |
+| Match (New Version 1.0)     |     256 |       14,651 |                  5,745 |    135,123 |    3,715,146 |           0.67 |             16.96 |                     0.31 |           488 |
+| Match (Old Version 0.3)     |       1 |       14,651 |                  5,745 |    135,088 |    3,713,118 |          20.59 |             20.57 |                    14.43 |           923 |
+| Match (New Version 1.0)     |       1 |       14,651 |                  5,745 |    135,123 |    3,715,146 |          11.20 |             11.23 |                    11.08 |           134 |
+| Match RAW (Old Version 0.3) |     256 |       88,807 |                 32,599 |    811,417 |   27,835,497 |          11.92 |            933.23 |                     4.73 |         5,438 |
+| Match RAW (New Version 1.0) |     256 |       88,825 |                 32,617 |    811,700 |   27,840,536 |           5.70 |            115.15 |                     4.98 |         1,692 |
+| Match RAW (Old Version 0.3) |       1 |       88,807 |                 32,599 |    811,417 |   27,835,497 |          93.49 |             93.45 |                    87.09 |           958 |
+| Match RAW (New Version 1.0) |       1 |       88,825 |                 32,617 |    811,700 |   27,840,536 |          67.60 |             68.18 |                    67.44 |           372 |
 
 <details>
 <summary>Match Commands</summary>
@@ -447,7 +485,7 @@ The benchmarks are based on the `data/floating-car-data/conf/match.conf` and the
 
 ```shell
 # Match (New Version 1.0) with all threads
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/match.conf \
   --verbose
 ```
@@ -465,7 +503,7 @@ The benchmarks are based on the `data/floating-car-data/conf/match.conf` and the
 
 ```shell
 # Match (New Version 1.0) with 1 thread
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/match.conf \
   --threads 1 \
   --verbose
@@ -486,7 +524,7 @@ The benchmarks are based on the `data/floating-car-data/conf/match.conf` and the
 
 ```shell
 # Match RAW (New Version 1.0) with all threads
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/match_raw.conf \
   --verbose
 ```
@@ -507,7 +545,7 @@ The benchmarks are based on the `data/floating-car-data/conf/match.conf` and the
 
 ```shell
 # Match RAW (New Version 1.0) with 1 thread
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/match_raw.conf \
   --threads 1 \
   --verbose
@@ -527,10 +565,10 @@ the new memory mapped network files, which is a lot faster and reduces the total
 Reading the network graph alone in the old version needs quite some resources, compared to opening the memory mapped
 network files in the new version:
 
-| Mode                           | Time (s) | CPU resources (s) | Max RAM (MB) |
-|:-------------------------------|---------:|------------------:|-------------:|
-| Read Network (Old Version 0.3) |     5.88 |              5.87 |          915 |
-| Open Network (New Version 1.0) |     0.17 |              1.65 |           22 |
+| Mode                           | Time (s) | CPU resources (s) | Max RAM (MiB) |
+|:-------------------------------|---------:|------------------:|--------------:|
+| Read Network (Old Version 0.3) |     5.85 |              5.84 |           921 |
+| Open Network (New Version 1.0) |     0.16 |              0.41 |            22 |
 
 <details>
 <summary>Read / Open Network Commands</summary>
@@ -545,7 +583,7 @@ echo "" | ./map_matching_2 \
 
 ```shell
 # Open Network (New Version 1.0)
-echo "" | ./map_matching_2-1.0.0-x86_64.AppImage \
+echo "" | ./map_matching_2-1.0.1-x86_64.AppImage \
     --match \
     --input data/floating-car-data/network/ \
     --read-line --console \
@@ -565,13 +603,14 @@ The comparison is based on the `data/floating-car-data/conf/compare.conf` file.
 We compared the results of the old version with the `ground_truth.csv` with the old version and the new version,
 and we compared the results of the new version with the `ground_truth.csv` with the new version.
 
-| Mode                                     | Time (s) | CPU resources (s) | Actual comparison time (s) | Max RAM (MB) | Mean correct fraction (%) | Weighted mean correct fraction (%) |
-|:-----------------------------------------|---------:|------------------:|---------------------------:|-------------:|--------------------------:|-----------------------------------:|
-| Comparison Old Matches (Old Version 0.3) |     6.47 |             15.49 |                       0.32 |          927 |                     99.40 |                                 NA |
-| Comparison Old Matches (New Version 1.0) |     0.56 |              7.40 |                       0.30 |           42 |                     99.40 |                              99.58 |
-| Comparison New Matches (New Version 1.0) |     0.51 |              7.61 |                       0.29 |           38 |                     99.40 |                              99.58 |
+| Mode                                     | Time (s) | CPU resources (s) | Actual comparison time (s) | Max RAM (MiB) | Mean correct fraction (%) | Weighted mean correct fraction (%) |
+|:-----------------------------------------|---------:|------------------:|---------------------------:|--------------:|--------------------------:|-----------------------------------:|
+| Comparison Old Matches (Old Version 0.3) |     6.51 |             15.93 |                       0.36 |           925 |                     99.40 |                                N/A |
+| Comparison Old Matches (New Version 1.0) |     0.41 |              8.31 |                       0.24 |            30 |                     99.40 |                              99.58 |
+| Comparison New Matches (New Version 1.0) |     0.46 |              7.07 |                       0.29 |            32 |                     99.40 |                              99.58 |
 
 We can see that the accuracy is exactly the same. However, the new version is faster comparing the results.
+The sub-second times and small memory differences are subject to measurement uncertainty and in practice equal.
 
 Since the old version needs to load the network even for making a comparison, it takes significantly longer time.
 Moreover, the old version only computes a mean accuracy but not a weighted mean accuracy.
@@ -598,7 +637,7 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 
 ```shell
 # Comparison Old Matches (New Version 1.0), there is no config file given in the examples directory
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --compare \
   --output /data/floating-car-data/old/ \
   --filename comparison.csv \
@@ -611,7 +650,7 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 
 ```shell
 # Comparison New Matches (New Version 1.0)
-./map_matching_2-1.0.0-x86_64.AppImage \
+./map_matching_2-1.0.1-x86_64.AppImage \
   --config data/floating-car-data/conf/compare.conf \
   --verbose
 ```

@@ -71,21 +71,16 @@ namespace map_matching_2::io::memory_mapped {
 
     template<typename Try, typename Catch>
     auto retry_alloc(const Try &try_function, const Catch &catch_function, const std::size_t retries = 1) {
-        std::exception_ptr eptr;
-
         std::size_t tries = 0;
         while (tries <= retries) {
             try {
                 return try_function();
             } catch (boost::interprocess::bad_alloc &ex) {
-                tries++;
-                eptr = std::current_exception();
                 catch_function(ex);
+                if (++tries > retries) {
+                    throw;
+                }
             }
-        }
-
-        if (eptr) {
-            std::rethrow_exception(eptr);
         }
 
         throw boost::interprocess::bad_alloc{};

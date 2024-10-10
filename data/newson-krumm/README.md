@@ -34,3 +34,12 @@ for MSVC: `run\msvc\release\bin\map_matching_2.exe`.
 ```
 
 The results will be in the `results` folder that is automatically created.
+
+Results on our test system (accuracy is the weighted mean correct fraction in percent):
+
+| Mode                 | Time (s) | Max RAM (MiB) | Accuracy (%) |
+|:---------------------|---------:|--------------:|-------------:|
+| Prepare              |     4.02 |           254 |          N/A |
+| Convert Ground Truth |     1.32 |            50 |          N/A |
+| Match                |     2.09 |            98 |          N/A |
+| Compare              |     0.51 |            22 |        99.89 |
