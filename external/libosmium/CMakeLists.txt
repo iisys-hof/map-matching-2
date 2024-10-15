@@ -18,6 +18,8 @@ set(Osmium_ROOT "${libosmium_SOURCE_DIR}" CACHE PATH "osmium root path" FORCE)
 
 find_package(Osmium MODULE REQUIRED COMPONENTS io)
 
-install(FILES
-        "${libosmium_SOURCE_DIR}/LICENSE"
-        DESTINATION doc/libosmium)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${libosmium_SOURCE_DIR}/LICENSE"
+            DESTINATION doc/libosmium)
+endif ()

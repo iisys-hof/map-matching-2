@@ -31,6 +31,8 @@ set(GPX_INCLUDE_DIR "${gpx_SOURCE_DIR}" CACHE PATH "gpx include dir" FORCE)
 
 target_compile_definitions(gpx PRIVATE _USE_MATH_DEFINES)
 
-install(FILES
-        "${gpx_SOURCE_DIR}/COPYING.LESSER"
-        DESTINATION doc/gpx)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${gpx_SOURCE_DIR}/COPYING.LESSER"
+            DESTINATION doc/gpx)
+endif ()

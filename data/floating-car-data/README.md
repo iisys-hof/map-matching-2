@@ -3,7 +3,7 @@
 A. Wöltche, "Open source map matching with Markov decision processes: A new method and a detailed benchmark with
 existing approaches", Transactions in GIS, vol. 27, no. 7, pp. 1959–1991, Oct. 2023, doi: 10.1111/tgis.13107
 
-Map matching dataset to download from: \
+Float Car Data (FCD) map matching dataset to download from: \
 [https://doi.org/10.6084/m9.figshare.19785835](https://doi.org/10.6084/m9.figshare.19785835)
 
 Place in this directory from the `benchmarks.zip` zip file \
@@ -12,7 +12,7 @@ the `oberfranken-latest.osm.pbf` OSM file, please see `odbl-10.txt` for licence 
 the `points.csv` csv file, and \
 the `ground_truth.csv` csv file.
 
-Additionally, we provide the anonymized `points_anonymized.csv` raw Floating Car Data (FCD) file with permission
+Additionally, we provide the anonymized `points_anonymized.csv` raw FCD file with permission
 from [Map and Route GmbH & Co. KG](https://www.mapandroute.de/) for further testing purposes. \
 The `points.csv` file from the data set above is a subset for that we provide hand-corrected results with the
 `ground_truth.csv` file.

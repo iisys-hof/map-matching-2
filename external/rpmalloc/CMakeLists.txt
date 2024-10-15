@@ -43,6 +43,8 @@ endif ()
 
 set(RPMALLOC_INCLUDE_DIR "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc include dir" FORCE)
 
-install(FILES
-        "${rpmalloc_SOURCE_DIR}/LICENSE"
-        DESTINATION doc/rpmalloc)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${rpmalloc_SOURCE_DIR}/LICENSE"
+            DESTINATION doc/rpmalloc)
+endif ()

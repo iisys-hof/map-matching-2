@@ -10,6 +10,8 @@ FetchContent_MakeAvailable(csv_parser)
 
 set(CSV_INCLUDE_DIR "${csv_parser_SOURCE_DIR}/single_include" CACHE PATH "csv parser include dir" FORCE)
 
-install(FILES
-        "${csv_parser_SOURCE_DIR}/LICENSE"
-        DESTINATION doc/csv_parser)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${csv_parser_SOURCE_DIR}/LICENSE"
+            DESTINATION doc/csv_parser)
+endif ()

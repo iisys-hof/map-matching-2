@@ -37,7 +37,7 @@ approaches** (https://doi.org/10.1111/tgis.13107)
 
 Our software can be downloaded prebuilt for Windows and Linux on the release page:
 
-#### [Download Latest Release](https://github.com/iisys-hof/map-matching-2/releases/latest)
+### [Download Latest Release](https://github.com/iisys-hof/map-matching-2/releases/latest)
 
 **Windows**: Zip-File containing the portable binary `map_matching_2.exe`.\
 **Linux**: portable AppImage containing the binary `map_matching_2` and the necessary shared libraries.\
@@ -83,8 +83,42 @@ The matches are not per definition "wrong" as they still resemble the original t
 optimal to the human eye.
 This example shows that in unclear situations, stochastic map matching still might decide for another solution than a
 human would.
-Our map matching software has a very high accuracy, as is benchmarked thoroughly in the article
-(https://doi.org/10.1111/tgis.13107), but it is not always correct.
+
+Here is an overview of the accuracy on all example data set benchmarks from [data](data).
+See also [Benchmarks](#benchmarks) for the benchmark setup.
+The accuracy metric used is the "weighted mean correct fraction" from each default match, there are more settings and
+results in the respective subfolders:
+
+| Data set                                    | Type           | Tracks | Time (s) | Memory (MiB) | Accuracy (%) |
+|:--------------------------------------------|----------------|-------:|---------:|-------------:|-------------:|
+| [GIS Cup 2012](data/gis-cup)                | Hand-corrected |     10 |     0.79 |          244 |        98.59 |
+| [Worldwide](data/kubicka-et-al)             | Hand-corrected |    100 |     7.83 |        1,278 |        98.73 |
+| [Floating Car Data](data/floating-car-data) | Hand-corrected |    263 |     0.67 |          488 |        99.58 |
+| [Melbourne](data/hengfeng-li)               | Ground truth   |      1 |     0.49 |           72 |        99.80 |
+| [Seattle](data/newson-krumm)                | Ground truth   |      1 |     2.09 |           98 |        99.89 |
+
+As we can see, the accuracy of `map_matching_2` is pretty high in various situations.
+
+The reason for the high accuracy in all these situations is the combination of multiple novel and refined approaches in
+this map matching solution.
+
+1. The custom trajectory simplification algorithm with a custom Douglas-Peucker algorithm
+   and a custom Point-Cloud-Merge algorithm.
+2. The novel "Candidate Adoption" feature that addresses adjacent and nearby stochastic outliers and noise.
+3. The custom Markov-Decision-Process that uses Reinforcement-Learning technology for a novel modeling of
+   the map matching process.
+4. The new metrics that evaluate not only lengths, distances, and azimuths but also route direction changes.
+
+Discrepancies happen, especially at the beginning and ending of a track, because the first and last GPS point are not
+exactly perpendicular to the true start and stop position (due to measurement uncertainty). Moreover, when the
+comparison matches contain errors themselves, which can especially be the case in the hand-corrected data sets. Still,
+also in the ground truth data sets, when the "correct" solution contains a complete street whereas the true start or
+stop was somewhere in the middle, it is factually impossible to achieve 100 % accuracy. Of course, in rare situations,
+also matching errors happen. This cannot be prevented with stochastic methods because they seek the most probable
+solution concerning their defined metrics, but in a specific case it might still be wrong.
+
+For more benchmarks and results also in other configurations (on the older "mean correct fraction" accuracy metric),
+please see the official article (https://doi.org/10.1111/tgis.13107).
 
 ### Features
 
@@ -249,6 +283,7 @@ Please note that a new release might render the prepared network graph invalid, 
 graph again if you download a new version.
 The prepared binary network graph files are not compatible between compilers.
 They are individual for each compiler and thus also not compatible between Linux and Windows.
+We recommend to always use memory-mapping (default).
 
 In case you used an older version of this software, all steps could be combined into one run.
 However, now with memory mapped files available, this is not practical anymore.
@@ -317,10 +352,12 @@ Building the software is straightforward. The following tools and versions are t
     - **Clang:** Version 18
 - **On Windows:**
     - **Visual Studio C++:** Version 17.11.5 (equivalent to MSVC 1940)
-- **Architecture:** Only 64-bit compiler and operating system are supported
+- **Architecture:** Only 64-bit compiler and operating system are officially supported
 
-We provide for Linux various Dockerfiles in the `docker` folder. They contain all necessary information for
+We provide for Linux various Dockerfiles in the [docker](docker) folder. They contain all necessary information for
 building the software with these recent versions even on older operating systems.
+
+Please also review the system specific hints (click on the text to show the hidden text) for building:
 
 <details>
 <summary>Hints for Linux building</summary>
@@ -335,14 +372,24 @@ development.
 <details>
 <summary>Hints for Windows building</summary>
 
-Please make sure that you use the 64-bit MSVC compiler by applying `-A x64` to the cmake command.
+Please make sure that you use the 64-bit MSVC compiler by initializing the correct compiler environment.
 
 For the dependency on Boost to build correctly, you might need to enable long paths in Windows, see
-[Windows help](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry).
-We recommend enabling the registry setting if you receive "failed" messages in the Boost build log during CMake
-configuration.
+[Windows help](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#registry-setting-to-enable-long-paths).
+We recommend setting the registry setting if you receive "failed" messages in the Boost build log during CMake
+configuration:
+
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem]
+"LongPathsEnabled"=dword:00000001
+```
+
+Please reboot your system after you changed the registry setting.
+
 Alternatively, you can try to move the build directory of the whole project to an upper directory, for example
-`C:\map-matching-2`.
+`C:\MM2`.
 
 This is because Boost internally uses quite some long paths during build, and depending on the file system position of
 this repository on your computer, it might lead to errors without long paths enabled.
@@ -353,11 +400,15 @@ Building and installing, when the prerequisites are fulfilled, are then straight
 
 Run the build commands from the `map-matching-2` base directory as the working directory.
 
+For Linux:
+
 ```shell
 # Linux
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -B build
 cmake --build build --parallel $(nproc) --target install
 ```
+
+For Windows (correct the paths to your CMake and Ninja installations):
 
 ```shell
 # Windows cmd.exe (in PowerShell first enter: cmd)
@@ -371,12 +422,12 @@ cmake --build build --parallel $(nproc) --target install
 Building needs multiple GB of disk space and needs several minutes even on fast systems.
 
 In the first step during configuration, CMake resolves all dependencies automatically,
-check the `external` folder if you are interested in the details.
+check the [external](external) folder if you are interested in the details.
 Because the dependencies are built during the first run of the configuration, this step needs some time.
 Later configuration calls are faster, even when the CMake Cache is reset.
 
-We provide many CMake parameters to tune the build during configuration, please review the `CMakeLists.txt` files of
-this project.
+We provide many CMake parameters to tune the build during configuration, please review the various `CMakeLists.txt`
+files in this project.
 
 In the second step, the software itself is built. Due to the complex template structure, this also needs quite some time
 and RAM. In case you are low in RAM, omit the `--parallel $(nproc)` argument or set it to `1` explicitly.
@@ -384,8 +435,9 @@ and RAM. In case you are low in RAM, omit the `--parallel $(nproc)` argument or 
 The software is installed in the newly created `run` directory, nothing outside of this directory is written.
 
 In case you work with [CLion](https://www.jetbrains.com/clion/) on Linux, we recommend that you use one of the
-Dockerfiles under `docker/build` as Toolchains. We use the Ubuntu 20.04 GCC and Clang variants.
-On Windows, you can directly use the MSVC Toolchain that you installed via the Visual Studio Installer.
+Dockerfiles under [docker/build](docker/build) as Toolchains. We use the Ubuntu 20.04 GCC and Clang variants.
+On Windows, you can directly use the MSVC 64-bit Toolchain that you installed via the Visual Studio Installer.
+Make sure that Ninja is used from CMake as build tool on both systems.
 
 ### Benchmarks
 
@@ -398,8 +450,8 @@ and 1024 MB DDR4 RAM on a local NVMe SSD in an Ubuntu 20.04 LTS LXC container.
 
 In these benchmarks, we compare the old version 0.3 preparation step with the new version 1.0 preparation step.
 
-We used the `data/floating-car-data/conf/prepare.conf` as a base. The import is the `oberfranken-latest.osm.pbf` in the
-version that we had at the time we ran the benchmarks.
+We used the [data/floating-car-data/conf/prepare.conf](data/floating-car-data/conf/prepare.conf) as a base. The import
+is the `oberfranken-latest.osm.pbf` in the version that we had at the time we ran the benchmarks.
 
 It has to be noted that although the "Max RAM" looks higher in the new version, most of it is "shared memory" that can
 be flushed to disk at any time from the operating system. This means that the actual necessary RAM usage is only some
@@ -456,8 +508,8 @@ overhead, however, it can be opened near instantaneously.
 In the following benchmarks, we match the data from our "Hof data set" from our
 publication (https://doi.org/10.1111/tgis.13107).
 
-The benchmarks are based on the `data/floating-car-data/conf/match.conf` and the
-`data/floating-car-data/conf/match_raw.conf` files.
+The benchmarks are based on the [data/floating-car-data/conf/match.conf](data/floating-car-data/conf/match.conf) and
+the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/match_raw.conf) files.
 
 | Mode                        | Threads | Track points | Sanitized track points | Candidates | Combinations | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
 |:----------------------------|--------:|-------------:|-----------------------:|-----------:|-------------:|---------------:|------------------:|-------------------------:|--------------:|
@@ -598,7 +650,8 @@ In this benchmark, we compare the results from the old and new version with the 
 publication (https://doi.org/10.1111/tgis.13107). This is to check whether the new version 1.0 is as accurate as the old
 version 0.3 that was used in the publication.
 
-The comparison is based on the `data/floating-car-data/conf/compare.conf` file.
+The comparison is based on the [data/floating-car-data/conf/compare.conf](data/floating-car-data/conf/compare.conf)
+file.
 
 We compared the results of the old version with the `ground_truth.csv` with the old version and the new version,
 and we compared the results of the new version with the `ground_truth.csv` with the new version.
@@ -613,7 +666,7 @@ We can see that the accuracy is exactly the same. However, the new version is fa
 The sub-second times and small memory differences are subject to measurement uncertainty and in practice equal.
 
 Since the old version needs to load the network even for making a comparison, it takes significantly longer time.
-Moreover, the old version only computes a mean accuracy but not a weighted mean accuracy.
+Moreover, the old version only computes the mean accuracy but not the weighted mean accuracy.
 The mean accuracy is the accuracies of all tracks divided by the number of tracks.
 The weighted mean accuracy takes into account the length of the track and normalizes the accuracies by the track
 lengths. As such, it is more correct because a very short but inaccurate result does not count as much as a very long
@@ -657,11 +710,13 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 
 </details>
 
+More accuracy metrics from other data sets are shown in the [data](data) subfolders.
+
 ### Reference
 
 *This is the successor to the deprecated repository [Map Matching](https://github.com/iisys-hof/map-matching).*
 
-If you want to cite this work, please see the official publication:
+If you want to cite this work, please also cite the official publication:
 
 A. Wöltche, "Open source map matching with Markov decision processes: A new method and a detailed benchmark with
 existing approaches", Transactions in GIS, vol. 27, no. 7, pp. 1959–1991, Oct. 2023,

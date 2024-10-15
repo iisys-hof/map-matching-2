@@ -112,6 +112,8 @@ endif ()
 
 find_package(Boost REQUIRED CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
-install(FILES
-        "${boost_SOURCE_DIR}/LICENSE_1_0.txt"
-        DESTINATION doc/boost)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${boost_SOURCE_DIR}/LICENSE_1_0.txt"
+            DESTINATION doc/boost)
+endif ()

@@ -13,6 +13,8 @@ set(Protozero_ROOT "${protozero_SOURCE_DIR}" CACHE PATH "protozero root path" FO
 
 find_package(Protozero MODULE REQUIRED)
 
-install(FILES
-        "${protozero_SOURCE_DIR}/LICENSE.md"
-        DESTINATION doc/protozero)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${protozero_SOURCE_DIR}/LICENSE.md"
+            DESTINATION doc/protozero)
+endif ()

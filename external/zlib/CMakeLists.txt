@@ -29,6 +29,8 @@ set(ZLIB_USE_STATIC_LIBS ON CACHE BOOL "zlib use static libs" FORCE)
 
 find_package(ZLIB REQUIRED)
 
-install(FILES
-        "${zlib_SOURCE_DIR}/LICENSE"
-        DESTINATION doc/zlib)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${zlib_SOURCE_DIR}/LICENSE"
+            DESTINATION doc/zlib)
+endif ()

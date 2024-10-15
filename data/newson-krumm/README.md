@@ -4,7 +4,7 @@ P. Newson and J. Krumm, "Hidden Markov Map Matching through Noise and Sparseness
 SIGSPATIAL International Conference on Advances in Geographic Information Systems, New York, NY, USA: Association for
 Computing Machinery, 2009, pp. 336–343, doi: [10.1145/1653771.1653818](https://dx.doi.org/10.1145%2F1653771.1653818).
 
-Ground truth dataset to download from: \
+Seattle ground truth dataset to download from: \
 [https://www.microsoft.com/en-us/research/publication/hidden-markov-map-matching-noise-sparseness/](https://www.microsoft.com/en-us/research/publication/hidden-markov-map-matching-noise-sparseness/)
 
 Place in this directory \

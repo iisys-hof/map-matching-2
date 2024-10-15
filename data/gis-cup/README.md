@@ -4,7 +4,7 @@ A. Mohamed, T. Rautman, J. Krumm, and A. Teredesai, "ACM SIGSPATIAL GIS Cup 2012
 6-9, 2012. Redondo Beach, CA, USA, Nov. 2012,
 doi: [10.1145/2424321.2424426](https://dx.doi.org/10.1145%2F2424321.2424426).
 
-Map matching dataset to download from: \
+GIS Cup 2012 map matching dataset to download from: \
 [https://web.archive.org/web/20130127211936/http://depts.washington.edu/giscup/home](https://web.archive.org/web/20130127211936/http://depts.washington.edu/giscup/home) \
 Click on the `Road Network Information` and `Training Data Sets` links.
 

@@ -4,7 +4,7 @@ M. Kubicka, A. Cela, P. Moulin, H. Mounier, and S. I. Niculescu, "Dataset for te
 algorithms", in 2015 IEEE Intelligent Vehicles Symposium (IV), Jun. 2015,
 doi: [10.1109/ivs.2015.7225829](https://dx.doi.org/10.1109%2Fivs.2015.7225829)
 
-Map matching dataset to download from: \
+Worldwide map matching dataset to download from: \
 [https://doi.org/10.5281/zenodo.57731](https://doi.org/10.5281/zenodo.57731)
 
 Unzip the `map-matching-dataset.zip` zip file and place in this directory \

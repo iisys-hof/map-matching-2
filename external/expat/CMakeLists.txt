@@ -35,6 +35,8 @@ set(EXPAT_ROOT "${expat_BINARY_DIR};${expat_SOURCE_DIR}/expat/lib" CACHE PATH "e
 
 find_package(EXPAT REQUIRED)
 
-install(FILES
-        "${expat_SOURCE_DIR}/COPYING"
-        DESTINATION doc/expat)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${expat_SOURCE_DIR}/COPYING"
+            DESTINATION doc/expat)
+endif ()

@@ -389,7 +389,12 @@ Prepare Process Options:
                                           or when the map matching metrics 
                                           later down the line respect the osm 
                                           tags,
-                                          which they do not by design currently
+                                          which they do not by design 
+                                          currently;
+                                          however, use this when you export 
+                                          edge_ids with the matches later,
+                                          as only then the ids are correctly 
+                                          preserved during simplification
                                         default is "all"
   --remove-unconnected arg (=off)       remove weakly unconnected components so
                                         that only the largest subgraph remains;
@@ -629,7 +634,7 @@ Output Options:
                                         for the application results
 
 Match Output Options:
-  --columns arg (=id,duration,track,prepared,match,track_length,prepared_length,match_length,edge_ids)
+  --columns arg (=id,duration,track,prepared,match,track_length,prepared_length,match_length)
                                         output columns in order for the 
                                         application results, separated by 
                                         comma;
@@ -647,7 +652,9 @@ Match Output Options:
                                           prepared_length: prepared track 
                                           length in meter
                                           match_length: match length in meter
-                                          edge_ids: list of original edge IDs
+                                          edge_ids: list of original edge IDs 
+                                          (off by default; if used, combine 
+                                          with simplify osm-aware
   --export-edges arg (=off)             export matched routes based on the 
                                         complete network edges instead of the 
                                         actual parts, this is only useful if 

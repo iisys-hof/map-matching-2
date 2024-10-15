@@ -33,6 +33,8 @@ set(BZip2_ROOT "${bz2_BINARY_DIR};${bz2_SOURCE_DIR}" CACHE PATH "bz2 root path" 
 find_library(BZIP2_LIBRARIES NAMES bz2_static PATHS ${BZip2_ROOT} REQUIRED)
 find_package(BZip2 REQUIRED)
 
-install(FILES
-        "${bz2_SOURCE_DIR}/COPYING"
-        DESTINATION doc/bz2)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${bz2_SOURCE_DIR}/COPYING"
+            DESTINATION doc/bz2)
+endif ()

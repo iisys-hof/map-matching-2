@@ -4,7 +4,7 @@ H. Li, L. Kulik, and K. Ramamohanarao, "Spatio-temporal trajectory simplificatio
 Proceedings of the 22nd ACM SIGSPATIAL International Conference on Advances in Geographic Information Systems, Nov.
 2014, pp. 63–72, doi: [10.1145/2666310.2666409](https://dx.doi.org/10.1145%2F2666310.2666409)
 
-Ground truth dataset to download from: \
+Melbourne ground truth dataset to download from: \
 [https://web.archive.org/web/20170301001019/https://people.eng.unimelb.edu.au/henli/projects/map-matching/](https://web.archive.org/web/20170301001019/https://people.eng.unimelb.edu.au/henli/projects/map-matching/)
 
 Place in this directory \

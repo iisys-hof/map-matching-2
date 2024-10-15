@@ -1,7 +1,7 @@
 # protobuf
 FetchContent_Declare(protobuf
         GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-        GIT_TAG v28.1
+        GIT_TAG v28.2
         SOURCE_SUBDIR cmake
         EXCLUDE_FROM_ALL
         FIND_PACKAGE_ARGS)
@@ -44,6 +44,8 @@ set(Protobuf_ROOT "${protobuf_SOURCE_DIR}/src;${protobuf_BINARY_DIR}" CACHE PATH
 
 find_package(Protobuf REQUIRED)
 
-install(FILES
-        "${protobuf_SOURCE_DIR}/LICENSE"
-        DESTINATION doc/protobuf)
+if (NOT BUILD_ONLY_LIBRARY)
+    install(FILES
+            "${protobuf_SOURCE_DIR}/LICENSE"
+            DESTINATION doc/protobuf)
+endif ()
