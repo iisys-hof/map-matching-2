@@ -28,6 +28,8 @@
 #include "geometry/algorithm/distance.hpp"
 #include "geometry/algorithm/substring.hpp"
 
+#include "util/time_helper.hpp"
+
 namespace map_matching_2::matching {
 
     template<typename Network>
@@ -48,8 +50,8 @@ namespace map_matching_2::matching {
         using lazy_multi_rich_line_type = typename network_traits<network_type>::lazy_multi_rich_line_type;
         using policy_type = typename network_traits<network_type>::policy_type;
 
-        constexpr explicit router(const network_type &network)
-            : _network{network} {}
+        constexpr explicit router(const network_type &network, util::time_helper &time_helper)
+            : _time_helper{time_helper}, _network{network} {}
 
         [[nodiscard]] std::vector<std::list<vertex_descriptor>> shortest_paths(
                 const std::vector<candidate_type> &candidates,
@@ -360,6 +362,7 @@ namespace map_matching_2::matching {
         using route_cache_type = boost::unordered::unordered_flat_map<
             route_cache_key_type, std::unique_ptr<const route_type>>;
 
+        util::time_helper &_time_helper;
         const network_type &_network;
 
         mutable graph::predecessors_type _predecessors{};

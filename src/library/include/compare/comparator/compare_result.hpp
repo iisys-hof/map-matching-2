@@ -29,7 +29,7 @@ namespace map_matching_2::compare {
         multi_track_type match;
         multi_track_type ground_truth;
         geometry::comparison<rich_segment_type> comparison;
-        double duration;
+        double duration{0.0};
     };
 
 }

@@ -21,7 +21,7 @@
 namespace map_matching_2::matching {
 
     static const std::string DEFAULT_COLUMNS{
-            "id,duration,track,prepared,match,track_length,prepared_length,match_length"
+            "id,aborted,duration,track,prepared,match,track_length,prepared_length,match_length"
     };
 
     static const std::string DEFAULT_CANDIDATE_COLUMNS{

@@ -34,7 +34,7 @@
 #include "matching/traits/network.hpp"
 #include "matching/settings.hpp"
 
-#include "environment/result.hpp"
+#include "util/time_helper.hpp"
 
 namespace map_matching_2::environment {
 
@@ -100,10 +100,18 @@ namespace map_matching_2::environment {
             if (_settings.filter_duplicates) {
                 const auto defects = _algorithms.detector.detect(track.rich_line, _settings.filter_duplicates);
                 _algorithms.detector.remove_defects(track.rich_line, defects);
+
+                if (abort()) {
+                    return;
+                }
             }
 
             if (_settings.simplify_track) {
                 geometry::simplify_rich_line(_track.rich_line, false, _settings.simplify_track_distance_tolerance);
+
+                if (abort()) {
+                    return;
+                }
             }
 
             if (_settings.median_merge) {
@@ -112,15 +120,15 @@ namespace map_matching_2::environment {
             }
         }
 
-        const auto &track() const {
+        [[nodiscard]] const auto &track() const {
             return _track;
         }
 
-        const auto &candidates() const {
+        [[nodiscard]] const auto &candidates() const {
             return _candidates;
         }
 
-        auto states() const {
+        [[nodiscard]] std::size_t states() const {
             std::size_t states = 0;
             for (const auto &state_actions : _state_cache) {
                 states += state_actions.size();
@@ -128,7 +136,7 @@ namespace map_matching_2::environment {
             return states;
         }
 
-        auto edges() const {
+        [[nodiscard]] std::size_t edges() const {
             std::size_t edges = 0;
             for (const auto &candidate : _candidates) {
                 edges += candidate.edges.size();
@@ -208,34 +216,12 @@ namespace map_matching_2::environment {
             return result;
         }
 
-        [[nodiscard]] environment::result<route_type> result(
+        [[nodiscard]] route_type result(
                 const std::vector<std::pair<std::size_t, std::size_t>> &policy) const {
-            route_type route = _algorithms.router.candidates_route(
+            return _algorithms.router.candidates_route(
                     _candidates, policy, _settings.within_edge_turns, _settings.join_merges,
                     _settings.routing_max_distance_factor);
-            const auto edge_list = _algorithms.router.edges_list(route);
-            if (_settings.export_edges) {
-                route = _algorithms.router.export_edges_route(edge_list);
-            }
-            auto ids = _algorithms.router.edge_ids(edge_list);
-            return environment::result<route_type>{std::move(route), std::move(ids)};
         }
-
-        // void resize_candidates(const std::vector<std::size_t> &positions, std::size_t round,
-        //                        bool adaptive_resize = true) {
-        //     if (_settings.k_nearest_candidate_search) {
-        //         _matcher.resize_candidates_nearest(
-        //                 _track, _candidates, positions, round, _settings.k_nearest_reverse,
-        //                 _settings.k_nearest_adjacent, _settings.candidate_adoption_siblings,
-        //                 _settings.candidate_adoption_nearby, _settings.candidate_adoption_reverse);
-        //     } else {
-        //         _matcher.resize_candidates_buffer(
-        //                 _track, _candidates, positions, round, _settings.buffer_upper_radius,
-        //                 _settings.buffer_lower_radius, _settings.adaptive_radius, adaptive_resize,
-        //                 _settings.candidate_adoption_siblings, _settings.candidate_adoption_nearby,
-        //                 _settings.candidate_adoption_reverse);
-        //     }
-        // }
 
         [[nodiscard]] const state_internal &state2internal(state_type state) const {
             return _states[state];
@@ -249,6 +235,10 @@ namespace map_matching_2::environment {
             } else {
                 return action - special_actions;
             }
+        }
+
+        [[nodiscard]] bool abort() {
+            return _algorithms.time_helper.update_and_has_reached();
         }
 
     private:

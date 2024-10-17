@@ -81,6 +81,10 @@ namespace map_matching_2::learning {
 
                     _environment.state = state;
                 }
+
+                if (_environment.abort()) {
+                    return highest_state;
+                }
             }
 
             return highest_state;
@@ -94,12 +98,22 @@ namespace map_matching_2::learning {
             bool trained = false;
 
             _environment.init();
+
+            std::vector<std::pair<std::size_t, std::size_t>> policy;
+
+            if (_environment.abort()) {
+                return policy;
+            }
+
             std::vector<state_type> states;
             std::vector<double> V;
             std::vector<action_type> policies;
-            std::vector<std::pair<std::size_t, std::size_t>> policy;
 
             std::size_t highest_state = generate_states(states);
+
+            if (_environment.abort()) {
+                return policy;
+            }
 
             V.reserve(highest_state + 1);
             while (V.size() < V.capacity()) {
@@ -111,7 +125,7 @@ namespace map_matching_2::learning {
                 policies.emplace_back(action_type{});
             }
 
-            for (auto it = states.crbegin(); it != states.crend(); it++) {
+            for (auto it = states.crbegin(); it != states.crend(); ++it) {
                 const auto &state = *it;
                 _environment.state = state;
 
@@ -133,7 +147,7 @@ namespace map_matching_2::learning {
                     old_value = value;
                     value = 0.0;
 
-                    for (auto it = states.crbegin(); it != states.crend(); it++) {
+                    for (auto it = states.crbegin(); it != states.crend(); ++it) {
                         const auto &state = *it;
                         _environment.state = state;
 
@@ -163,13 +177,17 @@ namespace map_matching_2::learning {
 
                     episode++;
 
-                    //                std::cout << "Episode: " << episode << ", value: " << std::setprecision(20) << value << std::endl;
+                    // std::cout << "Episode: " << episode << ", value: " << std::setprecision(20) << value << std::endl;
+
+                    if (_environment.abort()) {
+                        return policy;
+                    }
                 }
 
                 // policy improvement
                 stable = true;
 
-                for (auto it = states.crbegin(); it != states.crend(); it++) {
+                for (auto it = states.crbegin(); it != states.crend(); ++it) {
                     const auto &state = *it;
                     _environment.state = state;
 
@@ -206,6 +224,10 @@ namespace map_matching_2::learning {
                         if (max_action != old_action) {
                             stable = false;
                         }
+                    }
+
+                    if (_environment.abort()) {
+                        return policy;
                     }
                 }
             }
@@ -250,7 +272,7 @@ namespace map_matching_2::learning {
                 }
             }
 
-            //            std::cout << " Score: " << score << std::endl;
+            // std::cout << " Score: " << score << std::endl;
 
             return policy;
         }

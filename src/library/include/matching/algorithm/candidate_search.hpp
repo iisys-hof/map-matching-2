@@ -33,6 +33,7 @@
 #include "geometry/algorithm/substring.hpp"
 
 #include "util/benchmark.hpp"
+#include "util/time_helper.hpp"
 
 #include "../settings.hpp"
 
@@ -54,20 +55,25 @@ namespace map_matching_2::matching {
         using distance_type = typename network_traits<network_type>::distance_type;
         using length_type = typename network_traits<network_type>::length_type;
 
-        constexpr explicit candidate_searcher(const network_type &network)
-            : _network{network} {}
+        constexpr explicit candidate_searcher(const network_type &network, util::time_helper &time_helper)
+            : _time_helper{time_helper}, _network{network} {}
 
         [[nodiscard]] std::vector<candidate_type> candidate_search(
                 const track_type &track, const matching::settings &match_settings) const {
             std::vector<boost::container::multiset<candidate_edge_type>> candidate_edge_sets(track.rich_line.size());
             for (std::size_t i = 0; i < track.rich_line.size(); ++i) {
                 _candidate_search_individual(candidate_edge_sets[i], track, i, match_settings);
+
+                if(_time_helper.update_and_has_reached()) {
+                    return {};
+                }
             }
 
             return _finalize_candidates(candidate_edge_sets, track, match_settings);
         }
 
     private:
+        util::time_helper &_time_helper;
         const network_type &_network;
         mutable std::size_t _edge_size_switch{16};
         mutable double _edge_duration{std::numeric_limits<double>::signaling_NaN()},

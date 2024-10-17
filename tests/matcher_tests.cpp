@@ -25,6 +25,8 @@
 
 #include "matching/traits/network.hpp"
 
+#include "util/time_helper.hpp"
+
 #include "helper/matcher_fixture.hpp"
 
 BOOST_AUTO_TEST_SUITE(matcher_tests)
@@ -62,7 +64,8 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
 
         std::cout << track.str() << std::endl;
 
-        map_matching_2::matching::algorithms _algorithms{network_matcher};
+        map_matching_2::util::time_helper _time_helper;
+        map_matching_2::matching::algorithms _algorithms{network_matcher, _time_helper};
 
         map_matching_2::matching::settings match_settings{};
         match_settings.candidate_search = map_matching_2::matching::settings::CANDIDATE_SEARCH::CIRCLE;
@@ -119,7 +122,8 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
 
         std::cout << track.str() << std::endl;
 
-        map_matching_2::matching::algorithms _algorithms{network_matcher};
+        map_matching_2::util::time_helper _time_helper;
+        map_matching_2::matching::algorithms _algorithms{network_matcher, _time_helper};
 
         map_matching_2::matching::settings match_settings{};
         match_settings.candidate_search = map_matching_2::matching::settings::CANDIDATE_SEARCH::CIRCLE;

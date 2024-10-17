@@ -43,7 +43,7 @@ namespace map_matching_2::matching {
 
         geometry::srs_transform tracks_srs_transform{};
 
-        bool export_edges{false}, join_merges{true};
+        bool export_edges{false}, export_edge_ids{false}, join_merges{true};
         std::string output{}, filename{}, export_candidates{};
 
         bool console{false};
@@ -51,7 +51,7 @@ namespace map_matching_2::matching {
         bool filter_duplicates{true}, simplify_track{true}, median_merge{true}, adaptive_median_merge{true},
                 within_edge_turns{false}, candidate_adoption_siblings{true}, candidate_adoption_nearby{true},
                 candidate_adoption_reverse{false}, adaptive_radius{true};
-        double routing_max_distance_factor{5.0}, simplify_track_distance_tolerance{5.0},
+        double max_time{0.0}, routing_max_distance_factor{5.0}, simplify_track_distance_tolerance{5.0},
                 median_merge_distance_tolerance{10.0}, radius{200.0}, radius_upper_limit{10000.0},
                 radius_lower_limit{200.0};
         std::size_t k_nearest{16};
@@ -69,8 +69,7 @@ namespace map_matching_2::matching {
 
         double threshold{1e-3};
 
-        bool fixed_time{false};
-        double learning_rate{0.9}, epsilon{0.5}, early_stop_factor{1.0}, max_time{3.0};
+        double learning_rate{0.9}, epsilon{0.5}, early_stop_factor{1.0};
         std::size_t episodes{1000000000};
 
     };

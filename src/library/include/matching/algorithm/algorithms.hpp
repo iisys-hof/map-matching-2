@@ -21,6 +21,7 @@
 #include "types/matching/algorithm/route.hpp"
 
 #include "matching/traits/network.hpp"
+#include "util/time_helper.hpp"
 
 namespace map_matching_2::matching {
 
@@ -31,9 +32,10 @@ namespace map_matching_2::matching {
         using network_type = Network;
         using track_rich_line_type = typename matching::network_traits<network_type>::track_rich_line_type;
 
-        constexpr explicit algorithms(const network_type &network)
-            : searcher{network}, router{network} {}
+        constexpr explicit algorithms(const network_type &network, util::time_helper &time_helper)
+            : time_helper{time_helper}, searcher{network, time_helper}, router{network, time_helper} {}
 
+        util::time_helper &time_helper;
         detector_type<track_rich_line_type> detector{};
         candidate_searcher<network_type> searcher;
         class router<network_type> router;

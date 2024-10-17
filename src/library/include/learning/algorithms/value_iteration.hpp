@@ -80,15 +80,19 @@ namespace map_matching_2::learning {
                     }
 
                     _environment.state = state;
+
+                    if (_environment.abort()) {
+                        return highest_state;
+                    }
                 }
 
-                //                if (states.size() >= 1000 and states.size() < 10000 and
-                //                    states.size() % 1000 == 0 or states.size() % 10000 == 0) {
-                //                    std::cout << "States: " << states.size() << ", to visit: " << states_to_visit.size() << std::endl;
-                //                }
+                // if (states.size() >= 1000 and states.size() < 10000 and
+                //     states.size() % 1000 == 0 or states.size() % 10000 == 0) {
+                //     std::cout << "States: " << states.size() << ", to visit: " << states_to_visit.size() << std::endl;
+                // }
             }
 
-            //            std::cout << "Final States: " << states.size() << std::endl;
+            // std::cout << "Final States: " << states.size() << std::endl;
             return highest_state;
         }
 
@@ -99,11 +103,21 @@ namespace map_matching_2::learning {
             bool trained = false;
 
             _environment.init();
-            std::vector<state_type> states;
-            std::vector<double> V;
+
             std::vector<std::pair<std::size_t, std::size_t>> policy;
 
+            if (_environment.abort()) {
+                return policy;
+            }
+
+            std::vector<state_type> states;
+            std::vector<double> V;
+
             std::size_t highest_state = generate_states(states);
+
+            if (_environment.abort()) {
+                return policy;
+            }
 
             V.reserve(highest_state + 1);
             while (V.size() < V.capacity()) {
@@ -118,7 +132,7 @@ namespace map_matching_2::learning {
                 old_value = value;
                 value = 0.0;
 
-                for (auto it = states.crbegin(); it != states.crend(); it++) {
+                for (auto it = states.crbegin(); it != states.crend(); ++it) {
                     const auto &state = *it;
                     _environment.state = state;
 
@@ -150,6 +164,10 @@ namespace map_matching_2::learning {
 
                         value += max_action_value;
                     }
+
+                    if (_environment.abort()) {
+                        return policy;
+                    }
                 }
 
                 const double new_delta = std::fabs(value - old_value);
@@ -159,7 +177,7 @@ namespace map_matching_2::learning {
 
                 episode++;
 
-                //                std::cout << "Episode: " << episode << ", value: " << std::setprecision(20) << value << std::endl;
+                // std::cout << "Episode: " << episode << ", value: " << std::setprecision(20) << value << std::endl;
             }
 
             auto state = _environment.reset();
@@ -222,7 +240,7 @@ namespace map_matching_2::learning {
                 }
             }
 
-            //            std::cout << " Score: " << score << std::endl;
+            // std::cout << " Score: " << score << std::endl;
 
             return policy;
         }

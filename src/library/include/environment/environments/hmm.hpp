@@ -31,7 +31,7 @@
 #include "matching/traits/network.hpp"
 #include "matching/settings.hpp"
 
-#include "environment/result.hpp"
+#include "util/time_helper.hpp"
 
 namespace map_matching_2::environment {
 
@@ -80,18 +80,34 @@ namespace map_matching_2::environment {
             if (_settings.filter_duplicates) {
                 const auto defects = _algorithms.detector.detect(track.rich_line, _settings.filter_duplicates);
                 _algorithms.detector.remove_defects(track.rich_line, defects);
+
+                if (abort()) {
+                    return;
+                }
             }
 
             if (_settings.simplify_track) {
                 geometry::simplify_rich_line(_track.rich_line, false, _settings.simplify_track_distance_tolerance);
+
+                if (abort()) {
+                    return;
+                }
             }
 
             if (_settings.median_merge) {
                 _track.rich_line = geometry::median_merge(_track.rich_line.line(),
                         _settings.median_merge_distance_tolerance, _settings.adaptive_median_merge, &_network);
+
+                if (abort()) {
+                    return;
+                }
             }
 
             _candidates = _algorithms.searcher.candidate_search(_track, _settings);
+
+            if (abort()) {
+                return;
+            }
 
             // clear buffer
             _observations.clear();
@@ -128,6 +144,10 @@ namespace map_matching_2::environment {
                     candidate_observations.emplace_back(observation_probability);
                 }
                 _observations.emplace_back(std::move(candidate_observations));
+
+                if (abort()) {
+                    return;
+                }
             }
 
             // transitions
@@ -261,30 +281,38 @@ namespace map_matching_2::environment {
                     }
                     _transitions.emplace_back(std::move(candidate_probabilities));
                 }
+
+                if (abort()) {
+                    return;
+                }
             }
         }
 
-        const auto &track() const {
+        [[nodiscard]] const auto &track() const {
             return _track;
         }
 
-        const auto &candidates() const {
+        [[nodiscard]] const auto &candidates() const {
             return _candidates;
         }
 
-        auto states() const {
+        [[nodiscard]] std::size_t states() const {
             std::size_t states = 0;
             for (std::int64_t from = -1, to = 0; to < _candidates.size(); ++from, ++to) {
                 if (from < 0) {
-                    states += _transitions[to].size();
+                    if (to < _transitions.size()) {
+                        states += _transitions[to].size();
+                    }
                 } else {
-                    states += _transitions[to].size() * _transitions[from].size();
+                    if (from < _transitions.size() and to < _transitions.size()) {
+                        states += _transitions[to].size() * _transitions[from].size();
+                    }
                 }
             }
             return states;
         }
 
-        auto edges() const {
+        [[nodiscard]] std::size_t edges() const {
             std::size_t edges = 0;
             for (const auto &candidate : _candidates) {
                 edges += candidate.edges.size();
@@ -300,17 +328,15 @@ namespace map_matching_2::environment {
             return _transitions;
         }
 
-        [[nodiscard]] environment::result<route_type> result(
+        [[nodiscard]] bool abort() {
+            return _algorithms.time_helper.update_and_has_reached();
+        }
+
+        [[nodiscard]] route_type result(
                 const std::vector<std::pair<std::size_t, std::size_t>> &policy) const {
-            route_type route = _algorithms.router.candidates_route(
+            return _algorithms.router.candidates_route(
                     _candidates, policy, _settings.within_edge_turns, _settings.join_merges,
                     _settings.routing_max_distance_factor);
-            const auto edge_list = _algorithms.router.edges_list(route);
-            if (_settings.export_edges) {
-                route = _algorithms.router.export_edges_route(edge_list);
-            }
-            auto ids = _algorithms.router.edge_ids(edge_list);
-            return environment::result<route_type>{std::move(route), std::move(ids)};
         }
 
     private:

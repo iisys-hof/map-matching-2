@@ -36,6 +36,7 @@
 
 #include "util/coordinator.hpp"
 #include "util/benchmark.hpp"
+#include "util/time_helper.hpp"
 
 #include "traits/network.hpp"
 
@@ -106,7 +107,8 @@ namespace map_matching_2::matching {
             using environment_type = typename learner_type::environment_type;
             using match_result_type = match_result<learner_type>;
 
-            matching::algorithms<network_type> _algorithms{_network};
+            util::time_helper _time_helper{settings.max_time};
+            matching::algorithms<network_type> _algorithms{_network, _time_helper};
 
             match_result_type _match_result;
             _match_result.environments.reserve(multi_track.size());
@@ -132,18 +134,37 @@ namespace map_matching_2::matching {
                 learner_type &learner = _match_result.learner.emplace_back(
                         environment, settings);
 
+                // match
                 policy_type policy;
                 duration += util::benchmark([&]() {
                     environment.set(track);
-                    policy = learner();
+                    if (not _time_helper.update_and_has_reached()) {
+                        policy = learner();
+                    }
                 });
 
                 _prepared.emplace_back(environment.track().rich_line);
-                auto result = environment.result(policy);
-                _matches.emplace_back(route_type{result.route});
-                std::move(std::begin(result.ids), std::end(result.ids), std::back_inserter(_edge_ids));
+
+                // result
+                auto route = environment.result(policy);
+                if (settings.export_edge_ids or settings.export_edges) {
+                    const auto edge_list = _algorithms.router.edges_list(route);
+                    if (settings.export_edges) {
+                        route = _algorithms.router.export_edges_route(edge_list);
+                    }
+                    if (settings.export_edge_ids) {
+                        auto ids = _algorithms.router.edge_ids(edge_list);
+                        std::move(std::begin(ids), std::end(ids), std::back_inserter(_edge_ids));
+                    }
+                }
+                _matches.emplace_back(route_type{route});
 
                 _policies.emplace_back(std::move(policy));
+
+                if (_time_helper.reached_max_duration()) {
+                    _match_result.aborted = true;
+                    break;
+                }
             }
 
             _match_result.prepared = multi_track_type{

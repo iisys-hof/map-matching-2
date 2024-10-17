@@ -29,6 +29,7 @@ target_sources(library
         src/matching/matcher/match_task.cpp
         src/matching/defect.cpp
         src/util/compiler.cpp
+        src/util/time_helper.cpp
         src/util/version.cpp)
 
 if (EXPLICIT_TEMPLATES)

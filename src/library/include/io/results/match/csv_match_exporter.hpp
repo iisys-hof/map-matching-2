@@ -26,6 +26,7 @@ namespace map_matching_2::io::results {
 
     struct match_csv_task {
         std::string id, track, prepared, match, edge_ids;
+        bool aborted;
         double duration, track_length, prepared_length, match_length;
     };
 
@@ -102,7 +103,7 @@ namespace map_matching_2::io::results {
                     match_result.track.id,
                     std::move(track_wkt), std::move(prepared_wkt), std::move(match_wkt),
                     std::move(edge_ids),
-                    match_result.duration,
+                    match_result.aborted, match_result.duration,
                     track_length, prepared_length, match_length,
             };
         }
@@ -114,6 +115,7 @@ namespace map_matching_2::io::results {
     protected:
         enum class column {
             ID,
+            ABORTED,
             DURATION,
             TRACK,
             PREPARED,
@@ -132,6 +134,8 @@ namespace map_matching_2::io::results {
             for (const auto &_column_string : this->_column_strings) {
                 if (_column_string == "id") {
                     _columns.emplace_back(column::ID);
+                } else if (_column_string == "aborted") {
+                    _columns.emplace_back(column::ABORTED);
                 } else if (_column_string == "duration") {
                     _columns.emplace_back(column::DURATION);
                 } else if (_column_string == "track") {
@@ -161,6 +165,9 @@ namespace map_matching_2::io::results {
                 switch (_column) {
                     case column::ID:
                         result.emplace_back(task.id);
+                        break;
+                    case column::ABORTED:
+                        result.emplace_back(task.aborted ? "yes" : "no");
                         break;
                     case column::DURATION:
                         result.emplace_back(std::to_string(task.duration));

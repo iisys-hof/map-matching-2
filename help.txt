@@ -634,12 +634,15 @@ Output Options:
                                         for the application results
 
 Match Output Options:
-  --columns arg (=id,duration,track,prepared,match,track_length,prepared_length,match_length)
+  --columns arg (=id,aborted,duration,track,prepared,match,track_length,prepared_length,match_length)
                                         output columns in order for the 
                                         application results, separated by 
                                         comma;
                                           id: id of the track, aggregated in 
                                           case of multiple ids were specified
+                                          aborted: 'no' if track was 
+                                          successfully matched, 'yes' if 
+                                          max-time was reached before finishing
                                           duration: matching duration in 
                                           seconds
                                           track: original track as it was 
@@ -875,6 +878,23 @@ Export Options:
                                           part of the resulting match
 
 Matching Options:
+  --max-time arg (=0.0)                 when max-time (defined in seconds) is 
+                                        set to anything above 0.0, the matching
+                                        of a track is stopped after the set 
+                                        max-time is reached;there are multiple 
+                                        checkpoints during the matching 
+                                        algorithm for a defined aborting, this 
+                                        means that it can take a slight amount 
+                                        of extra time before the matching is 
+                                        actually stopped, in case a matching 
+                                        was stopped because the max-time was 
+                                        reached, the 'aborted' column is set to
+                                        'yes' in the output file, in case the 
+                                        current algorithm was able to produce 
+                                        any result up to this point, it is 
+                                        outputted, else nothing is outputted; 
+                                        for example Q-Learning might be able to
+                                        output something suboptimal
   --filter-duplicates arg (=on)         filter duplicate (adjacent spatially 
                                         equal) points in tracks before 
                                         matching, is recommended
@@ -1111,33 +1131,6 @@ Learning Options:
                                         larger than 1.0) leads to better 
                                         results but needs more time for 
                                         convergence
-  --fixed-time arg (=off)               enables fixed-time mode during 
-                                        q-learning, in this mode the 
-                                        convergence is stopped after set amount
-                                        of seconds, this is very useful in 
-                                        real-time or remote call mode when a 
-                                        result is needed after a maximum time, 
-                                        when the algorithm converged before the
-                                        set time is reached it stops early, 
-                                        when the set time is reached before the
-                                        algorithm converged the currently best 
-                                        result is exported as fast as possible
-  --max-time arg (=3.0)                 when fixed-time is enabled max-time 
-                                        sets the maximum time in seconds the 
-                                        q-learning algorithm tries to converge 
-                                        before stopping, in case the algorithm 
-                                        converges before this max-time timeout 
-                                        is reached, it early stops and returns 
-                                        the result, this time is only valid for
-                                        the matching run duration with 
-                                        q-learning, not for data importing, 
-                                        preparation, candidate search, and 
-                                        exporting of the results, which needs 
-                                        additional time, when the max-time is 
-                                        reached, the algorithm stops at the 
-                                        next possible stable moment and 
-                                        immediately returns the best result so 
-                                        far
   --max-episodes arg (=1000000000)      maximum episodes for definitive stop in
                                         q-learning, do not change except you 
                                         know what you are doing, training is 

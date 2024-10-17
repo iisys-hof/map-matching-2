@@ -22,11 +22,11 @@ namespace map_matching_2::util {
 
     template<typename Function>
     [[nodiscard]] double benchmark(const Function &function) {
-        using clock = std::chrono::steady_clock;
+        using clock_type = std::chrono::steady_clock;
 
-        const auto start = clock::now();
+        const auto start = clock_type::now();
         function();
-        const auto end = clock::now();
+        const auto end = clock_type::now();
 
         const std::chrono::duration<double> duration = end - start;
         return duration.count();

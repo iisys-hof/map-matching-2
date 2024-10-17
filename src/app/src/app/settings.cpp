@@ -28,12 +28,14 @@ namespace map_matching_2::app {
         settings.tracks_srs_transform = data.srs_tracks.srs_transform;
 
         settings.export_edges = data.match_output.export_edges;
+        settings.export_edge_ids = data.match_output.export_edge_ids;
         settings.join_merges = data.match_output.join_merges;
         settings.output = data.match_output.output;
         settings.filename = data.match_output.filename;
         settings.export_candidates = data.expo.candidates;
         settings.console = data.console.console;
 
+        settings.max_time = data.matching.max_time;
         settings.filter_duplicates = data.matching.filter_duplicates;
         settings.simplify_track = data.matching.simplify_track;
         settings.median_merge = data.matching.median_merge;
@@ -68,11 +70,9 @@ namespace map_matching_2::app {
 
         settings.threshold = data.dynamic_programming.threshold;
 
-        settings.fixed_time = data.learning.fixed_time;
         settings.learning_rate = data.learning.learning_rate;
         settings.epsilon = data.learning.epsilon;
         settings.early_stop_factor = data.learning.early_stop_factor;
-        settings.max_time = data.learning.max_time;
         settings.episodes = data.learning.episodes;
 
         if (data.matching.candidate_search == CANDIDATE_SEARCH_CIRCLE) {

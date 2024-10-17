@@ -72,9 +72,9 @@ namespace map_matching_2::io::results {
                 results.reserve(std::reduce(std::cbegin(counts), std::cend(counts)));
 
                 for (std::size_t i = 0; i < match_result.environments.size(); ++i) {
-                    const auto &environment = match_result.environments[i];
+                    const auto &environment = match_result.environments.at(i);
                     const auto &candidates = environment.candidates();
-                    const auto &policy = match_result.policies[i];
+                    const auto &policy = match_result.policies.at(i);
 
                     boost::unordered_flat_map<std::size_t, boost::unordered_flat_set<std::size_t>> policy_map;
                     for (auto [candidate_index, edge_index] : policy) {

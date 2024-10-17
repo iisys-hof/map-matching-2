@@ -42,6 +42,12 @@ namespace map_matching_2::learning {
         }
 
         std::vector<std::pair<std::size_t, std::size_t>> operator()() {
+            std::vector<std::pair<std::size_t, std::size_t>> policy;
+
+            if (_environment.abort()) {
+                return policy;
+            }
+
             const auto &observations = _environment.observations();
             const auto &transitions = _environment.transitions();
 
@@ -58,6 +64,10 @@ namespace map_matching_2::learning {
                     std::vector<action_type> paths(
                             observations[t].size(), _environment.no_action);
                     K.emplace_back(std::move(paths));
+
+                    if (_environment.abort()) {
+                        return policy;
+                    }
                 }
 
                 // initial probabilities
@@ -93,6 +103,10 @@ namespace map_matching_2::learning {
                     if (initializing) {
                         initialized = true;
                     }
+
+                    if (_environment.abort()) {
+                        return policy;
+                    }
                 }
 
                 // prepare policy
@@ -119,7 +133,6 @@ namespace map_matching_2::learning {
                 }
             }
 
-            std::vector<std::pair<std::size_t, std::size_t>> policy;
             policy.reserve(selections.size());
             for (std::size_t candidate = 0; candidate < observations.size(); ++candidate) {
                 std::int64_t edge = selections[candidate];

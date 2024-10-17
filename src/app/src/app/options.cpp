@@ -20,6 +20,7 @@
 #include <thread>
 #include <iostream>
 #include <filesystem>
+#include <algorithm>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/unordered/unordered_flat_set.hpp>
@@ -73,6 +74,11 @@ namespace map_matching_2::app {
     }
 
     void match_output_data::correct(const po::variables_map &vm) {
+        std::vector<std::string> _column_strings;
+        boost::split(_column_strings, columns, boost::is_any_of(","));
+        export_edge_ids = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "edge_ids") !=
+                std::cend(_column_strings);
+
         if (not vm["quiet"].as<bool>() and not vm["console"].as<bool>()) {
             if (export_edges) {
                 std::cout << "Enabled export edges mode." << std::endl;
@@ -461,6 +467,7 @@ namespace map_matching_2::app {
                 ("columns", po::value<std::string>(&data.columns)->default_value(matching::DEFAULT_COLUMNS),
                         "output columns in order for the application results, separated by comma;\n"
                         "  \tid: id of the track, aggregated in case of multiple ids were specified\n"
+                        "  \taborted: 'no' if track was successfully matched, 'yes' if max-time was reached before finishing\n"
                         "  \tduration: matching duration in seconds\n"
                         "  \ttrack: original track as it was imported as WKT\n"
                         "  \tprepared: prepared track as WKT after track sanitation, i.e., remove duplicates, median-merge\n"
@@ -1003,6 +1010,14 @@ namespace map_matching_2::app {
         po::options_description options("Matching Options", global.console.cols);
 
         options.add_options()
+                ("max-time", po::value<double>(&data.max_time)->default_value(0.0, "0.0"),
+                        "when max-time (defined in seconds) is set to anything above 0.0, "
+                        "the matching of a track is stopped after the set max-time is reached;"
+                        "there are multiple checkpoints during the matching algorithm for a defined aborting, "
+                        "this means that it can take a slight amount of extra time before the matching is actually stopped, "
+                        "in case a matching was stopped because the max-time was reached, the 'aborted' column is set to 'yes' in the output file, "
+                        "in case the current algorithm was able to produce any result up to this point, it is outputted, "
+                        "else nothing is outputted; for example Q-Learning might be able to output something suboptimal")
                 ("filter-duplicates", po::value<bool>(&data.filter_duplicates)->default_value(true, "on"),
                         "filter duplicate (adjacent spatially equal) points in tracks before matching, is recommended")
                 ("simplify-track", po::value<bool>(&data.simplify_track)->default_value(true, "on"),
@@ -1182,17 +1197,6 @@ namespace map_matching_2::app {
                         "early-stop-factor of 1.0 means early-stop only after sum of candidates episodes, "
                         "a smaller factor leads to faster convergence but worse results, "
                         "a larger factor (even larger than 1.0) leads to better results but needs more time for convergence")
-                ("fixed-time", po::value<bool>(&data.fixed_time)->default_value(false, "off"),
-                        "enables fixed-time mode during q-learning, in this mode the convergence is stopped after set amount of seconds, "
-                        "this is very useful in real-time or remote call mode when a result is needed after a maximum time, "
-                        "when the algorithm converged before the set time is reached it stops early, "
-                        "when the set time is reached before the algorithm converged the currently best result is exported as fast as possible")
-                ("max-time", po::value<double>(&data.max_time)->default_value(3.0, "3.0"),
-                        "when fixed-time is enabled max-time sets the maximum time in seconds the q-learning algorithm tries to converge before stopping, "
-                        "in case the algorithm converges before this max-time timeout is reached, it early stops and returns the result, "
-                        "this time is only valid for the matching run duration with q-learning, "
-                        "not for data importing, preparation, candidate search, and exporting of the results, which needs additional time, "
-                        "when the max-time is reached, the algorithm stops at the next possible stable moment and immediately returns the best result so far")
                 ("max-episodes", po::value<std::size_t>(&data.episodes)->default_value(1000000000),
                         "maximum episodes for definitive stop in q-learning, do not change except you know what you are doing, "
                         "training is generally stopped early before max-episodes is ever reached, "

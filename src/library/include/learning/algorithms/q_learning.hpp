@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 #include <random>
-#include <chrono>
 
 #include "matching/settings.hpp"
 
@@ -49,22 +48,23 @@ namespace map_matching_2::learning {
         }
 
         std::vector<std::pair<std::size_t, std::size_t>> operator()() {
-            using clock = std::chrono::high_resolution_clock;
-            const auto start = clock::now();
-
             assert(std::is_unsigned_v<state_type>);
             assert(std::is_unsigned_v<action_type>);
+            std::vector<std::pair<std::size_t, std::size_t>> policy;
 
-            std::size_t episode = 1;
+            // io::csv_exporter csv{"score.csv"};
+            // csv << std::vector{"score", "best"};
+
+            _environment.init();
+
+            if (_environment.abort()) {
+                return policy;
+            }
 
             std::vector<std::vector<double>> Q;
             std::vector<reward_type> rewards;
-            std::vector<std::pair<std::size_t, std::size_t>> policy;
 
-            //        io::csv_exporter csv{"score.csv"};
-            //        csv << std::vector{"score", "best"};
-
-            _environment.init();
+            std::size_t episode = 1;
 
             state_type state;
             double score;
@@ -161,18 +161,12 @@ namespace map_matching_2::learning {
                     no_improvement++;
                 }
 
-                //            csv << std::vector{std::to_string(score), std::to_string(best_score)};
+                // csv << std::vector{std::to_string(score), std::to_string(best_score)};
 
-                // early stop when fixed-time mode and max-time reached
+                // early stop when max-time reached
                 bool fixed_time_stop = false;
-                if (_settings.fixed_time) {
-                    const auto current = clock::now();
-                    const std::chrono::duration<double> duration = current - start;
-                    const auto seconds = duration.count();
-
-                    if (seconds >= _settings.max_time) {
-                        fixed_time_stop = true;
-                    }
+                if (_environment.abort()) {
+                    fixed_time_stop = true;
                 }
 
                 if (no_improvement >= improvement_stop or fixed_time_stop) {
@@ -228,18 +222,18 @@ namespace map_matching_2::learning {
                         step++;
                     }
 
-                    //                    std::cout << " Policy Score: " << score << std::endl;
+                    // std::cout << " Policy Score: " << score << std::endl;
 
                     if (score > best_policy_score) {
                         best_score = score;
                         no_improvement = 0;
                     } else if (no_improvement >= improvement_stop or fixed_time_stop) {
-                        //                        std::cout << "Stop after episode " << episode << std::endl;
+                        // std::cout << "Stop after episode " << episode << std::endl;
                         break;
                     }
                 }
 
-                //                std::cout << "Episode: " << episode << ", score: " << std::setprecision(20) << score << std::endl;
+                // std::cout << "Episode: " << episode << ", score: " << std::setprecision(20) << score << std::endl;
                 episode++;
             }
 

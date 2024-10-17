@@ -23,6 +23,7 @@ namespace map_matching_2::io::results {
     struct match_output_task {
         std::string id, match;
         std::size_t track_points, prepared_points, edges, combinations;
+        bool aborted;
         double duration;
     };
 
@@ -60,7 +61,7 @@ namespace map_matching_2::io::results {
             return {
                     match_result.track.id, std::move(wkt),
                     track_sizes, prepared_sizes, edges, combinations,
-                    match_result.duration
+                    match_result.aborted, match_result.duration
             };
         }
 
@@ -83,9 +84,9 @@ namespace map_matching_2::io::results {
                     _combinations += task.combinations;
 
                     return std::format(
-                            "Match {} with id '{}' done in {:.3f} s, "
+                            "Match {} with id '{}' {} {:.3f} s, "
                             "track points: {}, prepared points: {}, candidates: {}, combinations: {}",
-                            ++this->_counter, task.id, task.duration,
+                            ++this->_counter, task.id, task.aborted ? "aborted after" : "done in", task.duration,
                             task.track_points, task.prepared_points, task.edges, task.combinations);
                 }
             }
