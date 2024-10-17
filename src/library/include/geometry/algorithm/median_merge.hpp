@@ -112,8 +112,8 @@ namespace map_matching_2::geometry {
                     point_type median_point = geometry::median_point(result_points);
 
                     for (const auto &result : connected_results) {
-                        points.erase(result.second);
                         points_index.remove(result);
+                        points.erase(result.second);
                     }
 
                     it = current_it;
