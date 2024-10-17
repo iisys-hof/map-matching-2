@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 # project
 project(map_matching_2
-        VERSION 1.0.1
+        VERSION 1.0.2
         DESCRIPTION "Map Matching 2"
         LANGUAGES CXX)
 
