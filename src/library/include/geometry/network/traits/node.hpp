@@ -23,18 +23,14 @@ namespace map_matching_2::geometry::network {
 
     template<typename Node>
     concept is_node = requires(Node node) {
-        requires std::same_as<decltype(node.id), osmium::object_id_type>;
+        requires std::same_as<decltype(node.id), std::uint64_t>;
         requires std::same_as<decltype(node.point), typename Node::point_type>;
-        requires std::same_as<decltype(node.tags), typename Node::tags_container_type>;
     };
 
     template<is_node Node>
     struct node_traits {
         using node_type = Node;
         using point_type = typename node_type::point_type;
-        using tag_type = typename node_type::tag_type;
-        using allocator_type = typename node_type::allocator_type;
-        using tags_container_type = typename node_type::tags_container_type;
     };
 
 }

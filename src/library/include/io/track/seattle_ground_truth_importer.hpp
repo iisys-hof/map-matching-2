@@ -77,7 +77,7 @@ namespace map_matching_2::io::track {
                     std::ifstream seattle;
                     seattle.open(filenames[i]);
 
-                    boost::unordered::unordered_flat_map<osmium::object_id_type, std::pair<line_type, bool>> lines;
+                    boost::unordered::unordered_flat_map<std::uint64_t, std::pair<line_type, bool>> lines;
 
                     std::vector<std::string> parts;
 
@@ -88,7 +88,7 @@ namespace map_matching_2::io::track {
                     while (std::getline(seattle, line)) {
                         boost::split(parts, line, boost::is_any_of("\t"));
 
-                        osmium::object_id_type edge_id = std::stol(parts.at(0));
+                        std::uint64_t edge_id = std::stoul(parts.at(0));
                         bool two_way = std::stoi(parts.at(3)) == 1;
                         std::string wkt_line = parts.at(6);
 
@@ -117,7 +117,7 @@ namespace map_matching_2::io::track {
                     while (std::getline(route, line)) {
                         boost::split(parts, line, boost::is_any_of("\t"));
 
-                        osmium::object_id_type edge_id = std::stol(parts.at(0));
+                        std::uint64_t edge_id = std::stoul(parts.at(0));
                         bool from_to_to = std::stoi(parts.at(1)) == 1;
 
                         const auto &edge_pair = lines.at(edge_id);

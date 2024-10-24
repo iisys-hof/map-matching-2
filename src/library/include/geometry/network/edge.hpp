@@ -16,75 +16,53 @@
 #ifndef MAP_MATCHING_2_GEOMETRY_NETWORK_EDGE_HPP
 #define MAP_MATCHING_2_GEOMETRY_NETWORK_EDGE_HPP
 
+#include <cstdint>
 #include <vector>
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 
-#include <osmium/osm/types.hpp>
-
 #include "io/helper/tag_helper.hpp"
 
 namespace map_matching_2::geometry::network {
 
-    template<typename RichLine,
-        template<typename, typename> typename Container = std::vector,
-        template<typename> typename Allocator = std::allocator>
+    template<typename RichLine>
     struct edge {
 
         using rich_line_type = RichLine;
-        using tag_type = std::uint64_t;
 
-        using allocator_type = Allocator<void>;
-
-        using tags_container_type = Container<tag_type, Allocator<tag_type>>;
-
-        osmium::object_id_type id{};
+        std::uint64_t id{};
         rich_line_type rich_line;
-        tags_container_type tags;
 
         constexpr edge() requires
-            (std::default_initializable<rich_line_type> and std::default_initializable<tags_container_type> and
-                std::default_initializable<allocator_type>)
-            : rich_line{}, tags{} {}
+            (std::default_initializable<rich_line_type>)
+            : rich_line{} {}
 
-        constexpr edge(osmium::object_id_type id, rich_line_type rich_line, tags_container_type tags = {})
-            : id{id}, rich_line{std::move(rich_line)}, tags{std::move(tags)} {}
+        constexpr edge(const std::uint64_t id, rich_line_type rich_line)
+            : id{id}, rich_line{std::move(rich_line)} {}
 
         constexpr edge(const edge &other)
-            : id{other.id}, rich_line{other.rich_line}, tags{other.tags} {}
+            : id{other.id}, rich_line{other.rich_line} {}
 
-        constexpr edge(const edge &other, const allocator_type &allocator)
-            : id{other.id}, rich_line{other.rich_line, allocator}, tags{other.tags, allocator} {}
-
-        template<template<typename, typename> typename ContainerT,
-            template<typename> typename AllocatorT>
-        constexpr edge(const edge<rich_line_type, ContainerT, AllocatorT> &other)
-            : id{other.id}, rich_line{other.rich_line}, tags{std::cbegin(other.tags), std::cend(other.tags)} {}
-
-        template<template<typename, typename> typename ContainerT,
-            template<typename> typename AllocatorT>
-        constexpr edge(const edge<rich_line_type, ContainerT, AllocatorT> &other, const allocator_type &allocator)
-            : id{other.id}, rich_line{other.rich_line, allocator},
-            tags{std::cbegin(other.tags), std::cend(other.tags), allocator} {}
+        template<typename Allocator>
+        constexpr edge(const edge &other, const Allocator &allocator)
+            : id{other.id}, rich_line{other.rich_line, allocator} {}
 
         constexpr edge(edge &&other) noexcept
-            : id{std::move(other.id)}, rich_line{std::move(other.rich_line)}, tags{std::move(other.tags)} {}
+            : id{other.id}, rich_line{std::move(other.rich_line)} {}
 
         constexpr edge &operator=(const edge &other) {
             if (this != &other) {
                 id = other.id;
                 rich_line = other.rich_line;
-                tags = other.tags;
             }
             return *this;
         }
 
         constexpr edge &operator=(edge &&other) noexcept {
             if (this != &other) {
-                id = std::move(other.id);
+                id = other.id;
                 rich_line = std::move(other.rich_line);
-                tags = std::move(other.tags);
             }
             return *this;
         }
@@ -96,21 +74,8 @@ namespace map_matching_2::geometry::network {
                 return edge{std::move(a)};
             } else if (not b.rich_line.empty() and a.rich_line.empty()) {
                 return edge{std::move(b)};
-            } else {
-                _merge_tags(a, b);
-                return edge{a.id, std::move(a.rich_line.merge(std::move(b.rich_line))), std::move(a.tags)};
             }
-        }
-
-        static void _merge_tags(edge &a, edge &b) {
-            std::vector<tag_type> _missing_tags;
-            _missing_tags.reserve(b.tags.size());
-            std::remove_copy_if(b.tags.cbegin(), b.tags.cend(), std::back_inserter(_missing_tags),
-                    [&a](tag_type tag) {
-                        return std::find(a.tags.begin(), a.tags.end(), tag) != a.tags.end();
-                    });
-            a.tags.reserve(a.tags.size() + _missing_tags.size());
-            std::copy(_missing_tags.begin(), _missing_tags.end(), std::back_inserter(a.tags));
+            return edge{a.id, std::move(a.rich_line.merge(std::move(b.rich_line)))};
         }
 
         [[nodiscard]] static std::vector<std::string> header() {
@@ -133,7 +98,8 @@ namespace map_matching_2::geometry::network {
                 row.emplace_back("NaN");
             }
             std::string tags_str;
-            if (!tags.empty()) {
+            const auto tags = tag_helper.edge_tags(id);
+            if (not tags.empty()) {
                 tags_str.append("[");
                 bool first = true;
                 for (const auto &tag_id : tags) {
@@ -192,7 +158,6 @@ namespace map_matching_2::geometry::network {
             std::size_t seed = 0;
             boost::hash_combine(seed, data.id);
             boost::hash_combine(seed, data.rich_line);
-            boost::hash_combine(seed, data.tags);
             return seed;
         }
 
@@ -202,7 +167,6 @@ namespace map_matching_2::geometry::network {
         void serialize(Archive &ar, const unsigned int version) {
             ar & id;
             ar & rich_line;
-            ar & tags;
         }
 
     };
@@ -211,11 +175,9 @@ namespace map_matching_2::geometry::network {
 
 namespace std {
 
-    template<typename RichLine,
-        template<typename, typename> typename Container,
-        template<typename> typename Allocator>
-    struct hash<map_matching_2::geometry::network::edge<RichLine, Container, Allocator>> {
-        using type = map_matching_2::geometry::network::edge<RichLine, Container, Allocator>;
+    template<typename RichLine>
+    struct hash<map_matching_2::geometry::network::edge<RichLine>> {
+        using type = map_matching_2::geometry::network::edge<RichLine>;
 
         std::size_t operator()(const type &data) const noexcept {
             return hash_value(data);

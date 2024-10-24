@@ -133,7 +133,7 @@ namespace map_matching_2::geometry::network {
             index_helper().build_indices();
         }
 
-        [[nodiscard]] std::vector<vertex_descriptor> find_node(osmium::object_id_type node_id) const {
+        [[nodiscard]] std::vector<vertex_descriptor> find_node(std::uint64_t node_id) const {
             std::vector<vertex_descriptor> nodes;
             const auto vertices_v = this->graph().vertices_view();
             for (auto it = vertices_v.begin(); it != vertices_v.end(); it = vertices_v.next(it)) {
@@ -145,7 +145,7 @@ namespace map_matching_2::geometry::network {
             return nodes;
         }
 
-        [[nodiscard]] std::vector<edge_descriptor> find_edge(osmium::object_id_type edge_id) const {
+        [[nodiscard]] std::vector<edge_descriptor> find_edge(std::uint64_t edge_id) const {
             std::vector<edge_descriptor> edges;
             const auto edges_v = this->graph().edges_view();
             for (auto it = edges_v.begin(); it != edges_v.end(); it = edges_v.next(it)) {

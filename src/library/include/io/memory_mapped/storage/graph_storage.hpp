@@ -51,8 +51,6 @@ namespace map_matching_2::io::memory_mapped::storage {
         using vertex_index_map_type = typename types::template vector_type<vertex_descriptor,
             typename allocator_traits_type<allocator_type>::template rebind_alloc<vertex_descriptor>>;
 
-        using tags_container_type = typename graph::graph_traits<graph_type>::vertex_data_type::tags_container_type;
-
         graph_storage() {
             _prepare_allocator();
             _create();
@@ -116,10 +114,6 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         [[nodiscard]] constexpr vertex_index_map_type &vertex_index_map() {
             return *_vertex_index_map;
-        }
-
-        [[nodiscard]] tags_container_type tags_container() const {
-            return tags_container_type(*_allocator);
         }
 
         [[nodiscard]] std::size_t size() const {
@@ -198,8 +192,6 @@ namespace map_matching_2::io::memory_mapped::storage {
         using vertex_descriptor = typename graph::graph_traits<graph_type>::vertex_descriptor;
         using vertex_index_map_type = typename types::template vector_type<vertex_descriptor,
             typename allocator_traits_type<allocator_type>::template rebind_alloc<vertex_descriptor>>;
-
-        using tags_container_type = typename graph::graph_traits<graph_type>::vertex_data_type::tags_container_type;
 
         struct graph_wrapper {
             graph_type graph;
@@ -352,10 +344,6 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         [[nodiscard]] constexpr vertex_index_map_type &vertex_index_map() {
             return *_vertex_index_map;
-        }
-
-        [[nodiscard]] tags_container_type tags_container() const {
-            return tags_container_type(*_allocator);
         }
 
         [[nodiscard]] std::size_t size() const {

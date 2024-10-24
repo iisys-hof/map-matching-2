@@ -34,7 +34,7 @@ namespace map_matching_2::io::results {
         std::string id, projection, from, to;
         std::size_t part_index, set_index, candidate_index;
         double distance;
-        osmium::object_id_type edge_id;
+        std::uint64_t edge_id;
         bool is_result;
     };
 

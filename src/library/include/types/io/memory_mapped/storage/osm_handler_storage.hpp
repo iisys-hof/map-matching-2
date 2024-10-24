@@ -23,7 +23,7 @@
 #include "io/memory_mapped/storage/osm_handler_storage.hpp"
 
 #define MM2_OSM_HANDLER_STORAGE(CS, TYPES) map_matching_2::io::memory_mapped::storage::osm_handler_storage< \
-    MM2_IMPORT_NODE(CS, TYPES), TYPES>
+    MM2_NODE(CS), TYPES>
 
 #ifdef EXPLICIT_TEMPLATES
 
@@ -43,7 +43,7 @@ MM2_OSM_HANDLER_STORAGE_TEMPLATE_CS(MM2_CARTESIAN)
 namespace map_matching_2::io::memory_mapped::storage {
 
     template<geometry::is_point Point, is_types Types = memory_types>
-    using osm_handler_storage_type = osm_handler_storage<geometry::network::import_node_type<Point, Types>, Types>;
+    using osm_handler_storage_type = osm_handler_storage<geometry::network::node_type<Point>, Types>;
 
 }
 

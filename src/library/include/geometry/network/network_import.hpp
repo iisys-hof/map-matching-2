@@ -21,8 +21,6 @@
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
 
-#include <osmium/osm/types.hpp>
-
 #include "geometry/algorithm/reverse.hpp"
 
 #include "graph/algorithm/breadth_first_search.hpp"
@@ -282,6 +280,7 @@ namespace map_matching_2::geometry::network {
             edge_data_type &target_edge = graph.get_edge_data(out_edge);
 
             // merge the edges
+            this->tag_helper().merge_edge_tags(source_edge.id, target_edge.id);
             edge_data_type new_edge = edge_data_type::merge(std::move(source_edge), std::move(target_edge));
 
             // remove the original edges
@@ -419,8 +418,11 @@ namespace map_matching_2::geometry::network {
                         const edge_data_type &source_edge = graph.get_edge_data(in_edge);
                         const edge_data_type &target_edge = graph.get_edge_data(out_edge);
 
+                        const auto &source_tags = this->tag_helper().edge_tags(source_edge.id);
+                        const auto &target_tags = this->tag_helper().edge_tags(target_edge.id);
+
                         if (simplify_network_complete or
-                            (source_edge.id == target_edge.id and source_edge.tags == target_edge.tags)) {
+                            (source_edge.id == target_edge.id and source_tags == target_tags)) {
                             // only merge edges when they fit together concerning their ids and tags,
                             // for example maxspeed change within road may be retained, if not ignored
 

@@ -318,9 +318,9 @@ namespace map_matching_2::matching {
             return route_type{std::move(edges)};
         }
 
-        [[nodiscard]] static std::vector<osmium::object_id_type> edge_ids(
+        [[nodiscard]] static std::vector<std::uint64_t> edge_ids(
                 const std::vector<std::reference_wrapper<const edge_data_type>> &edges_list) {
-            std::vector<osmium::object_id_type> ids;
+            std::vector<std::uint64_t> ids;
 
             for (const auto &edge_ref : edges_list) {
                 const auto &edge = edge_ref.get();

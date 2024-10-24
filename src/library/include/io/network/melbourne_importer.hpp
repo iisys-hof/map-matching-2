@@ -79,8 +79,7 @@ namespace map_matching_2::io::network {
 
                     const vertex_size_type vertex_index = _graph_helper.add_vertex_with_index_mapping(
                             vertex_data_type{
-                                    static_cast<osmium::object_id_type>(node_id), std::move(point),
-                                    _reprojector_variant
+                                    static_cast<std::uint64_t>(node_id), std::move(point), _reprojector_variant
                             });
                     _vertex_map.emplace(node_id, vertex_index);
                 }
@@ -112,8 +111,7 @@ namespace map_matching_2::io::network {
 
                     _graph_helper.add_edge(
                             from_vertex, to_vertex, edge_data_type{
-                                    static_cast<osmium::object_id_type>(edge_id),
-                                    rich_line_type{line_type{from_node.point, to_node.point}}
+                                    edge_id, rich_line_type{line_type{from_node.point, to_node.point}}
                             });
                 }
 

@@ -26,11 +26,7 @@
 
 #include "geometry/network/edge.hpp"
 
-#define MM2_EDGE(RICH_LINE_TYPE, CS, TYPES) map_matching_2::geometry::network::edge< \
-    RICH_LINE_TYPE(CS, TYPES), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
-
-#define MM2_IMPORT_EDGE(RICH_LINE_TYPE, CS, TYPES) map_matching_2::geometry::network::edge< \
-    RICH_LINE_TYPE(CS, TYPES), MM2_VECTOR(TYPES), MM2_FAST_COUNTING_ALLOCATOR(TYPES)>
+#define MM2_EDGE(RICH_LINE_TYPE, CS, TYPES) map_matching_2::geometry::network::edge<RICH_LINE_TYPE(CS, TYPES)>
 
 #ifdef EXPLICIT_TEMPLATES
 
@@ -41,9 +37,9 @@
     MM2_EDGE_TEMPLATE(MM2_EDGE, MM2_RICH_LINE, CS, TYPES) \
     MM2_EDGE_TEMPLATE(MM2_EDGE, MM2_EAGER_RICH_LINE, CS, TYPES) \
     MM2_EDGE_TEMPLATE(MM2_EDGE, MM2_LAZY_RICH_LINE, CS, TYPES) \
-    MM2_EDGE_TEMPLATE(MM2_IMPORT_EDGE, MM2_IMPORT_RICH_LINE, CS, TYPES) \
-    MM2_EDGE_TEMPLATE(MM2_IMPORT_EDGE, MM2_IMPORT_EAGER_RICH_LINE, CS, TYPES) \
-    MM2_EDGE_TEMPLATE(MM2_IMPORT_EDGE, MM2_IMPORT_LAZY_RICH_LINE, CS, TYPES)
+    MM2_EDGE_TEMPLATE(MM2_EDGE, MM2_IMPORT_RICH_LINE, CS, TYPES) \
+    MM2_EDGE_TEMPLATE(MM2_EDGE, MM2_IMPORT_EAGER_RICH_LINE, CS, TYPES) \
+    MM2_EDGE_TEMPLATE(MM2_EDGE, MM2_IMPORT_LAZY_RICH_LINE, CS, TYPES)
 
 #define MM2_EDGE_TEMPLATE_RICH_LINE_TYPE_CS(CS) \
     MM2_EDGE_TEMPLATE_RICH_LINE_TYPE(CS, MM2_MEMORY_TYPES) \
@@ -58,28 +54,22 @@ MM2_EDGE_TEMPLATE_RICH_LINE_TYPE_CS(MM2_CARTESIAN)
 namespace map_matching_2::geometry::network {
 
     template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using edge_type = edge<rich_line_type<Point, Types>,
-        Types::template vector_type, Types::template allocator_type>;
+    using edge_type = edge<rich_line_type<Point, Types>>;
 
     template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using import_edge_type = edge<import_rich_line_type<Point, Types>,
-        Types::template vector_type, Types::template fast_counting_allocator_type>;
+    using import_edge_type = edge<import_rich_line_type<Point, Types>>;
 
     template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using eager_edge_type = edge<eager_rich_line_type<Point, Types>,
-        Types::template vector_type, Types::template allocator_type>;
+    using eager_edge_type = edge<eager_rich_line_type<Point, Types>>;
 
     template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using import_eager_edge_type = edge<import_eager_rich_line_type<Point, Types>,
-        Types::template vector_type, Types::template fast_counting_allocator_type>;
+    using import_eager_edge_type = edge<import_eager_rich_line_type<Point, Types>>;
 
     template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using lazy_edge_type = edge<lazy_rich_line_type<Point, Types>,
-        Types::template vector_type, Types::template allocator_type>;
+    using lazy_edge_type = edge<lazy_rich_line_type<Point, Types>>;
 
     template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using import_lazy_edge_type = edge<import_lazy_rich_line_type<Point, Types>,
-        Types::template vector_type, Types::template fast_counting_allocator_type>;
+    using import_lazy_edge_type = edge<import_lazy_rich_line_type<Point, Types>>;
 
 }
 

@@ -16,6 +16,7 @@
 #ifndef MAP_MATCHING_2_IO_MEMORY_MAPPED_STORAGE_TAG_STORAGE_HPP
 #define MAP_MATCHING_2_IO_MEMORY_MAPPED_STORAGE_TAG_STORAGE_HPP
 
+#include <cstdint>
 #include <format>
 #include <memory>
 #include <memory_resource>
@@ -118,7 +119,6 @@ namespace map_matching_2::io::memory_mapped::storage {
     template<typename Types, typename Allocator> requires
         (is_memory_types<Types>)
     class tag_storage<Types, Allocator> {
-
     public:
         using types = Types;
 
@@ -130,6 +130,10 @@ namespace map_matching_2::io::memory_mapped::storage {
             allocator_type>::template rebind_alloc<char>;
         using string_type = std::basic_string<char, std::char_traits<char>, string_allocator_type>;
 
+        using tag_vector_allocator_type = typename types::template allocator_traits_type<
+            allocator_type>::template rebind_alloc<std::uint64_t>;
+        using tag_vector_type = std::vector<std::uint64_t, tag_vector_allocator_type>;
+
         using pair_type = std::pair<std::uint64_t, std::uint64_t>;
 
         using key_allocator_type = typename types::template allocator_traits_type<
@@ -140,6 +144,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             allocator_type>::template rebind_alloc<std::pair<const std::uint64_t, pair_type>>;
         using ids_allocator_type = typename types::template allocator_traits_type<
             allocator_type>::template rebind_alloc<std::pair<const pair_type, std::uint64_t>>;
+        using vector_allocator_type = typename types::template allocator_traits_type<
+            allocator_type>::template rebind_alloc<std::pair<const std::uint64_t, tag_vector_type>>;
 
         using key_map_type = boost::unordered_flat_map<std::uint64_t, string_type,
             boost::hash<std::uint64_t>, std::equal_to<>, key_allocator_type>;
@@ -149,6 +155,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             boost::hash<std::uint64_t>, std::equal_to<>, tags_allocator_type>;
         using ids_map_type = boost::unordered_flat_map<pair_type, std::uint64_t,
             boost::hash<pair_type>, std::equal_to<>, ids_allocator_type>;
+        using vector_map_type = boost::unordered_flat_map<std::uint64_t, tag_vector_type,
+            boost::hash<std::uint64_t>, std::equal_to<>, vector_allocator_type>;
 
         tag_storage() {
             _prepare_allocator();
@@ -162,7 +170,9 @@ namespace map_matching_2::io::memory_mapped::storage {
             _allocation_counter{std::move(other._allocation_counter)}, _allocator{std::move(other._allocator)},
             _id_key_map{std::move(other._id_key_map)}, _key_id_map{std::move(other._key_id_map)},
             _id_value_map{std::move(other._id_value_map)}, _value_id_map{std::move(other._value_id_map)},
-            _tags_map{std::move(other._tags_map)}, _ids_map{std::move(other._ids_map)} {}
+            _tags_map{std::move(other._tags_map)}, _ids_map{std::move(other._ids_map)},
+            _nodes_map{std::move(other._nodes_map)}, _edges_map{std::move(other._edges_map)},
+            _empty_tags{std::move(other._empty_tags)}, _finalized{other._finalized} {}
 
         constexpr tag_storage &operator=(const tag_storage &other) = delete;
 
@@ -178,6 +188,10 @@ namespace map_matching_2::io::memory_mapped::storage {
                 _value_id_map = std::move(other._value_id_map);
                 _tags_map = std::move(other._tags_map);
                 _ids_map = std::move(other._ids_map);
+                _nodes_map = std::move(other._nodes_map);
+                _edges_map = std::move(other._edges_map);
+                _empty_tags = std::move(other._empty_tags);
+                _finalized = other._finalized;
             }
             return *this;
         }
@@ -202,6 +216,10 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         [[nodiscard]] constexpr string_type string(const std::string &str) {
             return string_type(str.c_str(), *_allocator);
+        }
+
+        [[nodiscard]] constexpr tag_vector_type tags() {
+            return tag_vector_type(*_allocator);
         }
 
         [[nodiscard]] constexpr const key_map_type &id_key_map() const {
@@ -252,6 +270,26 @@ namespace map_matching_2::io::memory_mapped::storage {
             return *_ids_map;
         }
 
+        [[nodiscard]] constexpr const vector_map_type &nodes_map() const {
+            return *_nodes_map;
+        }
+
+        [[nodiscard]] constexpr vector_map_type &nodes_map() {
+            return *_nodes_map;
+        }
+
+        [[nodiscard]] constexpr const vector_map_type &edges_map() const {
+            return *_edges_map;
+        }
+
+        [[nodiscard]] constexpr vector_map_type &edges_map() {
+            return *_edges_map;
+        }
+
+        [[nodiscard]] constexpr const tag_vector_type &empty_tags() const {
+            return *_empty_tags;
+        }
+
         [[nodiscard]] constexpr bool is_finalized() const {
             return _finalized;
         }
@@ -277,6 +315,9 @@ namespace map_matching_2::io::memory_mapped::storage {
             ar & *_value_id_map;
             ar & *_tags_map;
             ar & *_ids_map;
+            ar & *_nodes_map;
+            ar & *_edges_map;
+            ar & *_empty_tags;
             ar & _finalized;
         }
 
@@ -292,6 +333,9 @@ namespace map_matching_2::io::memory_mapped::storage {
         std::unique_ptr<value_map_type> _value_id_map{};
         std::unique_ptr<tags_map_type> _tags_map{};
         std::unique_ptr<ids_map_type> _ids_map{};
+        std::unique_ptr<vector_map_type> _nodes_map{};
+        std::unique_ptr<vector_map_type> _edges_map{};
+        std::unique_ptr<tag_vector_type> _empty_tags{};
         bool _finalized{false};
 
         void _prepare_allocator() {
@@ -329,6 +373,10 @@ namespace map_matching_2::io::memory_mapped::storage {
             _value_id_map = std::make_unique<value_map_type>(*_allocator);
             _tags_map = std::make_unique<tags_map_type>(*_allocator);
             _ids_map = std::make_unique<ids_map_type>(*_allocator);
+            _nodes_map = std::make_unique<vector_map_type>(*_allocator);
+            _edges_map = std::make_unique<vector_map_type>(*_allocator);
+            _empty_tags = std::make_unique<tag_vector_type>(*_allocator);
+            _finalized = false;
         }
 
     };
@@ -350,6 +398,10 @@ namespace map_matching_2::io::memory_mapped::storage {
             allocator_type>::template rebind_alloc<char>;
         using string_type = boost::interprocess::basic_string<char, std::char_traits<char>, string_allocator_type>;
 
+        using tag_vector_allocator_type = typename types::template allocator_traits_type<
+            allocator_type>::template rebind_alloc<std::uint64_t>;
+        using tag_vector_type = boost::interprocess::vector<std::uint64_t, tag_vector_allocator_type>;
+
         using pair_type = std::pair<std::uint64_t, std::uint64_t>;
 
         using key_allocator_type = typename types::template allocator_traits_type<
@@ -360,6 +412,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             allocator_type>::template rebind_alloc<std::pair<const std::uint64_t, pair_type>>;
         using ids_allocator_type = typename types::template allocator_traits_type<
             allocator_type>::template rebind_alloc<std::pair<const pair_type, std::uint64_t>>;
+        using vector_allocator_type = typename types::template allocator_traits_type<
+            allocator_type>::template rebind_alloc<std::pair<const std::uint64_t, tag_vector_type>>;
 
         using key_map_type = boost::unordered_flat_map<std::uint64_t, string_type,
             boost::hash<std::uint64_t>, std::equal_to<>, key_allocator_type>;
@@ -369,6 +423,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             boost::hash<std::uint64_t>, std::equal_to<>, tags_allocator_type>;
         using ids_map_type = boost::unordered_flat_map<pair_type, std::uint64_t,
             boost::hash<pair_type>, std::equal_to<>, ids_allocator_type>;
+        using vector_map_type = boost::unordered_flat_map<std::uint64_t, tag_vector_type,
+            boost::hash<std::uint64_t>, std::equal_to<>, vector_allocator_type>;
 
         constexpr static const char *tag_id_key_identifier = "tag-id-key";
         constexpr static const char *tag_key_id_identifier = "tag-key-id";
@@ -376,6 +432,9 @@ namespace map_matching_2::io::memory_mapped::storage {
         constexpr static const char *tag_value_id_identifier = "tag-value-id";
         constexpr static const char *tag_tags_identifier = "tag-tags";
         constexpr static const char *tag_ids_identifier = "tag-ids";
+        constexpr static const char *tag_nodes_identifier = "tag-nodes";
+        constexpr static const char *tag_edges_identifier = "tag-edges";
+        constexpr static const char *tag_empty_identifier = "tag-empty";
         constexpr static const char *finalized_identifier = "finalized";
 
         explicit tag_storage(
@@ -409,13 +468,17 @@ namespace map_matching_2::io::memory_mapped::storage {
             _id_key_map{std::move(other._id_key_map)}, _key_id_map{std::move(other._key_id_map)},
             _id_value_map{std::move(other._id_value_map)}, _value_id_map{std::move(other._value_id_map)},
             _tags_map{std::move(other._tags_map)}, _ids_map{std::move(other._ids_map)},
-            _finalized{std::move(other._finalized)} {
+            _nodes_map{std::move(other._nodes_map)}, _edges_map{std::move(other._edges_map)},
+            _empty_tags{std::move(other._empty_tags)}, _finalized{std::move(other._finalized)} {
             other._id_key_map = nullptr;
             other._key_id_map = nullptr;
             other._id_value_map = nullptr;
             other._value_id_map = nullptr;
             other._tags_map = nullptr;
             other._ids_map = nullptr;
+            other._nodes_map = nullptr;
+            other._edges_map = nullptr;
+            other._empty_tags = nullptr;
             other._finalized = nullptr;
         }
 
@@ -436,6 +499,9 @@ namespace map_matching_2::io::memory_mapped::storage {
                 _value_id_map = std::move(other._value_id_map);
                 _tags_map = std::move(other._tags_map);
                 _ids_map = std::move(other._ids_map);
+                _nodes_map = std::move(other._nodes_map);
+                _edges_map = std::move(other._edges_map);
+                _empty_tags = std::move(other._empty_tags);
                 _finalized = std::move(other._finalized);
                 other._id_key_map = nullptr;
                 other._key_id_map = nullptr;
@@ -443,6 +509,9 @@ namespace map_matching_2::io::memory_mapped::storage {
                 other._value_id_map = nullptr;
                 other._tags_map = nullptr;
                 other._ids_map = nullptr;
+                other._nodes_map = nullptr;
+                other._edges_map = nullptr;
+                other._empty_tags = nullptr;
                 other._finalized = nullptr;
             }
             return *this;
@@ -474,27 +543,7 @@ namespace map_matching_2::io::memory_mapped::storage {
             _prepare_allocator();
             _open();
 
-            if (not _id_key_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_id_key_identifier));
-            }
-            if (not _key_id_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_key_id_identifier));
-            }
-            if (not _id_value_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_id_value_identifier));
-            }
-            if (not _value_id_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_value_id_identifier));
-            }
-            if (not _tags_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_tags_identifier));
-            }
-            if (not _ids_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_ids_identifier));
-            }
-            if (not _finalized) {
-                throw std::runtime_error(std::format("could not find {}.", finalized_identifier));
-            }
+            _check_availability();
         }
 
         void drop_grow() {
@@ -510,27 +559,7 @@ namespace map_matching_2::io::memory_mapped::storage {
             _prepare_allocator();
             _create();
 
-            if (not _id_key_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_id_key_identifier));
-            }
-            if (not _key_id_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_key_id_identifier));
-            }
-            if (not _id_value_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_id_value_identifier));
-            }
-            if (not _value_id_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_value_id_identifier));
-            }
-            if (not _tags_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_tags_identifier));
-            }
-            if (not _ids_map) {
-                throw std::runtime_error(std::format("could not find {}.", tag_ids_identifier));
-            }
-            if (not _finalized) {
-                throw std::runtime_error(std::format("could not find {}.", finalized_identifier));
-            }
+            _check_availability();
         }
 
         void shrink_to_fit(bool reopen = true) {
@@ -555,6 +584,10 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         [[nodiscard]] constexpr string_type string(const std::string &str) {
             return string_type(str.c_str(), *_allocator);
+        }
+
+        [[nodiscard]] constexpr tag_vector_type tags() {
+            return tag_vector_type(*_allocator);
         }
 
         [[nodiscard]] constexpr const key_map_type &id_key_map() const {
@@ -605,6 +638,26 @@ namespace map_matching_2::io::memory_mapped::storage {
             return *_ids_map;
         }
 
+        [[nodiscard]] constexpr const vector_map_type &nodes_map() const {
+            return *_nodes_map;
+        }
+
+        [[nodiscard]] constexpr vector_map_type &nodes_map() {
+            return *_nodes_map;
+        }
+
+        [[nodiscard]] constexpr const vector_map_type &edges_map() const {
+            return *_edges_map;
+        }
+
+        [[nodiscard]] constexpr vector_map_type &edges_map() {
+            return *_edges_map;
+        }
+
+        [[nodiscard]] constexpr const tag_vector_type &empty_tags() const {
+            return *_empty_tags;
+        }
+
         [[nodiscard]] constexpr bool is_finalized() const {
             return *_finalized;
         }
@@ -635,6 +688,9 @@ namespace map_matching_2::io::memory_mapped::storage {
         value_map_type *_value_id_map{nullptr};
         tags_map_type *_tags_map{nullptr};
         ids_map_type *_ids_map{nullptr};
+        vector_map_type *_nodes_map{nullptr};
+        vector_map_type *_edges_map{nullptr};
+        tag_vector_type *_empty_tags{nullptr};
         bool *_finalized{nullptr};
 
         void _prepare_allocator() {
@@ -666,6 +722,12 @@ namespace map_matching_2::io::memory_mapped::storage {
                     (tag_tags_identifier)(tags_map_type{*_allocator});
             _ids_map = _container.storage().template construct<ids_map_type>
                     (tag_ids_identifier)(ids_map_type{*_allocator});
+            _nodes_map = _container.storage().template construct<vector_map_type>
+                    (tag_nodes_identifier)(vector_map_type{*_allocator});
+            _edges_map = _container.storage().template construct<vector_map_type>
+                    (tag_edges_identifier)(vector_map_type{*_allocator});
+            _empty_tags = _container.storage().template construct<tag_vector_type>
+                    (tag_empty_identifier)(tag_vector_type{*_allocator});
             _finalized = _container.storage().template construct<bool>
                     (finalized_identifier)(false);
         }
@@ -677,7 +739,43 @@ namespace map_matching_2::io::memory_mapped::storage {
             _value_id_map = _container.storage().template find<value_map_type>(tag_value_id_identifier).first;
             _tags_map = _container.storage().template find<tags_map_type>(tag_tags_identifier).first;
             _ids_map = _container.storage().template find<ids_map_type>(tag_ids_identifier).first;
+            _nodes_map = _container.storage().template find<vector_map_type>(tag_nodes_identifier).first;
+            _edges_map = _container.storage().template find<vector_map_type>(tag_edges_identifier).first;
+            _empty_tags = _container.storage().template find<tag_vector_type>(tag_empty_identifier).first;
             _finalized = _container.storage().template find<bool>(finalized_identifier).first;
+        }
+
+        void _check_availability() const {
+            if (not _id_key_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_id_key_identifier));
+            }
+            if (not _key_id_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_key_id_identifier));
+            }
+            if (not _id_value_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_id_value_identifier));
+            }
+            if (not _value_id_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_value_id_identifier));
+            }
+            if (not _tags_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_tags_identifier));
+            }
+            if (not _ids_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_ids_identifier));
+            }
+            if (not _nodes_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_nodes_identifier));
+            }
+            if (not _edges_map) {
+                throw std::runtime_error(std::format("could not find {}.", tag_edges_identifier));
+            }
+            if (not _empty_tags) {
+                throw std::runtime_error(std::format("could not find {}.", tag_empty_identifier));
+            }
+            if (not _finalized) {
+                throw std::runtime_error(std::format("could not find {}.", finalized_identifier));
+            }
         }
 
     };

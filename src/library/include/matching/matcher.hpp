@@ -123,7 +123,7 @@ namespace map_matching_2::matching {
             std::vector<route_type> _matches;
             _matches.reserve(multi_track.size());
 
-            std::vector<osmium::object_id_type> _edge_ids;
+            std::vector<std::uint64_t> _edge_ids;
 
             double duration{0.0};
             for (std::size_t i = 0; i < multi_track.size(); ++i) {

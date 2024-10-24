@@ -71,7 +71,7 @@ namespace map_matching_2::io::network {
                 std::vector<std::string> parts;
 
                 std::string line;
-                osmium::object_id_type id = 0;
+                std::uint64_t id = 0;
                 while (std::getline(nodes, line)) {
                     boost::split(parts, line, boost::is_any_of("\t;,| "));
                     point_type point{std::stod(parts.at(0)), std::stod(parts.at(1))};

@@ -27,7 +27,7 @@
 
 #define MM2_ADJACENCY_LIST(CS, TYPES) map_matching_2::graph::adjacency_list< \
     MM2_LIST(TYPES), MM2_LIST(TYPES), map_matching_2::graph::bidirectional, \
-    MM2_IMPORT_NODE(CS, TYPES), MM2_IMPORT_EDGE(MM2_IMPORT_RICH_LINE, CS, TYPES), \
+    MM2_NODE(CS), MM2_EDGE(MM2_IMPORT_RICH_LINE, CS, TYPES), \
     MM2_LIST(TYPES), typename MM2_FAST_COUNTING_ALLOCATOR(TYPES)<void>>
 
 #ifdef EXPLICIT_TEMPLATES
@@ -52,7 +52,7 @@ namespace map_matching_2::graph {
         Types::template list_type,
         Types::template list_type,
         bidirectional,
-        geometry::network::import_node_type<Point, Types>,
+        geometry::network::node_type<Point>,
         geometry::network::import_edge_type<Point, Types>,
         Types::template list_type,
         typename Types::template fast_counting_allocator_type<void>>;

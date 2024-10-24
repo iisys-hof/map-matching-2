@@ -56,48 +56,50 @@ struct network_fixture {
     map_matching_2::io::allocator::counting_allocator<std::byte,
         map_matching_2::io::allocator::allocation_counter> allocator;
 
-    boost::unordered::unordered_flat_map<osmium::object_id_type, vertex_descriptor> nodes_map;
-    boost::unordered::unordered_flat_map<osmium::object_id_type, edge_descriptor> edges_map;
+    boost::unordered::unordered_flat_map<std::uint64_t, vertex_descriptor> nodes_map;
+    boost::unordered::unordered_flat_map<std::uint64_t, edge_descriptor> edges_map;
 
     map_matching_2::io::helper::tag_helper_type<> tag_helper;
+    using tag_vector_type = map_matching_2::io::helper::tag_helper_type<>::tag_vector_type;
 
-    node_type create_node(osmium::object_id_type id, point_type point,
+    node_type create_node(std::uint64_t id, point_type point,
             std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
-        typename node_type::tags_container_type tag_ids(allocator);
+        tag_vector_type tag_ids(allocator);
         tag_ids.reserve(tags.size());
         for (const auto &tag_pair : tags) {
             tag_ids.emplace_back(tag_helper.id(tag_pair.first, tag_pair.second));
         }
+        tag_helper.set_node_tags(id, std::move(tag_ids));
 
-        return node_type{id, std::move(point), std::move(tag_ids)};
+        return node_type{id, std::move(point)};
     }
 
-    edge_type create_edge(osmium::object_id_type id, const line_type &line,
+    edge_type create_edge(std::uint64_t id, const line_type &line,
             std::initializer_list<std::pair<std::string, std::string>> tags = {}) {
-        typename edge_type::tags_container_type tag_ids(allocator);
+        tag_vector_type tag_ids(allocator);
         tag_ids.reserve(tags.size());
         for (const auto &tag_pair : tags) {
             tag_ids.emplace_back(tag_helper.id(tag_pair.first, tag_pair.second));
         }
+        tag_helper.set_edge_tags(id, std::move(tag_ids));
 
-        return edge_type{id, rich_line_type{line}, std::move(tag_ids)};
+        return edge_type{id, rich_line_type{line}};
     }
 
-    vertex_descriptor add_node(Network &network, const osmium::object_id_type node_id, node_type node) {
+    vertex_descriptor add_node(Network &network, const std::uint64_t node_id, node_type node) {
         auto vertex_index = network.graph_helper().add_vertex_with_index_mapping(node);
         auto vertex = network.graph_helper().get_vertex_descriptor_for_index(vertex_index);
         nodes_map.emplace(node_id, vertex);
         return vertex;
     }
 
-    vertex_descriptor add_vertex(Network &network, const osmium::object_id_type node_id, const point_type point) {
+    vertex_descriptor add_vertex(Network &network, const std::uint64_t node_id, const point_type point) {
         return add_node(network, node_id, create_node(node_id, point));
     }
 
 
-    edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
-            const std::initializer_list<const std::pair<
-                osmium::object_id_type, osmium::object_id_type>> node_pairs) {
+    edge_descriptor add_edge(Network &network, const std::uint64_t edge_id,
+            const std::initializer_list<const std::pair<std::uint64_t, std::uint64_t>> node_pairs) {
         line_type line;
         line.reserve(node_pairs.size() * 2 - 1);
 
@@ -132,8 +134,8 @@ struct network_fixture {
         return edge_descriptor;
     }
 
-    edge_descriptor add_edge(Network &network, const osmium::object_id_type edge_id,
-            const std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
+    edge_descriptor add_edge(Network &network, const std::uint64_t edge_id,
+            const std::pair<std::uint64_t, std::uint64_t> node_pair) {
         return add_edge(network, edge_id, {node_pair});
     }
 

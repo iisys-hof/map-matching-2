@@ -38,7 +38,7 @@ namespace map_matching_2::matching {
         multi_track_type prepared;
         std::vector<policy_type> policies;
         route_type match;
-        std::vector<osmium::object_id_type> edge_ids;
+        std::vector<std::uint64_t> edge_ids;
         bool aborted{false};
         double duration{0.0};
     };

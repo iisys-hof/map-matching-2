@@ -74,7 +74,6 @@ namespace map_matching_2::io::memory_mapped::storage {
         using osm_vertex_type = osm_vertex<vertex_type>;
         using vertex_container_type = typename types::template vector_type<osm_vertex_type,
             typename types::template allocator_traits_type<allocator_type>::template rebind_alloc<osm_vertex_type>>;
-        using tags_container_type = typename geometry::network::node_traits<vertex_type>::tags_container_type;
 
         osm_handler_storage() {
             _prepare_allocator();
@@ -128,10 +127,6 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         [[nodiscard]] constexpr vertex_container_type &vertices() {
             return *_vertices;
-        }
-
-        [[nodiscard]] tags_container_type tags_container() const {
-            return tags_container_type(*_allocator);
         }
 
     private:
@@ -194,7 +189,6 @@ namespace map_matching_2::io::memory_mapped::storage {
         using osm_vertex_type = osm_vertex<vertex_type>;
         using vertex_container_type = typename types::template vector_type<osm_vertex_type,
             typename types::template allocator_traits_type<allocator_type>::template rebind_alloc<osm_vertex_type>>;
-        using tags_container_type = typename geometry::network::node_traits<vertex_type>::tags_container_type;
 
         struct osm_vertex_wrapper {
             vertex_container_type vertices;
@@ -324,10 +318,6 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         [[nodiscard]] constexpr vertex_container_type &vertices() {
             return *_vertices;
-        }
-
-        [[nodiscard]] tags_container_type tags_container() const {
-            return tags_container_type(*_allocator);
         }
 
     private:

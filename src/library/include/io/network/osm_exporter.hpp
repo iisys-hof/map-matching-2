@@ -51,7 +51,7 @@ namespace map_matching_2::io::network {
             osmium::memory::Buffer buffer{10240, osmium::memory::Buffer::auto_grow::yes};
 
             // index all points
-            osmium::object_id_type index = 0;
+            std::uint64_t index = 0;
             const auto edges_v = _graph.edges_view();
             for (auto it = edges_v.begin(); it != edges_v.end(); it = edges_v.next(it)) {
                 const edge_data_type &edge = edges_v[it].get();
@@ -119,7 +119,7 @@ namespace map_matching_2::io::network {
         using coordinate_type = geometry::data<point_type>::coordinate_type;
 
         using point_map_key_type = std::pair<coordinate_type, coordinate_type>;
-        using point_map_type = boost::unordered::unordered_flat_map<point_map_key_type, osmium::object_id_type>;
+        using point_map_type = boost::unordered::unordered_flat_map<point_map_key_type, std::uint64_t>;
         using point_set_type = boost::unordered::unordered_flat_set<point_map_key_type>;
 
         const graph_type &_graph;
@@ -143,10 +143,13 @@ namespace map_matching_2::io::network {
             osm_node.set_location(location);
 
             {
-                osmium::builder::TagListBuilder node_tag_builder{node_builder};
-                for (const auto &tag : node.tags) {
-                    const auto tags = _tag_helper.tag(tag);
-                    node_tag_builder.add_tag(tags.first, tags.second);
+                const auto &tags = _tag_helper.node_tags(node.id);
+                if (not tags.empty()) {
+                    osmium::builder::TagListBuilder node_tag_builder{node_builder};
+                    for (const auto &tag : tags) {
+                        const auto pair = _tag_helper.tag(tag);
+                        node_tag_builder.add_tag(pair.first, pair.second);
+                    }
                 }
             }
 
@@ -162,12 +165,11 @@ namespace map_matching_2::io::network {
             osm_node.set_location(location);
         }
 
-        void add_way(osmium::memory::Buffer &buffer, const edge_data_type &edge, bool is_oneway,
-                osmium::object_id_type index) {
+        void add_way(osmium::memory::Buffer &buffer, const edge_data_type &edge, bool is_oneway, std::uint64_t index) {
             osmium::builder::WayBuilder way_builder{buffer};
 
             osmium::Way &osm_way = way_builder.object();
-            osm_way.set_id(index);
+            osm_way.set_id(static_cast<osmium::object_id_type>(index));
 
             {
                 osmium::builder::WayNodeListBuilder way_node_list_builder{way_builder};
@@ -180,7 +182,7 @@ namespace map_matching_2::io::network {
                     const auto point_index = _point_map[point_map_key];
 
                     osmium::Location location{x, y};
-                    osmium::NodeRef node_ref{point_index, location};
+                    osmium::NodeRef node_ref{static_cast<osmium::object_id_type>(point_index), location};
                     way_node_list_builder.add_node_ref(node_ref);
                 }
             }
@@ -188,18 +190,19 @@ namespace map_matching_2::io::network {
             {
                 osmium::builder::TagListBuilder way_tag_builder{way_builder};
                 bool has_oneway = false;
-                for (const auto &tag : edge.tags) {
-                    const auto tags = _tag_helper.tag(tag);
-                    if (tags.first == "oneway") {
-                        if (tags.second == "yes") {
+                const auto &tags = _tag_helper.edge_tags(edge.id);
+                for (const auto &tag : tags) {
+                    const auto pair = _tag_helper.tag(tag);
+                    if (pair.first == "oneway") {
+                        if (pair.second == "yes") {
                             // one way detected, don't add again later
                             has_oneway = true;
-                        } else if (tags.second == "-1" or tags.second == "reverse") {
+                        } else if (pair.second == "-1" or pair.second == "reverse") {
                             // skip reverse tags as they were corrected on import
                             continue;
                         }
                     }
-                    way_tag_builder.add_tag(tags.first, tags.second);
+                    way_tag_builder.add_tag(pair.first, pair.second);
                 }
                 if (not has_oneway and is_oneway) {
                     way_tag_builder.add_tag("oneway", "yes");

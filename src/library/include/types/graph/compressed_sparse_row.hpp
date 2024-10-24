@@ -27,7 +27,7 @@
 
 #define MM2_EAGER_COMPRESSED_SPARSE_ROW(CS, TYPES) map_matching_2::graph::compressed_sparse_row< \
     MM2_VECTOR(TYPES), MM2_VECTOR(TYPES), map_matching_2::graph::directional, \
-    MM2_NODE(CS, TYPES), MM2_EDGE(MM2_EAGER_RICH_LINE, CS, TYPES), \
+    MM2_NODE(CS), MM2_EDGE(MM2_EAGER_RICH_LINE, CS, TYPES), \
     typename MM2_ALLOCATOR(TYPES)<void>>
 
 #ifdef EXPLICIT_TEMPLATES
@@ -52,7 +52,7 @@ namespace map_matching_2::graph {
         Types::template vector_type,
         Types::template vector_type,
         directional,
-        geometry::network::node_type<Point, Types>,
+        geometry::network::node_type<Point>,
         geometry::network::eager_edge_type<Point, Types>,
         typename Types::template allocator_type<void>>;
 

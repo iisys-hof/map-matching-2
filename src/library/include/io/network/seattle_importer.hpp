@@ -88,8 +88,7 @@ namespace map_matching_2::io::network {
                         const point_type &from_point = edge_line.front();
                         from_vertex = _graph_helper.add_vertex_with_index_mapping(
                                 vertex_data_type{
-                                        static_cast<osmium::object_id_type>(from_node_id), from_point,
-                                        _reprojector_variant
+                                        from_node_id, from_point, _reprojector_variant
                                 });
                         _vertex_map.emplace(from_node_id, from_vertex);
                     } else {
@@ -101,8 +100,7 @@ namespace map_matching_2::io::network {
                         const point_type &to_point = edge_line.back();
                         to_vertex = _graph_helper.add_vertex_with_index_mapping(
                                 vertex_data_type{
-                                        static_cast<osmium::object_id_type>(to_node_id), to_point,
-                                        _reprojector_variant
+                                        to_node_id, to_point, _reprojector_variant
                                 });
                         _vertex_map.emplace(to_node_id, to_vertex);
                     } else {
@@ -111,14 +109,14 @@ namespace map_matching_2::io::network {
 
                     _graph_helper.add_edge(
                             from_vertex, to_vertex, edge_data_type{
-                                    static_cast<osmium::object_id_type>(edge_id), rich_line_type{edge_line}
+                                    edge_id, rich_line_type{edge_line}
                             });
 
                     if (two_way) {
                         std::reverse(edge_line.begin(), edge_line.end());
                         _graph_helper.add_edge(
                                 to_vertex, from_vertex, edge_data_type{
-                                        static_cast<osmium::object_id_type>(edge_id), rich_line_type{edge_line}
+                                        edge_id, rich_line_type{edge_line}
                                 });
                     }
                 }

@@ -23,18 +23,14 @@ namespace map_matching_2::geometry::network {
 
     template<typename Edge>
     concept is_edge = requires(Edge edge) {
-        requires std::same_as<decltype(edge.id), osmium::object_id_type>;
+        requires std::same_as<decltype(edge.id), std::uint64_t>;
         requires std::same_as<decltype(edge.rich_line), typename Edge::rich_line_type>;
-        requires std::same_as<decltype(edge.tags), typename Edge::tags_container_type>;
     };
 
     template<is_edge Edge>
     struct edge_traits {
         using edge_type = Edge;
         using rich_line_type = typename edge_type::rich_line_type;
-        using tag_type = typename edge_type::tag_type;
-        using allocator_type = typename edge_type::allocator_type;
-        using tags_container_type = typename edge_type::tags_container_type;
     };
 
 }

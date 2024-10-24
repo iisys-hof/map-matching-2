@@ -30,13 +30,14 @@ BOOST_AUTO_TEST_SUITE(network_tests)
 
     BOOST_FIXTURE_TEST_CASE(node_test, network_fixture<network_import_metric>) {
         const auto node = create_node(1, {2, 3}, {{"key", "value"}});
+        const auto &tags = tag_helper.node_tags(node.id);
 
         BOOST_CHECK_EQUAL(node.id, 1);
         BOOST_CHECK_CLOSE_FRACTION(node.point.get<0>(), 2, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(node.point.get<1>(), 3, 1e-6);
-        BOOST_CHECK_EQUAL(node.tags.size(), 1);
-        BOOST_CHECK_EQUAL(tag_helper.tag(node.tags.at(0)).first, "key");
-        BOOST_CHECK_EQUAL(tag_helper.tag(node.tags.at(0)).second, "value");
+        BOOST_CHECK_EQUAL(tags.size(), 1);
+        BOOST_CHECK_EQUAL(tag_helper.tag(tags.at(0)).first, "key");
+        BOOST_CHECK_EQUAL(tag_helper.tag(tags.at(0)).second, "value");
 
         auto node_copy = node;
         BOOST_CHECK_EQUAL(node_copy.id, 1);
@@ -64,16 +65,18 @@ BOOST_AUTO_TEST_SUITE(network_tests)
                 {"tag", "test"},
                 {"tag2", "test2"}
         });
+        const auto &tags = tag_helper.edge_tags(edge.id);
+
         BOOST_CHECK_EQUAL(edge.id, 1);
         BOOST_CHECK_EQUAL(edge.rich_line.size(), line.size());
         BOOST_CHECK_CLOSE_FRACTION(edge.rich_line.length(), length, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(edge.rich_line.azimuth(), azimuth, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(edge.rich_line.directions(), directions, 1e-6);
-        BOOST_CHECK_EQUAL(edge.tags.size(), 2);
-        BOOST_CHECK_EQUAL(tag_helper.tag(edge.tags.at(0)).first, "tag");
-        BOOST_CHECK_EQUAL(tag_helper.tag(edge.tags.at(0)).second, "test");
-        BOOST_CHECK_EQUAL(tag_helper.tag(edge.tags.at(1)).first, "tag2");
-        BOOST_CHECK_EQUAL(tag_helper.tag(edge.tags.at(1)).second, "test2");
+        BOOST_CHECK_EQUAL(tags.size(), 2);
+        BOOST_CHECK_EQUAL(tag_helper.tag(tags.at(0)).first, "tag");
+        BOOST_CHECK_EQUAL(tag_helper.tag(tags.at(0)).second, "test");
+        BOOST_CHECK_EQUAL(tag_helper.tag(tags.at(1)).first, "tag2");
+        BOOST_CHECK_EQUAL(tag_helper.tag(tags.at(1)).second, "test2");
     }
 
     BOOST_FIXTURE_TEST_CASE(network_creation_test, network_fixture<network_import_metric>) {

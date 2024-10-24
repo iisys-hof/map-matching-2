@@ -48,7 +48,6 @@ namespace map_matching_2::io::helper {
         using graph_storage_types = typename graph_storage_type::types;
         using graph_type = typename graph_storage_type::graph_type;
         using allocator_type = typename graph_storage_type::allocator_type;
-        using tags_container_type = typename graph_storage_type::tags_container_type;
         using vertex_data_type = typename graph::graph_traits<graph_type>::vertex_data_type;
         using edge_data_type = typename graph::graph_traits<graph_type>::edge_data_type;
         using vertex_descriptor = typename graph::graph_traits<graph_type>::vertex_descriptor;
@@ -114,18 +113,14 @@ namespace map_matching_2::io::helper {
             (graph::is_compressed_sparse_row<graph_type>) {
             const auto &vertex_converter = [&]<typename VertexDataT>(
                     const VertexDataT &vertex_data, const allocator_type &allocator) -> vertex_data_type {
-                return vertex_data_type{
-                        vertex_data.id, vertex_data.point,
-                        clone_tags_container(vertex_data.tags, other_tag_helper)
-                };
+                tag_helper().clone_node_tags(vertex_data.id, other_tag_helper);
+                return vertex_data_type{vertex_data.id, vertex_data.point};
             };
 
             const auto &edge_converter = [&]<typename EdgeDataT>(
                     const EdgeDataT &edge_data, const allocator_type &allocator) -> edge_data_type {
-                return edge_data_type{
-                        edge_data.id, rich_line_type{edge_data.rich_line, allocator},
-                        clone_tags_container(edge_data.tags, other_tag_helper)
-                };
+                tag_helper().clone_edge_tags(edge_data.id, other_tag_helper);
+                return edge_data_type{edge_data.id, rich_line_type{edge_data.rich_line, allocator}};
             };
 
             if constexpr (is_mmap_tag_helper<tag_helper_type>) {
@@ -194,15 +189,17 @@ namespace map_matching_2::io::helper {
             (graph::is_adjacency_list<graph_type>) {
             if constexpr (is_mmap_graph_helper<graph_helper>) {
                 return io::memory_mapped::retry_alloc([&]() {
+                            tag_helper().clone_node_tags(vertex_data.id, other);
                             return graph().add_vertex(vertex_data_type{
-                                    vertex_data.id, vertex_data.point, clone_tags_container(vertex_data.tags, other)
+                                    vertex_data.id, vertex_data.point
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
                         });
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
+                tag_helper().clone_node_tags(vertex_data.id, other);
                 return graph().add_vertex(vertex_data_type{
-                        vertex_data.id, vertex_data.point, clone_tags_container(vertex_data.tags, other)
+                        vertex_data.id, vertex_data.point
                 });
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
@@ -215,15 +212,17 @@ namespace map_matching_2::io::helper {
             (graph::is_adjacency_list<graph_type>) {
             if constexpr (is_mmap_graph_helper<graph_helper>) {
                 return io::memory_mapped::retry_alloc([&]() {
+                            tag_helper().set_node_tags(vertex_data.id, tag_list);
                             return graph().add_vertex(vertex_data_type{
-                                    vertex_data.id, vertex_data.point, tags(tag_list)
+                                    vertex_data.id, vertex_data.point
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
                         });
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
+                tag_helper().set_node_tags(vertex_data.id, tag_list);
                 return graph().add_vertex(vertex_data_type{
-                        vertex_data.id, vertex_data.point, tags(tag_list)
+                        vertex_data.id, vertex_data.point
                 });
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
@@ -237,14 +236,14 @@ namespace map_matching_2::io::helper {
             if constexpr (is_mmap_graph_helper<graph_helper>) {
                 return io::memory_mapped::retry_alloc([&]() {
                             return graph().add_vertex(vertex_data_type{
-                                    vertex_data.id, vertex_data.point, tags()
+                                    vertex_data.id, vertex_data.point
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
                         });
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 return graph().add_vertex(vertex_data_type{
-                        vertex_data.id, vertex_data.point, tags()
+                        vertex_data.id, vertex_data.point
                 });
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
@@ -272,20 +271,22 @@ namespace map_matching_2::io::helper {
             typename TagHelperT = tag_helper_type>
         vertex_size_type add_vertex_with_index_mapping(const VertexData &vertex_data, const TagHelperT &other) requires
             (graph::is_adjacency_list<graph_type>) {
+            const auto &_add = [this, &vertex_data, &other]() -> vertex_size_type {
+                tag_helper().clone_node_tags(vertex_data.id, other);
+                vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
+                        vertex_data.id, vertex_data.point
+                });
+                return _add_to_vertex_index_map(vertex_desc);
+            };
+
             if constexpr (is_mmap_graph_helper<graph_helper>) {
-                return io::memory_mapped::retry_alloc([&]() {
-                            vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
-                                    vertex_data.id, vertex_data.point, clone_tags_container(vertex_data.tags, other)
-                            });
-                            return _add_to_vertex_index_map(vertex_desc);
+                return io::memory_mapped::retry_alloc([&]()-> vertex_size_type {
+                            return _add();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
                         });
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
-                vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
-                        vertex_data.id, vertex_data.point, clone_tags_container(vertex_data.tags, other)
-                });
-                return _add_to_vertex_index_map(vertex_desc);
+                return _add();
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
                 throw std::runtime_error{"graph_helper type unknown"};
@@ -296,20 +297,22 @@ namespace map_matching_2::io::helper {
         vertex_size_type add_vertex_with_index_mapping(
                 const VertexData &vertex_data, const osmium::TagList &tag_list) requires
             (graph::is_adjacency_list<graph_type>) {
+            const auto &_add = [this, &vertex_data, &tag_list]() -> vertex_size_type {
+                tag_helper().set_node_tags(vertex_data.id, tag_list);
+                vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
+                        vertex_data.id, vertex_data.point
+                });
+                return _add_to_vertex_index_map(vertex_desc);
+            };
+
             if constexpr (is_mmap_graph_helper<graph_helper>) {
-                return io::memory_mapped::retry_alloc([&]() {
-                            vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
-                                    vertex_data.id, vertex_data.point, tags(tag_list)
-                            });
-                            return _add_to_vertex_index_map(vertex_desc);
+                return io::memory_mapped::retry_alloc([&]() -> vertex_size_type {
+                            return _add();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
                         });
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
-                vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
-                        vertex_data.id, vertex_data.point, tags(tag_list)
-                });
-                return _add_to_vertex_index_map(vertex_desc);
+                return _add();
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
                 throw std::runtime_error{"graph_helper type unknown"};
@@ -322,7 +325,7 @@ namespace map_matching_2::io::helper {
             if constexpr (is_mmap_graph_helper<graph_helper>) {
                 return io::memory_mapped::retry_alloc([&]() {
                             vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
-                                    vertex_data.id, vertex_data.point, tags()
+                                    vertex_data.id, vertex_data.point
                             });
                             return _add_to_vertex_index_map(vertex_desc);
                         }, [&](auto &ex) {
@@ -330,7 +333,7 @@ namespace map_matching_2::io::helper {
                         });
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
-                        vertex_data.id, vertex_data.point, tags()
+                        vertex_data.id, vertex_data.point
                 });
                 return _add_to_vertex_index_map(vertex_desc);
             } else {
@@ -371,9 +374,9 @@ namespace map_matching_2::io::helper {
                 return io::memory_mapped::retry_alloc([&]() {
                             const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                             const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
+                            tag_helper().clone_edge_tags(edge_data.id, other);
                             return graph().add_edge(source, target, edge_data_type{
-                                    edge_data.id, rich_line_type{edge_data.rich_line, allocator()},
-                                    clone_tags_container(edge_data.tags, other)
+                                    edge_data.id, rich_line_type{edge_data.rich_line, allocator()}
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
@@ -381,8 +384,9 @@ namespace map_matching_2::io::helper {
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
+                tag_helper().clone_edge_tags(edge_data.id, other);
                 return graph().add_edge(source, target, edge_data_type{
-                        edge_data.id, edge_data.rich_line, clone_tags_container(edge_data.tags, other)
+                        edge_data.id, edge_data.rich_line
                 });
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
@@ -398,8 +402,9 @@ namespace map_matching_2::io::helper {
                 return io::memory_mapped::retry_alloc([&]() {
                             const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                             const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
+                            tag_helper().set_edge_tags(edge_data.id, tag_list);
                             return graph().add_edge(source, target, edge_data_type{
-                                    edge_data.id, rich_line_type{edge_data.rich_line, allocator()}, tags(tag_list)
+                                    edge_data.id, rich_line_type{edge_data.rich_line, allocator()}
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
@@ -407,8 +412,9 @@ namespace map_matching_2::io::helper {
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
+                tag_helper().set_edge_tags(edge_data.id, tag_list);
                 return graph().add_edge(source, target, edge_data_type{
-                        edge_data.id, edge_data.rich_line, tags(tag_list)
+                        edge_data.id, edge_data.rich_line
                 });
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
@@ -425,7 +431,7 @@ namespace map_matching_2::io::helper {
                             const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                             const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
                             return graph().add_edge(source, target, edge_data_type{
-                                    edge_data.id, rich_line_type{edge_data.rich_line, allocator()}, tags()
+                                    edge_data.id, rich_line_type{edge_data.rich_line, allocator()}
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
@@ -434,7 +440,7 @@ namespace map_matching_2::io::helper {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
                 return graph().add_edge(source, target, edge_data_type{
-                        edge_data.id, edge_data.rich_line, tags()
+                        edge_data.id, edge_data.rich_line
                 });
             } else {
                 static_assert(util::dependent_false_v<graph_helper>, "graph_helper type unknown");
@@ -528,46 +534,8 @@ namespace map_matching_2::io::helper {
             }
         }
 
-        template<typename TagsT>
-        [[nodiscard]] tags_container_type clone_tags_container(const TagsT &tags) {
-            tags_container_type tags_container = this->tags();
-            tags_container.reserve(tags.size());
-            for (const auto &tag_id : tags) {
-                tags_container.emplace_back(tag_id);
-            }
-            return tags_container;
-        }
-
-        template<typename TagsT,
-            typename TagHelperT = tag_helper_type>
-        [[nodiscard]] tags_container_type clone_tags_container(const TagsT &tags, const TagHelperT &other) {
-            tags_container_type tags_container = this->tags();
-            tags_container.reserve(tags.size());
-            for (const auto &tag_id : tags) {
-                // clones tag data from external tag_storage to graph tag_storage
-                auto tag = other.tag(tag_id);
-                tags_container.emplace_back(tag_helper().id(tag.first, tag.second));
-            }
-            return tags_container;
-        }
-
-        [[nodiscard]] tags_container_type tags(const osmium::TagList &tag_list) {
-            tags_container_type tags_container = this->tags();
-            tags_container.reserve(tag_list.size());
-            for (const auto &tag : tag_list) {
-                tags_container.emplace_back(tag_helper().id(tag.key(), tag.value()));
-            }
-            return tags_container;
-        }
-
-        [[nodiscard]] tags_container_type tags() {
-            return graph_storage().tags_container();
-        }
-
         [[nodiscard]] vertex_size_type _add_to_vertex_index_map(const vertex_descriptor &vertex_desc) requires
             (graph::is_adjacency_list<graph_type>) {
-            std::exception_ptr eptr = nullptr;
-
             const auto current_size = graph_storage().vertex_index_map().size();
 
             vertex_size_type vertex_index = graph().vertex_index(vertex_desc);
@@ -581,15 +549,11 @@ namespace map_matching_2::io::helper {
             try {
                 graph_storage().vertex_index_map().emplace_back(vertex_desc);
             } catch (...) {
-                eptr = std::current_exception();
                 while (graph_storage().vertex_index_map().size() > current_size) {
                     graph_storage().vertex_index_map().pop_back();
                 }
                 graph().remove_vertex(vertex_desc);
-            }
-
-            if (eptr) {
-                std::rethrow_exception(eptr);
+                throw;
             }
 
             return vertex_index;

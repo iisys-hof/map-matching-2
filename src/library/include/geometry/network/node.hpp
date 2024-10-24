@@ -16,12 +16,11 @@
 #ifndef MAP_MATCHING_2_GEOMETRY_NETWORK_NODE_HPP
 #define MAP_MATCHING_2_GEOMETRY_NETWORK_NODE_HPP
 
+#include <cstdint>
 #include <vector>
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
-
-#include <osmium/osm/types.hpp>
 
 #include "io/helper/tag_helper.hpp"
 
@@ -31,76 +30,39 @@
 
 namespace map_matching_2::geometry::network {
 
-    template<typename Point,
-        template<typename, typename> typename Container = std::vector,
-        template<typename> typename Allocator = std::allocator>
+    template<typename Point>
     struct node {
 
         using point_type = Point;
-        using tag_type = std::uint64_t;
 
-        using allocator_type = Allocator<void>;
-
-        using tags_container_type = Container<tag_type, Allocator<tag_type>>;
-
-        osmium::object_id_type id{};
+        std::uint64_t id{};
         point_type point;
-        tags_container_type tags;
 
         constexpr node() requires
-            (std::default_initializable<point_type> and std::default_initializable<tags_container_type> and
-                std::default_initializable<allocator_type>)
-            : point{}, tags{} {}
+            (std::default_initializable<point_type>)
+            : point{} {}
 
-        constexpr node(osmium::object_id_type id, point_type point) requires
-            (std::default_initializable<tags_container_type> and std::default_initializable<allocator_type>)
-            : node{id, std::move(point), tags_container_type{}} {}
-
-        constexpr node(osmium::object_id_type id, point_type point, tags_container_type tags)
-            : id{id}, point{std::move(point)}, tags{std::move(tags)} {}
+        constexpr node(const std::uint64_t id, point_type point)
+            : id{id}, point{std::move(point)} {}
 
         template<typename InPoint>
-        node(osmium::object_id_type id, InPoint input_point,
+        node(const std::uint64_t id, InPoint input_point,
                 const geometry::point_reprojector_variant &reprojector_variant) requires
-            (std::default_initializable<tags_container_type> and std::default_initializable<allocator_type> and
-                geometry::is_point<InPoint>)
-            : node{std::move(id), std::move(input_point), reprojector_variant, tags_container_type{}} {}
-
-        template<typename InPoint>
-        node(osmium::object_id_type id, InPoint input_point,
-                const geometry::point_reprojector_variant &reprojector_variant, tags_container_type tags) requires
             (geometry::is_point<InPoint>)
-            : id{std::move(id)}, tags{std::move(tags)} {
+            : id{id} {
             reproject_point(input_point, point, reprojector_variant);
         }
 
         constexpr node(const node &other)
-            : id{other.id}, point{other.point}, tags{other.tags} {}
-
-        constexpr node(const node &other, const allocator_type &allocator)
-            : id{other.id}, point{other.point}, tags{other.tags, allocator} {}
-
-        template<template<typename, typename> typename ContainerT,
-            template<typename> typename AllocatorT>
-        constexpr node(const node<point_type, ContainerT, AllocatorT> &other)
-            : id{other.id}, point{other.point}, tags{std::cbegin(other.tags), std::cend(other.tags)} {}
-
-        template<template<typename, typename> typename ContainerT,
-            template<typename> typename AllocatorT>
-        constexpr node(const node<point_type, ContainerT, AllocatorT> &other, const allocator_type &allocator)
-            : id{other.id}, point{other.point}, tags{std::cbegin(other.tags), std::cend(other.tags), allocator} {}
+            : id{other.id}, point{other.point} {}
 
         constexpr node(node &&other) noexcept
-            : id{std::move(other.id)}, point{std::move(other.point)}, tags{std::move(other.tags)} {}
-
-        constexpr node(node &&other, const allocator_type &allocator) noexcept
-            : id{std::move(other.id)}, point{std::move(other.point)}, tags{std::move(other.tags), allocator} {}
+            : id{std::move(other.id)}, point{std::move(other.point)} {}
 
         constexpr node &operator=(const node &other) {
             if (this != &other) {
                 id = other.id;
                 point = other.point;
-                tags = other.tags;
             }
             return *this;
         }
@@ -109,7 +71,6 @@ namespace map_matching_2::geometry::network {
             if (this != &other) {
                 id = std::move(other.id);
                 point = std::move(other.point);
-                tags = std::move(other.tags);
             }
             return *this;
         }
@@ -131,7 +92,8 @@ namespace map_matching_2::geometry::network {
             row.emplace_back(std::to_string(id));
             row.emplace_back(wkt());
             std::string tags_str;
-            if (!tags.empty()) {
+            const auto tags = tag_helper.node_tags(id);
+            if (not tags.empty()) {
                 tags_str.append("[");
                 bool first = true;
                 for (const auto &tag_id : tags) {
@@ -189,7 +151,6 @@ namespace map_matching_2::geometry::network {
             std::size_t seed = 0;
             boost::hash_combine(seed, data.id);
             boost::hash_combine(seed, data.point);
-            boost::hash_combine(seed, data.tags);
             return seed;
         }
 
@@ -199,7 +160,6 @@ namespace map_matching_2::geometry::network {
         void serialize(Archive &ar, const unsigned int version) {
             ar & id;
             ar & point;
-            ar & tags;
         }
 
     };
@@ -208,11 +168,9 @@ namespace map_matching_2::geometry::network {
 
 namespace std {
 
-    template<typename Point,
-        template<typename, typename> typename Container,
-        template<typename> typename Allocator>
-    struct hash<map_matching_2::geometry::network::node<Point, Container, Allocator>> {
-        using type = map_matching_2::geometry::network::node<Point, Container, Allocator>;
+    template<typename Point>
+    struct hash<map_matching_2::geometry::network::node<Point>> {
+        using type = map_matching_2::geometry::network::node<Point>;
 
         std::size_t operator()(const type &data) const noexcept {
             return hash_value(data);

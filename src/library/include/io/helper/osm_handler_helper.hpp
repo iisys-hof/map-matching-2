@@ -18,7 +18,6 @@
 
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/way.hpp>
-#include <osmium/tags/taglist.hpp>
 
 #include "types/geometry/rich_type/rich_line.hpp"
 #include "types/geometry/network/node.hpp"
@@ -54,7 +53,6 @@ namespace map_matching_2::io::helper {
         using vertex_type = typename osm_vertex_type::vertex_type;
         using vertex_size_type = typename osm_vertex_type::vertex_size_type;
         using vertex_container_type = typename osm_handler_storage_type::vertex_container_type;
-        using tags_container_type = typename osm_handler_storage_type::tags_container_type;
 
         constexpr osm_handler_helper(
                 osm_handler_storage_type osm_handler_storage = {}, tag_helper_type tag_helper = {})
@@ -115,11 +113,12 @@ namespace map_matching_2::io::helper {
             using osm_point_type = geometry::point_type<geometry::cs_geographic>;
 
             const auto _add_node = [&]() -> std::size_t {
+                const auto id = static_cast<std::uint64_t>(osm_node.id());
                 const auto node_location = osm_node.location();
                 const std::size_t index = vertices().size();
+                tag_helper().set_node_tags(id, osm_node.tags());
                 vertices().emplace_back(osm_vertex_type{
-                        osm_node.id(), osm_point_type{node_location.lon(), node_location.lat()},
-                        reprojector_variant, tags(osm_node.tags())
+                        id, osm_point_type{node_location.lon(), node_location.lat()}, reprojector_variant
                 });
                 return index;
             };
@@ -147,6 +146,7 @@ namespace map_matching_2::io::helper {
         void add_edge(GraphHelper &graph_helper, const osm_vertex_type &osm_vertex_from,
                 const osm_vertex_type &osm_vertex_to,
                 const bool oneway, const bool reverse, const osmium::Way &osm_way) {
+            const std::uint64_t id = static_cast<std::uint64_t>(osm_way.id());
             const osmium::TagList &tag_list = osm_way.tags();
 
             using point_type = typename GraphHelper::vertex_data_type::point_type;
@@ -159,7 +159,7 @@ namespace map_matching_2::io::helper {
                     graph_helper.add_edge(
                             osm_vertex_from.vertex_index, osm_vertex_to.vertex_index,
                             edge_data_type{
-                                    osm_way.id(), rich_line_type{
+                                    id, rich_line_type{
                                             line_type{osm_vertex_from.vertex.point, osm_vertex_to.vertex.point}
                                     }
                             }, tag_list);
@@ -167,7 +167,7 @@ namespace map_matching_2::io::helper {
                     graph_helper.add_edge(
                             osm_vertex_to.vertex_index, osm_vertex_from.vertex_index,
                             edge_data_type{
-                                    osm_way.id(), rich_line_type{
+                                    id, rich_line_type{
                                             line_type{osm_vertex_to.vertex.point, osm_vertex_from.vertex.point}
                                     }
                             }, tag_list);
@@ -176,7 +176,7 @@ namespace map_matching_2::io::helper {
                 graph_helper.add_edge(
                         osm_vertex_from.vertex_index, osm_vertex_to.vertex_index,
                         edge_data_type{
-                                osm_way.id(), rich_line_type{
+                                id, rich_line_type{
                                         line_type{osm_vertex_from.vertex.point, osm_vertex_to.vertex.point}
                                 }
                         }, tag_list);
@@ -184,20 +184,11 @@ namespace map_matching_2::io::helper {
                 graph_helper.add_edge(
                         osm_vertex_to.vertex_index, osm_vertex_from.vertex_index,
                         edge_data_type{
-                                osm_way.id(), rich_line_type{
+                                id, rich_line_type{
                                         line_type{osm_vertex_to.vertex.point, osm_vertex_from.vertex.point}
                                 }
                         }, tag_list);
             }
-        }
-
-        [[nodiscard]] tags_container_type tags(const osmium::TagList &tag_list) {
-            tags_container_type tags_container = osm_handler_storage().tags_container();
-            tags_container.reserve(tag_list.size());
-            for (const auto &tag : tag_list) {
-                tags_container.emplace_back(tag_helper().id(tag.key(), tag.value()));
-            }
-            return tags_container;
         }
 
     private:

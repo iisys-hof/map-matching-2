@@ -22,21 +22,12 @@
 
 #include "geometry/network/node.hpp"
 
-#define MM2_NODE(CS, TYPES) map_matching_2::geometry::network::node< \
-    MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
-
-#define MM2_IMPORT_NODE(CS, TYPES) map_matching_2::geometry::network::node< \
-    MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_FAST_COUNTING_ALLOCATOR(TYPES)>
+#define MM2_NODE(CS) map_matching_2::geometry::network::node<MM2_POINT(CS)>
 
 #ifdef EXPLICIT_TEMPLATES
 
-#define MM2_NODE_TEMPLATE(CS, TYPES) \
-    MM2_EXTERN template class MM2_NODE(CS, TYPES); \
-    MM2_EXTERN template class MM2_IMPORT_NODE(CS, TYPES);
-
 #define MM2_NODE_TEMPLATE_CS(CS) \
-    MM2_NODE_TEMPLATE(CS, MM2_MEMORY_TYPES) \
-    MM2_NODE_TEMPLATE(CS, MM2_MMAP_TYPES)
+    MM2_EXTERN template class MM2_NODE(CS);
 
 MM2_NODE_TEMPLATE_CS(MM2_GEOGRAPHIC)
 MM2_NODE_TEMPLATE_CS(MM2_SPHERICAL_EQUATORIAL)
@@ -46,11 +37,8 @@ MM2_NODE_TEMPLATE_CS(MM2_CARTESIAN)
 
 namespace map_matching_2::geometry::network {
 
-    template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using node_type = node<Point, Types::template vector_type, Types::template allocator_type>;
-
-    template<is_point Point, io::memory_mapped::is_types Types = io::memory_mapped::memory_types>
-    using import_node_type = node<Point, Types::template vector_type, Types::template fast_counting_allocator_type>;
+    template<is_point Point>
+    using node_type = node<Point>;
 
 }
 

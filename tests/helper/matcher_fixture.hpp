@@ -53,8 +53,7 @@ struct matcher_fixture {
     }
 
     std::int64_t get_candidate_position(typename matcher_type::network_type &network,
-            auto &candidates, std::size_t candidate_index,
-            std::pair<osmium::object_id_type, osmium::object_id_type> node_pair) {
+            auto &candidates, std::size_t candidate_index, std::pair<std::uint64_t, std::uint64_t> node_pair) {
         for (std::int64_t i = 0; i < candidates.at(candidate_index).edges.size(); ++i) {
             const auto &candidate_edge = candidates.at(candidate_index).edges.at(i);
             const auto source = network.graph().source(candidate_edge.edge_desc);
