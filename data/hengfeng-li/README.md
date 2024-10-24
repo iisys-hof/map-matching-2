@@ -54,13 +54,21 @@ The results will be in the `results` folder that is automatically created.
 
 Results on our test system (accuracy is the weighted mean correct fraction in percent):
 
-| Mode                   | Time (s) | Max RAM (MiB) | Accuracy (%) |
-|:-----------------------|---------:|--------------:|-------------:|
-| Prepare                |     1.65 |           160 |          N/A |
-| Prepare (OSM)          |     3.07 |           261 |          N/A |
-| Prepare (Ground Truth) |     1.51 |           166 |          N/A |
-| Convert Ground Truth   |     0.22 |            84 |          N/A |
-| Match                  |     0.49 |            72 |          N/A |
-| Match (OSM)            |     0.79 |            84 |          N/A |
-| Compare                |     0.23 |            26 |        99.80 |
-| Compare (OSM)          |     0.23 |            24 |        99.86 |
+| Mode                     | Time (s) | Max RAM (MiB) | Accuracy (%) |
+|:-------------------------|---------:|--------------:|-------------:|
+| Prepare                  |     1.63 |           144 |          N/A |
+| Prepare *                |     1.05 |           138 |          N/A |
+| Prepare (OSM)            |     3.06 |           234 |          N/A |
+| Prepare (OSM) *          |     2.15 |           224 |          N/A |
+| Prepare (Ground Truth)   |     1.48 |           146 |          N/A |
+| Prepare (Ground Truth) * |     1.22 |           170 |          N/A |
+| Convert Ground Truth     |     0.21 |            74 |          N/A |
+| Match                    |     0.50 |            66 |          N/A |
+| Match (OSM)              |     0.81 |            74 |          N/A |
+| Compare                  |     0.24 |            16 |        99.80 |
+| Compare (OSM)            |     0.24 |            20 |        99.86 |
+
+Max RAM contains shared memory (cached memory backed by disk, not actually used).\
+The prepare runs marked with * were run with `--memory-mapped-preparation off`.
+In this case, only the final data is written into memory mapped files and during the preparation,
+non-cached RAM (actually used by the process) is used.

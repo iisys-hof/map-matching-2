@@ -55,7 +55,13 @@ Results (with ground truth corrections from above applied) on our test system
 
 | Mode                 | Time (s) | Max RAM (MiB) | Accuracy (%) |
 |:---------------------|---------:|--------------:|-------------:|
-| Prepare              |    20.63 |         1,327 |          N/A |
-| Convert Ground Truth |     0.48 |           354 |          N/A |
-| Match                |     0.79 |           244 |          N/A |
-| Compare              |     0.28 |            24 |        98.59 |
+| Prepare              |    20.60 |         1,268 |          N/A |
+| Prepare *            |    17.74 |         1,494 |          N/A |
+| Convert Ground Truth |     0.48 |           316 |          N/A |
+| Match                |     0.79 |           226 |          N/A |
+| Compare              |     0.29 |            22 |        98.59 |
+
+Max RAM contains shared memory (cached memory backed by disk, not actually used).\
+The prepare runs marked with * were run with `--memory-mapped-preparation off`.
+In this case, only the final data is written into memory mapped files and during the preparation,
+non-cached RAM (actually used by the process) is used.

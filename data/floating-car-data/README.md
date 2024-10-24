@@ -57,10 +57,17 @@ The results will be in the `results` folder that is automatically created.
 
 Results on our test system (accuracy is the weighted mean correct fraction in percent):
 
-| Mode          | Time (s) | Max RAM (MiB) | Accuracy (%) |
-|:--------------|---------:|--------------:|-------------:|
-| Prepare       |    39.41 |         2,508 |          N/A |
-| Match         |     0.67 |           488 |          N/A |
-| Compare       |     0.46 |            32 |        99.58 |
-| Match (RAW)   |     5.70 |         1,692 |          N/A |
-| Prepare (All) |    47.84 |         2,899 |          N/A |
+| Mode            | Time (s) | Max RAM (MiB) | Accuracy (%) |
+|:----------------|---------:|--------------:|-------------:|
+| Prepare         |    32.80 |         2,271 |          N/A |
+| Prepare *       |    12.87 |         1,543 |          N/A |
+| Match           |     0.66 |           422 |          N/A |
+| Compare         |     0.59 |            38 |        99.58 |
+| Match (RAW)     |     5.56 |         1,620 |          N/A |
+| Prepare (All)   |    37.38 |         2,602 |          N/A |
+| Prepare (All) * |    14.48 |         1,688 |          N/A |
+
+Max RAM contains shared memory (cached memory backed by disk, not actually used).\
+The prepare runs marked with * were run with `--memory-mapped-preparation off`.
+In this case, only the final data is written into memory mapped files and during the preparation,
+non-cached RAM (actually used by the process) is used.

@@ -45,12 +45,19 @@ The results will be in the `results` folder that is automatically created.
 
 Results on our test system (accuracy is the weighted mean correct fraction in percent):
 
-| Mode                   | Time (s) | Max RAM (MiB) | Accuracy (%) |
-|:-----------------------|---------:|--------------:|-------------:|
-| Prepare                |    31.46 |         3,075 |          N/A |
-| Prepare (Ground Truth) |    29.24 |         3,038 |          N/A |
-| Convert Ground Truth   |     8.57 |         1,437 |          N/A |
-| Match                  |     7.83 |         1,278 |          N/A |
-| Match (Export-Edges)   |    25.38 |         3,137 |          N/A |
-| Compare                |     0.94 |            51 |        98.73 |
-| Compare (Export-Edges) |     0.88 |            44 |        98.93 |
+| Mode                     | Time (s) | Max RAM (MiB) | Accuracy (%) |
+|:-------------------------|---------:|--------------:|-------------:|
+| Prepare                  |    31.24 |         2,717 |          N/A |
+| Prepare *                |    16.24 |         1,761 |          N/A |
+| Prepare (Ground Truth)   |    25.98 |         2,640 |          N/A |
+| Prepare (Ground Truth) * |    20.64 |         2,553 |          N/A |
+| Convert Ground Truth     |     8.69 |         1,303 |          N/A |
+| Match                    |     7.77 |         1,220 |          N/A |
+| Match (Export-Edges)     |    28.82 |         2,934 |          N/A |
+| Compare                  |     0.94 |            41 |        98.73 |
+| Compare (Export-Edges)   |     0.90 |            55 |        98.93 |
+
+Max RAM contains shared memory (cached memory backed by disk, not actually used).\
+The prepare runs marked with * were run with `--memory-mapped-preparation off`.
+In this case, only the final data is written into memory mapped files and during the preparation,
+non-cached RAM (actually used by the process) is used.
