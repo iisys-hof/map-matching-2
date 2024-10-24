@@ -81,7 +81,7 @@ namespace map_matching_2::io::helper {
             return _tag_storage;
         }
 
-        [[nodiscard]] std::uint64_t id(const std::string &key, const std::string &value) {
+        [[nodiscard]] std::uint64_t id(const std::string &key, const std::string &value, bool retry = true) {
             if (_tag_storage.is_finalized()) {
                 throw std::runtime_error{"cannot add new tag, tag_storage is finalized"};
             }
@@ -142,11 +142,15 @@ namespace map_matching_2::io::helper {
                 static_assert(not std::is_same_v<key_type, std::string> or
                         not std::is_same_v<value_type, std::string>,
                         "mmap key_type and value_type cannot be std::string, does not work with mmap");
-                return memory_mapped::retry_alloc([&]() {
-                            return _id();
-                        }, [&](auto &ex) {
-                            handle_bad_alloc(ex);
-                        });
+                if (retry) {
+                    return memory_mapped::retry_alloc([&]() {
+                                return _id();
+                            }, [&](auto &ex) {
+                                handle_bad_alloc(ex);
+                            });
+                } else {
+                    return _id();
+                }
             } else {
                 return _id();
             }
@@ -260,11 +264,11 @@ namespace map_matching_2::io::helper {
         }
 
         [[nodiscard]] tag_vector_type tags(const osmium::TagList &tag_list) {
-            const auto &_tags = [this, &tag_list]() -> tag_vector_type {
+            const auto &_tags = [&]() -> tag_vector_type {
                 tag_vector_type tags_container = _tag_storage.tags();
                 tags_container.reserve(tag_list.size());
                 for (const auto &tag : tag_list) {
-                    tags_container.emplace_back(id(tag.key(), tag.value()));
+                    tags_container.emplace_back(id(tag.key(), tag.value(), false));
                 }
                 return tags_container;
             };
@@ -282,7 +286,7 @@ namespace map_matching_2::io::helper {
 
         template<typename TagsT>
         [[nodiscard]] tag_vector_type copy_tags(const TagsT &tags) {
-            const auto &_copy_tags = [this, &tags]() -> tag_vector_type {
+            const auto &_copy_tags = [&]() -> tag_vector_type {
                 tag_vector_type tags_container = _tag_storage.tags();
                 tags_container.reserve(tags.size());
                 std::copy(std::cbegin(tags), std::cend(tags), std::back_inserter(tags_container));
@@ -302,13 +306,13 @@ namespace map_matching_2::io::helper {
 
         template<typename TagsT, typename TagHelperT>
         [[nodiscard]] tag_vector_type clone_tags(const TagsT &tags, const TagHelperT &other) {
-            const auto &_clone_tags = [this, &tags, &other]() -> tag_vector_type {
+            const auto &_clone_tags = [&]() -> tag_vector_type {
                 tag_vector_type tags_container = _tag_storage.tags();
                 tags_container.reserve(tags.size());
                 for (const auto &tag_id : tags) {
                     // clones tag data from other tag_storage to this tag_storage
                     auto tag = other.tag(tag_id);
-                    tags_container.emplace_back(id(tag.first, tag.second));
+                    tags_container.emplace_back(id(tag.first, tag.second, false));
                 }
                 return tags_container;
             };
