@@ -84,7 +84,7 @@ namespace map_matching_2::geometry {
         constexpr linestring(const linestring<PointT, ContainerT, AllocatorT> &other) requires
             (std::default_initializable<allocator_type>)
             : base_type{} {
-            std::copy(std::cbegin(other), std::cend(other), std::begin(*this));
+            std::copy(std::cbegin(other), std::cend(other), std::back_inserter(*this));
         }
 
         template<typename PointT = Point,
@@ -93,7 +93,7 @@ namespace map_matching_2::geometry {
         constexpr linestring(const linestring<PointT, ContainerT, AllocatorT> &other,
                 const allocator_type &alloc)
             : base_type(alloc) {
-            std::copy(std::cbegin(other), std::cend(other), std::begin(*this));
+            std::copy(std::cbegin(other), std::cend(other), std::back_inserter(*this));
         }
 
         constexpr linestring(linestring &&other) noexcept
@@ -220,7 +220,7 @@ namespace map_matching_2::geometry {
         constexpr multi_linestring(const linestring<LineT, ContainerT, AllocatorT> &other) requires
             (std::default_initializable<line_type> and std::default_initializable<allocator_type>)
             : base_type{} {
-            std::copy(std::cbegin(other), std::cend(other), std::begin(*this));
+            std::copy(std::cbegin(other), std::cend(other), std::back_inserter(*this));
         }
 
         template<typename LineT = Line,
@@ -230,7 +230,7 @@ namespace map_matching_2::geometry {
                 const allocator_type &alloc) requires
             (std::default_initializable<line_type>)
             : base_type(alloc) {
-            std::copy(std::cbegin(other), std::cend(other), std::begin(*this));
+            std::copy(std::cbegin(other), std::cend(other), std::back_inserter(*this));
         }
 
         constexpr multi_linestring(multi_linestring &&other) noexcept
