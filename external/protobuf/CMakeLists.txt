@@ -1,7 +1,7 @@
 # protobuf
 FetchContent_Declare(protobuf
         GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-        GIT_TAG v28.2
+        GIT_TAG v28.3
         SOURCE_SUBDIR cmake
         EXCLUDE_FROM_ALL
         FIND_PACKAGE_ARGS)

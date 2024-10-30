@@ -1,7 +1,7 @@
 # date
 FetchContent_Declare(date
         GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-        GIT_TAG v3.0.2
+        GIT_TAG v3.0.3
         EXCLUDE_FROM_ALL)
 
 FetchContent_MakeAvailable(date)
