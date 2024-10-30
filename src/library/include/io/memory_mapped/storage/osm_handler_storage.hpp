@@ -50,6 +50,30 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         constexpr ~osm_vertex() = default;
 
+        friend bool operator==(const osm_vertex &left, const osm_vertex &right) {
+            return left.vertex.id == right.vertex.id;
+        }
+
+        friend bool operator!=(const osm_vertex &left, const osm_vertex &right) {
+            return not(left == right);
+        }
+
+        friend bool operator<(const osm_vertex &left, const osm_vertex &right) {
+            return left.vertex.id < right.vertex.id;
+        }
+
+        friend bool operator<=(const osm_vertex &left, const osm_vertex &right) {
+            return not(right < left);
+        }
+
+        friend bool operator>(const osm_vertex &left, const osm_vertex &right) {
+            return right < left;
+        }
+
+        friend bool operator>=(const osm_vertex &left, const osm_vertex &right) {
+            return not(left < right);
+        }
+
         vertex_type vertex;
         vertex_size_type vertex_index{};
         bool added{false};
@@ -72,8 +96,11 @@ namespace map_matching_2::io::memory_mapped::storage {
         using vertex_type = Vertex;
 
         using osm_vertex_type = osm_vertex<vertex_type>;
-        using vertex_container_type = typename types::template vector_type<osm_vertex_type,
-            typename types::template allocator_traits_type<allocator_type>::template rebind_alloc<osm_vertex_type>>;
+
+        using vertex_allocator_type = typename types::template allocator_traits_type<
+            allocator_type>::template rebind_alloc<osm_vertex_type>;
+
+        using vertex_container_type = typename types::template vector_type<osm_vertex_type, vertex_allocator_type>;
 
         osm_handler_storage() {
             _prepare_allocator();
@@ -187,8 +214,11 @@ namespace map_matching_2::io::memory_mapped::storage {
         using vertex_type = Vertex;
 
         using osm_vertex_type = osm_vertex<vertex_type>;
-        using vertex_container_type = typename types::template vector_type<osm_vertex_type,
-            typename types::template allocator_traits_type<allocator_type>::template rebind_alloc<osm_vertex_type>>;
+
+        using vertex_allocator_type = typename types::template allocator_traits_type<
+            allocator_type>::template rebind_alloc<osm_vertex_type>;
+
+        using vertex_container_type = typename types::template vector_type<osm_vertex_type, vertex_allocator_type>;
 
         struct osm_vertex_wrapper {
             vertex_container_type vertices;

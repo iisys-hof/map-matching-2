@@ -51,7 +51,6 @@ namespace map_matching_2::io::helper {
         using allocator_type = typename osm_handler_storage_type::allocator_type;
         using osm_vertex_type = typename osm_handler_storage_type::osm_vertex_type;
         using vertex_type = typename osm_vertex_type::vertex_type;
-        using vertex_size_type = typename osm_vertex_type::vertex_size_type;
         using vertex_container_type = typename osm_handler_storage_type::vertex_container_type;
 
         constexpr osm_handler_helper(
@@ -108,30 +107,53 @@ namespace map_matching_2::io::helper {
             return osm_handler_storage().allocator();
         }
 
-        [[nodiscard]] std::size_t add_node(
-                const osmium::Node &osm_node, const geometry::point_reprojector_variant &reprojector_variant) {
+        void add_node(const osmium::Node &osm_node, const geometry::point_reprojector_variant &reprojector_variant) {
             using osm_point_type = geometry::point_type<geometry::cs_geographic>;
 
-            const auto _add_node = [&]() -> std::size_t {
+            const auto _add_node = [&]() {
                 const auto id = static_cast<std::uint64_t>(osm_node.id());
                 const auto node_location = osm_node.location();
-                const std::size_t index = vertices().size();
                 tag_helper().set_node_tags(id, osm_node.tags());
+                if (not _sort_vertices and not vertices().empty() and vertices().back().vertex.id > id) {
+                    _sort_vertices = true;
+                }
                 vertices().emplace_back(osm_vertex_type{
                         id, osm_point_type{node_location.lon(), node_location.lat()}, reprojector_variant
                 });
-                return index;
             };
 
             if constexpr (is_mmap_osm_handler_helper<osm_handler_helper>) {
-                return io::memory_mapped::retry_alloc([&]() {
-                            return _add_node();
+                io::memory_mapped::retry_alloc([&]() {
+                            _add_node();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
                         });
             } else {
-                return _add_node();
+                _add_node();
             }
+        }
+
+        void check_and_sort_nodes() {
+            if (_sort_vertices) {
+                std::sort(std::begin(vertices()), std::end(vertices()));
+                _sort_vertices = false;
+            }
+        }
+
+        [[nodiscard]] bool contains_node(const std::uint64_t id) {
+            check_and_sort_nodes();
+            const osm_vertex_type empty_osm_vertex{id, _empty_point};
+            return std::binary_search(std::begin(vertices()), std::end(vertices()), empty_osm_vertex);
+        }
+
+        [[nodiscard]] osm_vertex_type &get_node(const std::uint64_t id) {
+            check_and_sort_nodes();
+            const osm_vertex_type empty_osm_vertex{id, _empty_point};
+            auto it = std::lower_bound(std::begin(vertices()), std::end(vertices()), empty_osm_vertex);
+            if (it == std::end(vertices()) or *it != empty_osm_vertex) {
+                throw std::out_of_range{std::format("osm_vertex {} not found in vertices", id)};
+            }
+            return *it;
         }
 
         template<typename GraphHelper>
@@ -143,10 +165,10 @@ namespace map_matching_2::io::helper {
         }
 
         template<typename GraphHelper>
-        void add_edge(GraphHelper &graph_helper, const osm_vertex_type &osm_vertex_from,
-                const osm_vertex_type &osm_vertex_to,
+        void add_edge(GraphHelper &graph_helper,
+                const osm_vertex_type &osm_vertex_from, const osm_vertex_type &osm_vertex_to,
                 const bool oneway, const bool reverse, const osmium::Way &osm_way) {
-            const std::uint64_t id = static_cast<std::uint64_t>(osm_way.id());
+            const auto id = static_cast<std::uint64_t>(osm_way.id());
             const osmium::TagList &tag_list = osm_way.tags();
 
             using point_type = typename GraphHelper::vertex_data_type::point_type;
@@ -192,8 +214,11 @@ namespace map_matching_2::io::helper {
         }
 
     private:
+        static constexpr typename osm_vertex_type::vertex_type::point_type _empty_point{};
+
         osm_handler_storage_type _osm_handler_storage;
         tag_helper_type _tag_helper;
+        bool _sort_vertices{false};
 
         void handle_bad_alloc(auto &ex) {
             if constexpr (io::memory_mapped::has_grow<osm_handler_storage_type>) {

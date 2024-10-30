@@ -339,9 +339,7 @@ namespace map_matching_2::app {
 
         if constexpr (io::helper::is_mmap_osm_handler_helper<osm_handler_helper_type>) {
             using osm_handler_storage_type = typename osm_handler_helper_type::osm_handler_storage_type;
-            using osm_handler_type = io::network::osm_handler<GraphHelper,
-                io::network::osm_mmap_index_type,
-                osm_handler_helper_type>;
+            using osm_handler_type = io::network::osm_handler<GraphHelper, osm_handler_helper_type>;
 
             return std::make_unique<osm_handler_type>(
                     graph_helper, std::move(reprojector_variant), osm_handler_helper_type{
@@ -355,8 +353,7 @@ namespace map_matching_2::app {
                     });
         } else if constexpr (io::helper::is_memory_osm_handler_helper<osm_handler_helper_type>) {
             using osm_handler_storage_type = typename osm_handler_helper_type::osm_handler_storage_type;
-            using osm_handler_type = io::network::osm_handler<GraphHelper,
-                io::network::osm_memory_index_type, osm_handler_helper_type>;
+            using osm_handler_type = io::network::osm_handler<GraphHelper, osm_handler_helper_type>;
 
             return std::make_unique<osm_handler_type>(
                     graph_helper, std::move(reprojector_variant), osm_handler_helper_type{

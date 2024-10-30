@@ -18,20 +18,16 @@
 
 #include <osmium/osm.hpp>
 #include <osmium/handler.hpp>
-#include <osmium/index/map/all.hpp>
 #include <osmium/tags/tags_filter.hpp>
 
 namespace map_matching_2::io::network {
 
-    template<typename GraphHelper, typename Index, typename OSMHandlerHelper>
+    template<typename GraphHelper, typename OSMHandlerHelper>
     class osm_handler : public osmium::handler::Handler {
 
     public:
         using graph_helper_type = GraphHelper;
-        using index_type = Index;
         using osm_handler_helper_type = OSMHandlerHelper;
-
-        static constexpr std::size_t empty_value = osmium::index::empty_value<std::size_t>();
 
         osm_handler(graph_helper_type &graph_helper, geometry::point_reprojector_variant reprojector_variant,
                 osm_handler_helper_type osm_handler_helper = {})
@@ -48,10 +44,9 @@ namespace map_matching_2::io::network {
 
         void node(const osmium::Node &osm_node) {
             if (osm_node.visible()) {
-                const auto node_id = osm_node.id();
-                if (_node_index.get_noexcept(static_cast<osmium::unsigned_object_id_type>(node_id)) == empty_value) {
-                    const auto index = _osm_handler_helper.add_node(osm_node, _reprojector_variant);
-                    _node_index.set(static_cast<osmium::unsigned_object_id_type>(node_id), index);
+                const auto node_index = static_cast<std::uint64_t>(osm_node.id());
+                if (not _osm_handler_helper.contains_node(node_index)) {
+                    _osm_handler_helper.add_node(osm_node, _reprojector_variant);
                 }
             }
         }
@@ -60,41 +55,30 @@ namespace map_matching_2::io::network {
             if (osm_way.visible() and keep(osm_way)) {
                 const auto &osm_nodes = osm_way.nodes();
 
-                auto &osm_vertices = _osm_handler_helper.vertices();
-
                 for (const auto &osm_node : osm_nodes) {
-                    const auto osm_node_id = osm_node.ref();
-
                     try {
-                        const auto index = _node_index.get(
-                                static_cast<osmium::unsigned_object_id_type>(osm_node_id));
-
-                        auto &osm_vertex = osm_vertices[index];
+                        const auto osm_node_index = static_cast<std::uint64_t>(osm_node.ref());
+                        auto &osm_vertex = _osm_handler_helper.get_node(osm_node_index);
 
                         _osm_handler_helper.add_vertex(_graph_helper, osm_vertex);
-                    } catch (osmium::not_found &ex) {
+                    } catch (std::out_of_range &ex) {
                         // std::cerr << ex.what() << std::endl;
                     }
                 }
 
                 for (std::size_t i = 0; i < osm_nodes.size() - 1; ++i) {
-                    const auto node_ref_from = osm_nodes[i].ref();
-                    const auto node_ref_to = osm_nodes[i + 1].ref();
-
                     try {
-                        const auto index_from = _node_index.get(
-                                static_cast<osmium::unsigned_object_id_type>(node_ref_from));
-                        const auto index_to = _node_index.get(
-                                static_cast<osmium::unsigned_object_id_type>(node_ref_to));
+                        const auto index_from = static_cast<std::uint64_t>(osm_nodes[i].ref());
+                        const auto index_to = static_cast<std::uint64_t>(osm_nodes[i + 1].ref());
 
-                        const auto &osm_vertex_from = osm_vertices[index_from];
-                        const auto &osm_vertex_to = osm_vertices[index_to];
+                        const auto &osm_vertex_from = _osm_handler_helper.get_node(index_from);
+                        const auto &osm_vertex_to = _osm_handler_helper.get_node(index_to);
 
                         const auto [oneway, reverse] = detect_oneway(osm_way);
 
                         _osm_handler_helper.add_edge(
                                 _graph_helper, osm_vertex_from, osm_vertex_to, oneway, reverse, osm_way);
-                    } catch (osmium::not_found &ex) {
+                    } catch (std::out_of_range &ex) {
                         // std::cerr << ex.what() << std::endl;
                     }
                 }
@@ -109,7 +93,6 @@ namespace map_matching_2::io::network {
         graph_helper_type &_graph_helper;
         geometry::point_reprojector_variant _reprojector_variant;
 
-        index_type _node_index{};
         osm_handler_helper_type _osm_handler_helper;
 
         osmium::TagsFilter _query, _filter, _oneway, _oneway_reverse;
