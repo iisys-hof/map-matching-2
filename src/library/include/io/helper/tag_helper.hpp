@@ -171,7 +171,7 @@ namespace map_matching_2::io::helper {
 
         template<typename TagHelperT>
         void clone_node_tags(const std::uint64_t id, const TagHelperT &other) {
-            clone_map_tags(id, other, MAP_TAGS::NODES_MAP);
+            clone_map_tags(id, other.node_tags(id), other, MAP_TAGS::NODES_MAP);
         }
 
         void set_edge_tags(const std::uint64_t id, tag_vector_type &&tags) {
@@ -189,7 +189,7 @@ namespace map_matching_2::io::helper {
 
         template<typename TagHelperT>
         void clone_edge_tags(const std::uint64_t id, const TagHelperT &other) {
-            clone_map_tags(id, other, MAP_TAGS::EDGES_MAP);
+            clone_map_tags(id, other.edge_tags(id), other, MAP_TAGS::EDGES_MAP);
         }
 
         void merge_edge_tags(const std::uint64_t id, const std::uint64_t &other_id) {
@@ -373,10 +373,9 @@ namespace map_matching_2::io::helper {
             }
         }
 
-        template<typename TagHelperT>
-        void clone_map_tags(const std::uint64_t id, const TagHelperT &other, MAP_TAGS map_tag) {
+        template<typename TagT, typename TagHelperT>
+        void clone_map_tags(const std::uint64_t id, const TagT &tags, const TagHelperT &other, MAP_TAGS map_tag) {
             const auto &_clone_map_tags = [&]() {
-                const auto &tags = other.node_tags(id);
                 if (not tags.empty()) {
                     auto &map = get_map(map_tag);
                     map.emplace(id, clone_tags(tags, other));
