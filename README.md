@@ -283,9 +283,9 @@ There are multiple providers for OpenStreetMap data extract downloads, see the c
 [https://wiki.openstreetmap.org/wiki/Planet.osm#Extracts](https://osmtoday.com/)
 
 Here are some providers from the above link:\
-GeoFabrik: [https://download.geofabrik.de/](https://osmtoday.com/)\
-BBBike: [https://download.bbbike.org/osm/](https://osmtoday.com/)\
-OpenStreetMap.fr: [http://download.openstreetmap.fr/](https://osmtoday.com/)\
+GeoFabrik: [https://download.geofabrik.de/](https://download.geofabrik.de/)\
+BBBike: [https://download.bbbike.org/osm/](https://download.bbbike.org/osm/)\
+OpenStreetMap.fr: [http://download.openstreetmap.fr/](http://download.openstreetmap.fr/)\
 OSMToday: [https://osmtoday.com/](https://osmtoday.com/)\
 movisda: [https://osm.download.movisda.io/](https://osm.download.movisda.io/)\
 protomaps: [https://app.protomaps.com/](https://app.protomaps.com/)\
