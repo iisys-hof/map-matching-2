@@ -277,7 +277,52 @@ The basic usage is a two- or three-step approach:
    review the differences. Base command:\
    `./map_matching_2 --compare --match-tracks data/results/matches.csv --compare-tracks data/ground_truth.csv --output data/results`
 
-#### More details and in-depth explanation
+#### Download OpenStreetMap data extracts
+
+There are multiple providers for OpenStreetMap data extract downloads, see the complete list with metadata:\
+[https://wiki.openstreetmap.org/wiki/Planet.osm#Extracts](https://osmtoday.com/)
+
+Here are some providers from the above link:\
+GeoFabrik: [https://download.geofabrik.de/](https://osmtoday.com/)\
+BBBike: [https://download.bbbike.org/osm/](https://osmtoday.com/)\
+OpenStreetMap.fr: [http://download.openstreetmap.fr/](https://osmtoday.com/)\
+OSMToday: [https://osmtoday.com/](https://osmtoday.com/)\
+movisda: [https://osm.download.movisda.io/](https://osm.download.movisda.io/)\
+protomaps: [https://app.protomaps.com/](https://app.protomaps.com/)\
+Interline: [https://www.interline.io/osm/extracts/](https://www.interline.io/osm/extracts/)\
+OverPass API: [https://www.overpass-api.de/](https://www.overpass-api.de/)
+
+No responsibility is taken for the correctness of this information.
+
+#### Sorting OpenStreetMap data
+
+The OpenStreetMap data should be sorted by type and id for a fast and reliable import.\
+Most downloads should already fulfil this condition.
+
+If you are unsure, you can check this by yourself with the following command:
+
+```shell
+osmium fileinfo -e openstreetmap.osm.pbf
+```
+
+It should state: `Objects ordered (by type and id): yes`
+
+If it does not, you can sort the file by yourself with the following command:
+
+```shell
+osmium sort -o sorted.osm.pbf unsorted.osm.pbf
+```
+
+If you have little main memory, use `-s "multipass"` for a slower but less memory intensive sorting.
+
+```shell
+osmium sort -s "multipass" -o sorted.osm.pbf unsorted.osm.pbf
+```
+
+Alternatively, try another data provider from above.\
+We have good experience with the extracts from GeoFabrik.
+
+#### More details and in-depth explanation on the usage
 
 Please note that a new release might render the prepared network graph invalid, you might need to re-prepare the network
 graph again if you download a new version.
