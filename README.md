@@ -280,7 +280,7 @@ The basic usage is a two- or three-step approach:
 #### Download OpenStreetMap data extracts
 
 There are multiple providers for OpenStreetMap data extract downloads, see the complete list with metadata:\
-[https://wiki.openstreetmap.org/wiki/Planet.osm#Extracts](https://osmtoday.com/)
+[https://wiki.openstreetmap.org/wiki/Planet.osm#Extracts](https://wiki.openstreetmap.org/wiki/Planet.osm#Extracts)
 
 Here are some providers from the above link:\
 GeoFabrik: [https://download.geofabrik.de/](https://download.geofabrik.de/)\
