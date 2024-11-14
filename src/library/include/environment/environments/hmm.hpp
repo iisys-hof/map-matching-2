@@ -188,8 +188,11 @@ namespace map_matching_2::environment {
                                     transition_probability += std::log(1.0);
                                 } else {
                                     // calculate transition probability
-                                    const length_type next_distance =
-                                            to_candidate.track->rich_line.length(to_candidate.index - 1);
+                                    length_type next_distance = geometry::default_float_type<length_type>::v1;
+                                    if (to_candidate.track->rich_line.has_length(to_candidate.index - 1)) {
+                                        next_distance =
+                                                to_candidate.track->rich_line.length(to_candidate.index - 1);
+                                    }
                                     length_type route_length = geometry::default_float_type<length_type>::v1;
                                     if (route.has_length()) {
                                         route_length = route.length();
@@ -223,10 +226,14 @@ namespace map_matching_2::environment {
                                     transition_probability += length_probability;
 
                                     if (route.has_azimuth()) {
-                                        const angle_type next_azimuth =
-                                                to_candidate.track->rich_line.azimuth(to_candidate.index - 1);
+                                        const angle_type route_azimuth = route.azimuth();
+                                        angle_type next_azimuth = route_azimuth;
+                                        if (to_candidate.track->rich_line.has_azimuth(to_candidate.index - 1)) {
+                                            next_azimuth =
+                                                    to_candidate.track->rich_line.azimuth(to_candidate.index - 1);
+                                        }
 
-                                        const auto diff_azimuth = geometry::angle_diff(next_azimuth, route.azimuth());
+                                        const auto diff_azimuth = geometry::angle_diff(next_azimuth, route_azimuth);
                                         double azimuth_probability =
                                                 std::max(1e-20, (180.0 - std::fabs(diff_azimuth)) / 180.0);
 
@@ -237,27 +244,26 @@ namespace map_matching_2::environment {
                                         transition_probability += azimuth_probability;
 
                                         // calculate turn
-                                        if (from_candidate.index >= 1 and to_candidate.index >= 2) {
-                                            angle_type current_azimuth =
+                                        if (from_candidate.index >= 1 and to_candidate.index >= 2 and
+                                            from_candidate.track->rich_line.has_azimuth(from_candidate.index - 1) and
+                                            to_candidate.track->rich_line.has_direction(to_candidate.index - 2)) {
+                                            const angle_type current_azimuth =
                                                     from_candidate.track->rich_line.azimuth(from_candidate.index - 1);
-
                                             const angle_type next_turn =
                                                     to_candidate.track->rich_line.direction(to_candidate.index - 2);
 
-                                            if (not std::isnan(next_turn)) {
-                                                const auto route_turn = geometry::direction_deg(
-                                                        current_azimuth, route.azimuth());
-                                                const auto turn_diff = geometry::angle_diff(next_turn, route_turn);
+                                            const auto route_turn = geometry::direction_deg(
+                                                    current_azimuth, route_azimuth);
+                                            const auto turn_diff = geometry::angle_diff(next_turn, route_turn);
 
-                                                double turn_probability =
-                                                        std::max(1e-20, (360.0 - std::fabs(turn_diff)) / 360.0);
+                                            double turn_probability =
+                                                    std::max(1e-20, (360.0 - std::fabs(turn_diff)) / 360.0);
 
-                                                turn_probability = std::log(
-                                                        std::pow(turn_probability, _settings.hmm_turn_factor));
-                                                assert(turn_probability > -std::numeric_limits<double>::infinity() and
-                                                        turn_probability <= 0.0);
-                                                transition_probability += turn_probability;
-                                            }
+                                            turn_probability = std::log(
+                                                    std::pow(turn_probability, _settings.hmm_turn_factor));
+                                            assert(turn_probability > -std::numeric_limits<double>::infinity() and
+                                                    turn_probability <= 0.0);
+                                            transition_probability += turn_probability;
                                         }
                                     }
 

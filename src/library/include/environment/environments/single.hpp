@@ -327,11 +327,16 @@ namespace map_matching_2::environment {
                                     reward -= _settings.mdp_distance_factor * (next_edge.distance * 2);
                                 }
 
-                                const length_type next_distance =
-                                        adjacent
-                                        ? next_candidate.track->rich_line.length(next_candidate.index - 1)
-                                        : geometry::point_distance(current_candidate.point(),
-                                                next_candidate.point());
+                                length_type next_distance = geometry::default_float_type<length_type>::v0;
+                                if (adjacent) {
+                                    if (next_candidate.track->rich_line.has_length(next_candidate.index - 1)) {
+                                        next_distance =
+                                                next_candidate.track->rich_line.length(next_candidate.index - 1);
+                                    }
+                                } else {
+                                    next_distance = geometry::point_distance(
+                                            current_candidate.point(), next_candidate.point());
+                                }
 
                                 length_type route_length = geometry::default_float_type<length_type>::v0;
                                 if (route.has_length()) {
@@ -356,29 +361,45 @@ namespace map_matching_2::environment {
                                 }
 
                                 if (route.has_azimuth()) {
-                                    const angle_type next_azimuth =
-                                            adjacent
-                                            ? next_candidate.track->rich_line.azimuth(next_candidate.index - 1)
-                                            : geometry::azimuth_deg(current_candidate.point(),
-                                                    next_candidate.point());
+                                    const angle_type route_azimuth = route.azimuth();
+                                    angle_type next_azimuth = route_azimuth;
+                                    if (adjacent) {
+                                        if (next_candidate.track->rich_line.has_azimuth(next_candidate.index - 1)) {
+                                            next_azimuth =
+                                                    next_candidate.track->rich_line.azimuth(next_candidate.index - 1);
+                                        }
+                                    } else {
+                                        if (not geometry::equals_points(
+                                                current_candidate.point(), next_candidate.point())) {
+                                            next_azimuth = geometry::azimuth_deg(
+                                                    current_candidate.point(), next_candidate.point());
+                                        }
+                                    }
 
                                     const auto azimuth_diff = std::fabs(geometry::angle_diff(
-                                            next_azimuth, route.azimuth()));
+                                            next_azimuth, route_azimuth));
                                     reward -= _settings.mdp_azimuth_factor * azimuth_diff;
 
                                     // calculate turn
-                                    if (current_candidate.index >= 1 and next_candidate.index >= 2) {
-                                        angle_type current_azimuth =
+                                    if (current_candidate.index >= 1 and next_candidate.index >= 2 and
+                                        current_candidate.track->rich_line.has_azimuth(current_candidate.index - 1)) {
+                                        const angle_type current_azimuth =
                                                 current_candidate.track->rich_line.azimuth(current_candidate.index - 1);
 
-                                        const angle_type next_turn =
-                                                adjacent
-                                                ? next_candidate.track->rich_line.direction(next_candidate.index - 2)
-                                                : geometry::direction_deg(current_azimuth, next_azimuth);
+                                        angle_type next_turn = std::numeric_limits<angle_type>::quiet_NaN();
+                                        if (adjacent) {
+                                            if (next_candidate.track->rich_line.has_direction(
+                                                    next_candidate.index - 2)) {
+                                                next_turn = next_candidate.track->rich_line.direction(
+                                                        next_candidate.index - 2);
+                                            }
+                                        } else {
+                                            next_turn = geometry::direction_deg(current_azimuth, next_azimuth);
+                                        }
 
                                         if (not std::isnan(next_turn)) {
                                             const auto route_turn = geometry::direction_deg(
-                                                    current_azimuth, route.azimuth());
+                                                    current_azimuth, route_azimuth);
                                             auto turn_diff = std::fabs(geometry::angle_diff(next_turn, route_turn));
                                             reward -= _settings.mdp_turn_factor * turn_diff;
                                         }
@@ -418,15 +439,27 @@ namespace map_matching_2::environment {
                                                 bool prev_adjacent =
                                                         prev_candidate.index + 1 == current_candidate.index;
 
-                                                const auto route_direction = geometry::angle_diff(
+                                                const angle_type route_direction = geometry::angle_diff(
                                                         prev_route.azimuth(), route.azimuth());
-                                                const auto candidates_direction =
-                                                        prev_adjacent and adjacent
-                                                        ? next_candidate.track->rich_line.direction(
-                                                                next_candidate.index - 2)
-                                                        : geometry::direction_deg(prev_candidate.point(),
+                                                angle_type candidates_direction =
+                                                        std::numeric_limits<angle_type>::quiet_NaN();
+                                                if (prev_adjacent and adjacent) {
+                                                    if (next_candidate.track->rich_line.has_direction(
+                                                            next_candidate.index - 2)) {
+                                                        candidates_direction =
+                                                                next_candidate.track->rich_line.direction(
+                                                                        next_candidate.index - 2);
+                                                    }
+                                                } else {
+                                                    if (not geometry::equals_points(
+                                                                prev_candidate.point(), current_candidate.point()) and
+                                                        not geometry::equals_points(
+                                                                current_candidate.point(), next_candidate.point()))
+                                                        candidates_direction = geometry::direction_deg(
+                                                                prev_candidate.point(),
                                                                 current_candidate.point(),
                                                                 next_candidate.point());
+                                                }
 
                                                 if (not std::isnan(candidates_direction)) {
                                                     reward -= _settings.mdp_turn_factor * std::fabs(
@@ -489,7 +522,9 @@ namespace map_matching_2::environment {
         [[nodiscard]] reward_type _fail_reward(const std::size_t current_position) const {
             reward_type remaining_length = geometry::default_float_type<reward_type>::v0;
             for (std::size_t i = current_position; i + 1 < _candidates.size(); ++i) {
-                remaining_length += _candidates[i].track->rich_line.length(_candidates[i].index);
+                if (_candidates[i].track->rich_line.has_length(_candidates[i].index)) {
+                    remaining_length += _candidates[i].track->rich_line.length(_candidates[i].index);
+                }
             }
             return remaining_length;
         }
