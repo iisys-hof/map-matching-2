@@ -1,7 +1,7 @@
 # expat
 FetchContent_Declare(expat
         GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-        GIT_TAG R_2_6_3
+        GIT_TAG R_2_6_4
         SOURCE_SUBDIR expat
         EXCLUDE_FROM_ALL)
 
