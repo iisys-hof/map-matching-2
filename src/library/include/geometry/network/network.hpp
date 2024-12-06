@@ -22,6 +22,7 @@
 #include <boost/unordered/unordered_flat_set.hpp>
 
 #include "graph/algorithm/dijkstra_shortest_path.hpp"
+#include "graph/algorithm/a_star_shortest_path.hpp"
 
 #include "types/geometry/network/route/lazy_route.hpp"
 
@@ -224,8 +225,7 @@ namespace map_matching_2::geometry::network {
 
             boost::unordered_flat_set<vertex_descriptor> goals_found;
             goals_visitor<decltype(weight_func)> visitor{
-                    max_distance, max_distance_factor, goals, goals_found, predecessors, distances, colors,
-                    weight_func
+                    max_distance, max_distance_factor, goals, goals_found, distances, colors, weight_func
             };
 
             graph::dijkstra_shortest_path(this->graph(), start,
@@ -251,6 +251,49 @@ namespace map_matching_2::geometry::network {
             }
 
             return shortest_paths;
+        }
+
+        [[nodiscard]] std::list<vertex_descriptor>
+        a_star_shortest_paths(const vertex_descriptor &start,
+                const vertex_descriptor &goal,
+                distance_type max_distance, double max_distance_factor,
+                graph::predecessors_type &predecessors,
+                graph::distances_type<length_type> &distances,
+                graph::colors_type &colors,
+                graph::priority_queue_type<graph::priority_type<length_type, vertex_descriptor>> &queue) const {
+            constexpr auto weight_func = [](const edge_data_type &edge) constexpr {
+                return edge.rich_line.length();
+            };
+
+            const auto heuristic_func = [this](const vertex_descriptor &vertex_desc,
+                    const vertex_descriptor &goal_desc) constexpr {
+                return geometry::euclidean_distance(
+                        this->graph().get_vertex_data(vertex_desc).point,
+                        this->graph().get_vertex_data(goal_desc).point);
+            };
+
+            goal_visitor<decltype(weight_func)> visitor{
+                    max_distance, max_distance_factor, goal, distances, colors, weight_func
+            };
+
+            graph::a_star_shortest_path(this->graph(), start, goal,
+                    predecessors, distances, colors, queue, visitor, weight_func, heuristic_func);
+
+            std::list<vertex_descriptor> shortest_path;
+            for (vertex_descriptor vertex = goal;; vertex = predecessors[vertex]) {
+                shortest_path.emplace_front(vertex);
+                if (predecessors[vertex] == vertex)
+                    break;
+            }
+
+            predecessors.clear();
+            distances.clear();
+            colors.clear();
+            while (not queue.empty()) {
+                queue.pop();
+            }
+
+            return shortest_path;
         }
 
         [[nodiscard]] route_type extract_route(const std::list<vertex_descriptor> &shortest_path) const {
@@ -361,34 +404,24 @@ namespace map_matching_2::geometry::network {
         }
 
         template<typename WeightFunc>
-        class goals_visitor : public graph::visitor {
+        class base_max_distance_visitor : public graph::visitor {
 
         public:
-            constexpr goals_visitor(const distance_type max_distance,
+            constexpr base_max_distance_visitor(const distance_type max_distance,
                     const double max_distance_factor,
-                    const boost::unordered_flat_set<vertex_descriptor> &goals,
-                    boost::unordered_flat_set<vertex_descriptor> &goals_found,
-                    graph::predecessors_type &predecessors,
                     graph::distances_type<length_type> &distances,
                     graph::colors_type &colors,
                     const WeightFunc &weight_func)
-                : _max_distance{max_distance}, _max_distance_factor{max_distance_factor}, _goals{goals},
-                _goals_found{goals_found}, _predecessors{predecessors}, _distances{distances}, _colors{colors},
-                _weight_func{weight_func} {}
-
-            void examine_vertex(const graph_type &graph,
-                    const typename graph::graph_traits<graph_type>::vertex_descriptor &vertex_desc) {
-                if (_goals.contains(vertex_desc)) {
-                    _goals_found.emplace(vertex_desc);
-                }
-
-                if (_goals_found.size() >= _goals.size()) {
-                    stop();
-                }
-            }
+                : _max_distance{max_distance}, _max_distance_factor{max_distance_factor}, _distances{distances},
+                _colors{colors}, _weight_func{weight_func} {}
 
             void examine_edge(const graph_type &graph,
                     const typename graph::graph_traits<graph_type>::edge_descriptor &edge_desc) {
+                if (_max_distance_factor < 0.0) {
+                    // effectively disable this method if the max-distance-factor is disabled
+                    return;
+                }
+
                 const vertex_descriptor &source = graph.source(edge_desc);
                 const auto distance_source = _distances[source];
                 const auto weight = _weight_func(graph.get_edge_data(edge_desc));
@@ -404,13 +437,69 @@ namespace map_matching_2::geometry::network {
             const distance_type _max_distance;
             const double _max_distance_factor;
 
-            const boost::unordered_flat_set<vertex_descriptor> &_goals;
-            boost::unordered_flat_set<vertex_descriptor> &_goals_found;
-
-            graph::predecessors_type &_predecessors;
             graph::distances_type<length_type> &_distances;
             graph::colors_type &_colors;
             const WeightFunc &_weight_func;
+
+        };
+
+        template<typename WeightFunc>
+        class goals_visitor : public base_max_distance_visitor<WeightFunc> {
+
+        public:
+            using base_type = base_max_distance_visitor<WeightFunc>;
+
+            constexpr goals_visitor(const distance_type max_distance,
+                    const double max_distance_factor,
+                    const boost::unordered_flat_set<vertex_descriptor> &goals,
+                    boost::unordered_flat_set<vertex_descriptor> &goals_found,
+                    graph::distances_type<length_type> &distances,
+                    graph::colors_type &colors,
+                    const WeightFunc &weight_func)
+                : base_type{max_distance, max_distance_factor, distances, colors, weight_func},
+                _goals{goals}, _goals_found{goals_found} {}
+
+            void finish_vertex(const graph_type &graph,
+                    const typename graph::graph_traits<graph_type>::vertex_descriptor &vertex_desc) {
+                if (_goals.contains(vertex_desc)) {
+                    _goals_found.emplace(vertex_desc);
+                }
+
+                if (_goals_found.size() >= _goals.size()) {
+                    this->stop();
+                }
+            }
+
+        private:
+            const boost::unordered_flat_set<vertex_descriptor> &_goals;
+            boost::unordered_flat_set<vertex_descriptor> &_goals_found;
+
+        };
+
+        template<typename WeightFunc>
+        class goal_visitor : public base_max_distance_visitor<WeightFunc> {
+
+        public:
+            using base_type = base_max_distance_visitor<WeightFunc>;
+
+            constexpr goal_visitor(const distance_type max_distance,
+                    const double max_distance_factor,
+                    const vertex_descriptor &goal,
+                    graph::distances_type<length_type> &distances,
+                    graph::colors_type &colors,
+                    const WeightFunc &weight_func)
+                : base_type{max_distance, max_distance_factor, distances, colors, weight_func},
+                _goal{goal} {}
+
+            void finish_vertex(const graph_type &graph,
+                    const typename graph::graph_traits<graph_type>::vertex_descriptor &vertex_desc) {
+                if (_goal == vertex_desc) {
+                    this->stop();
+                }
+            }
+
+        private:
+            const vertex_descriptor &_goal;
 
         };
 

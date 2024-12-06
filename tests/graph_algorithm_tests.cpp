@@ -19,11 +19,18 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/unordered/unordered_flat_set.hpp>
 
+#include "geometry/algorithm/distance.hpp"
+
 #include "graph/adjacency_list.hpp"
 #include "graph/compressed_sparse_row.hpp"
 #include "graph/algorithm/breadth_first_search.hpp"
 #include "graph/algorithm/depth_first_search.hpp"
 #include "graph/algorithm/dijkstra_shortest_path.hpp"
+#include "graph/algorithm/a_star_shortest_path.hpp"
+
+struct node {
+    boost::geometry::model::d2::point_xy<double> point;
+};
 
 struct edge {
     double weight;
@@ -36,14 +43,14 @@ struct priority_type_comparator {
     }
 };
 
-template<typename Edge>
+template<typename Node, typename Edge>
 using adjacency_list_type = map_matching_2::graph::adjacency_list<
-    std::list, std::list, map_matching_2::graph::directional, void, Edge, std::list>;
-template<typename Edge>
+    std::list, std::list, map_matching_2::graph::directional, Node, Edge, std::list>;
+template<typename Node, typename Edge>
 using compressed_sparse_row_type = map_matching_2::graph::compressed_sparse_row<
-    std::vector, std::vector, map_matching_2::graph::directional, void, Edge>;
+    std::vector, std::vector, map_matching_2::graph::directional, Node, Edge>;
 
-template<typename Graph = adjacency_list_type<void>>
+template<typename Graph = adjacency_list_type<node, void>>
 std::pair<Graph, std::vector<typename Graph::vertex_descriptor>> create_tree() {
     Graph graph;
 
@@ -52,9 +59,16 @@ std::pair<Graph, std::vector<typename Graph::vertex_descriptor>> create_tree() {
 
     std::vector<vertex_descriptor> vertices;
     vertices.reserve(10);
-    for (std::size_t i = 0; i < 10; ++i) {
-        vertices.emplace_back(graph.add_vertex());
-    }
+    vertices.emplace_back(graph.add_vertex(node{{0.0, 2.0}})); // 0
+    vertices.emplace_back(graph.add_vertex(node{{-1.0, 1.0}})); // 1
+    vertices.emplace_back(graph.add_vertex(node{{0.0, 1.0}})); // 2
+    vertices.emplace_back(graph.add_vertex(node{{1.0, 1.0}})); // 3
+    vertices.emplace_back(graph.add_vertex(node{{-1.0, 0.0}})); // 4
+    vertices.emplace_back(graph.add_vertex(node{{-0.5, 0.0}})); // 5
+    vertices.emplace_back(graph.add_vertex(node{{0.0, 0.0}})); // 6
+    vertices.emplace_back(graph.add_vertex(node{{1.0, 0.0}})); // 7
+    vertices.emplace_back(graph.add_vertex(node{{-0.5, -1.0}})); // 8
+    vertices.emplace_back(graph.add_vertex(node{{-0.5, -2.0}})); // 9
 
     /*
      *     <- 0 ->  <--
@@ -82,7 +96,7 @@ std::pair<Graph, std::vector<typename Graph::vertex_descriptor>> create_tree() {
     return std::pair{std::move(graph), std::move(vertices)};
 }
 
-template<typename Graph = adjacency_list_type<edge>>
+template<typename Graph = adjacency_list_type<node, edge>>
 std::pair<Graph, std::vector<typename Graph::vertex_descriptor>> create_weighted_graph() {
     Graph graph;
 
@@ -91,9 +105,16 @@ std::pair<Graph, std::vector<typename Graph::vertex_descriptor>> create_weighted
 
     std::vector<vertex_descriptor> vertices;
     vertices.reserve(10);
-    for (std::size_t i = 0; i < 10; ++i) {
-        vertices.emplace_back(graph.add_vertex());
-    }
+    vertices.emplace_back(graph.add_vertex(node{{0.0, 0.0}})); // 0
+    vertices.emplace_back(graph.add_vertex(node{{0.0, 1.0}})); // 1
+    vertices.emplace_back(graph.add_vertex(node{{1.0, 1.0}})); // 2
+    vertices.emplace_back(graph.add_vertex(node{{0.0, 2.0}})); // 3
+    vertices.emplace_back(graph.add_vertex(node{{1.0, 2.0}})); // 4
+    vertices.emplace_back(graph.add_vertex(node{{2.0, 1.0}})); // 5
+    vertices.emplace_back(graph.add_vertex(node{{2.0, 2.0}})); // 6
+    vertices.emplace_back(graph.add_vertex(node{{1.0, 0.0}})); // 7
+    vertices.emplace_back(graph.add_vertex(node{{3.0, 1.0}})); // 8
+    vertices.emplace_back(graph.add_vertex(node{{3.0, 2.0}})); // 9
 
     /*
      * 3 -- 4 -- 6 -- 9
@@ -204,7 +225,7 @@ BOOST_AUTO_TEST_SUITE(graph_algorithm_tests)
         auto [graph, vertices] = create_tree();
         test_bfs(graph, vertices);
 
-        compressed_sparse_row_type<void> csr;
+        compressed_sparse_row_type<node, void> csr;
         csr.from_adjacency_list(graph);
         auto csr_vertices = convert_vertex_descriptors<decltype(graph), decltype(csr)>(graph, vertices);
         test_bfs(csr, csr_vertices);
@@ -228,7 +249,7 @@ BOOST_AUTO_TEST_SUITE(graph_algorithm_tests)
         auto [graph, vertices] = create_tree();
         test_dfs(graph, vertices);
 
-        compressed_sparse_row_type<void> csr;
+        compressed_sparse_row_type<node, void> csr;
         csr.from_adjacency_list(graph);
         auto csr_vertices = convert_vertex_descriptors<decltype(graph), decltype(csr)>(graph, vertices);
         test_dfs(csr, csr_vertices);
@@ -299,10 +320,86 @@ BOOST_AUTO_TEST_SUITE(graph_algorithm_tests)
         auto [graph, vertices] = create_weighted_graph();
         test_dijkstra(graph, vertices);
 
-        compressed_sparse_row_type<edge> csr;
+        compressed_sparse_row_type<node, edge> csr;
         csr.from_adjacency_list(graph);
         auto csr_vertices = convert_vertex_descriptors<decltype(graph), decltype(csr)>(graph, vertices);
         test_dijkstra(csr, csr_vertices);
+
+    }
+
+    BOOST_AUTO_TEST_CASE(adjacency_list_graph_astar_test) {
+
+        auto test_astar = []<typename Graph>(const Graph &graph, const auto &vertices) {
+            using vertex_descriptor = typename Graph::vertex_descriptor;
+
+            std::vector<std::size_t> shortest_path_0_9{0, 7, 8, 9};
+            std::vector<std::size_t> shortest_path_3_8{3, 4, 2, 7, 8};
+
+            //        auto vertices_v = graph.vertices_view();
+            //        std::vector<vertex_descriptor> index_map(vertices_v.size());
+            //        for (auto it = vertices_v.begin(); it != vertices_v.end(); it = vertices_v.next(it)) {
+            //            index_map[graph.vertex_index(it)] = it;
+            //        }
+
+            using weight_type = decltype(edge::weight);
+            constexpr auto weight_func = [](const edge &data) constexpr {
+                return data.weight;
+            };
+
+            const auto heuristic_func = [&graph](const vertex_descriptor &vertex_desc,
+                    const vertex_descriptor &goal_desc) constexpr {
+                return map_matching_2::geometry::euclidean_distance(
+                        graph.get_vertex_data(vertex_desc).point, graph.get_vertex_data(goal_desc).point);
+            };
+
+            using priority_type = map_matching_2::graph::priority_type<weight_type, vertex_descriptor>;
+            map_matching_2::graph::predecessors_type predecessors;
+            map_matching_2::graph::distances_type<weight_type> distances;
+            map_matching_2::graph::colors_type colors;
+            map_matching_2::graph::priority_queue_type<priority_type> queue;
+            map_matching_2::graph::visitor visitor;
+
+            map_matching_2::graph::a_star_shortest_path(graph, vertices[0], vertices[9],
+                    predecessors, distances, colors, queue, visitor, weight_func, heuristic_func);
+
+            for (std::size_t i = shortest_path_0_9.size() - 1; i > 0; --i) {
+                BOOST_CHECK_EQUAL(predecessors[shortest_path_0_9[i]], shortest_path_0_9[i - 1]);
+            }
+
+            for (std::size_t i = 0; i < vertices.size(); ++i) {
+                std::cout << std::format("Predecessor {}: {}; ", i, predecessors[i])
+                        << std::format("Distance to {}: {}", i, distances[i]) << std::endl;
+            }
+
+            predecessors.clear();
+            distances.clear();
+            colors.clear();
+
+            map_matching_2::graph::a_star_shortest_path(
+                    graph, vertices[3], vertices[8], predecessors, distances, colors, queue, visitor,
+                    weight_func, heuristic_func);
+
+            for (std::size_t i = shortest_path_3_8.size() - 1; i > 0; --i) {
+                BOOST_CHECK_EQUAL(predecessors[shortest_path_3_8[i]], shortest_path_3_8[i - 1]);
+            }
+
+            for (std::size_t i = 0; i < vertices.size(); ++i) {
+                std::cout << std::format("Predecessor {}: {}; ", i, predecessors[i])
+                        << std::format("Distance to {}: {}", i, distances[i]) << std::endl;
+            }
+
+            predecessors.clear();
+            distances.clear();
+            colors.clear();
+        };
+
+        auto [graph, vertices] = create_weighted_graph();
+        test_astar(graph, vertices);
+
+        compressed_sparse_row_type<node, edge> csr;
+        csr.from_adjacency_list(graph);
+        auto csr_vertices = convert_vertex_descriptors<decltype(graph), decltype(csr)>(graph, vertices);
+        test_astar(csr, csr_vertices);
 
     }
 

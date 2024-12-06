@@ -79,7 +79,8 @@ namespace map_matching_2::app {
         export_edge_ids = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "edge_ids") !=
                 std::cend(_column_strings);
 
-        if (not vm["quiet"].as<bool>() and not vm["console"].as<bool>()) {
+        if (not vm["quiet"].empty() and not vm["quiet"].as<bool>() and
+            not vm["console"].empty() and not vm["console"].as<bool>()) {
             if (export_edges) {
                 std::cout << "Enabled export edges mode." << std::endl;
             }
@@ -227,7 +228,7 @@ namespace map_matching_2::app {
     }
 
     void tracks_data::correct(const po::variables_map &vm) {
-        if (not vm["read-line"].as<bool>()) {
+        if (not vm["read-line"].empty() and not vm["read-line"].as<bool>()) {
             if (files.empty()) {
                 throw std::invalid_argument{"no tracks file specified, please see help."};
             }
@@ -286,7 +287,8 @@ namespace map_matching_2::app {
             k_nearest = 1;
         }
 
-        if (not vm["quiet"].as<bool>() and not vm["console"].as<bool>()) {
+        if (not vm["quiet"].empty() and not vm["quiet"].as<bool>() and
+            not vm["console"].empty() and not vm["console"].as<bool>()) {
             if (not filter_duplicates) {
                 std::cout << "Disabled duplicates filtering." << std::endl;
             }
@@ -1045,11 +1047,19 @@ namespace map_matching_2::app {
                         "it is, however, enabled by default when all candidate-adoption features are disabled, "
                         "because then it raises the correctness of the results as no larger detours are taken "
                         "that could not be collapsed without candidate-adoption")
+                ("a-star", po::bool_switch(&data.a_star),
+                        "use the A* shortest path algorithm instead of Dijkstra's shortest path algorithm, "
+                        "may in fact decrease performance in most situations, because the A* algorithm is a "
+                        "single-source-single-target algorithm and this software benefits from "
+                        "single-source-multiple-target queries as Dijsktra's algorithm provides; "
+                        "moreover the accuracy might be worse, because the A* algorithm might not yield optimal results"
+                        "in geographic and spherical coordinate systems due to the heuristic method not being admissible")
                 ("routing-max-distance-factor",
                         po::value<double>(&data.routing_max_distance_factor)->default_value(5.0, "5.0"),
                         "max distance factor for upper bound for routing algorithm, "
                         "removes all nodes from routing that are too far away from the search area between a start and end node, "
-                        "dramatically reduces routing duration in networks significantly larger than the given track")
+                        "dramatically reduces routing duration in networks significantly larger than the given track, "
+                        "any negative value (i.e., -1) disables this setting")
                 ("candidate-adoption-siblings",
                         po::value<bool>(&data.candidate_adoption_siblings)->default_value(true, "on"),
                         "for each measurement, adopt candidates from preceding and succeeding candidate, "

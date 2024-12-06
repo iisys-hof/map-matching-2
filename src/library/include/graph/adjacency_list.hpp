@@ -1188,7 +1188,7 @@ namespace map_matching_2::graph {
 
         template<typename Predicate>
         void in_remove_if(const vertex_descriptor &vertex_desc, const Predicate &predicate) requires
-            (not is_bidirectional_v or not util::is_random_access_v<in_edge_container>) {
+            (is_bidirectional_v and not util::is_random_access_v<in_edge_container>) {
             in_edge_container &in_edges = get_vertex(vertex_desc).in_edges;
             in_edge_descriptor in_edge_desc = in_edges.begin();
             while (in_edge_desc != in_edges.end()) {
@@ -1201,7 +1201,7 @@ namespace map_matching_2::graph {
         }
 
         void in_remove_if(const vertex_descriptor &vertex_desc) requires
-            (not is_bidirectional_v or not util::is_random_access_v<in_edge_container>) {
+            (is_bidirectional_v and not util::is_random_access_v<in_edge_container>) {
             const auto &predicate = [](const edge_descriptor &out_edge_desc) constexpr -> bool { return false; };
 
             return in_remove_if(vertex_desc, predicate);

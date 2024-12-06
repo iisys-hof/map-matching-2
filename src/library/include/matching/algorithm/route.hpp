@@ -78,10 +78,29 @@ namespace map_matching_2::matching {
                     _predecessors, _distances, _colors, _queue);
         }
 
+        [[nodiscard]] std::list<vertex_descriptor> shortest_path(
+                const std::vector<candidate_type> &candidates,
+                std::size_t from, std::size_t source, std::size_t to, std::size_t target,
+                double max_distance_factor = 10.0) const {
+            const auto &candidate_edge_start = candidates[from].edges[source];
+            const auto &vertex_start = _network.graph().target(candidate_edge_start.edge_desc);
+            const auto &node_start = _network.vertex(vertex_start);
+
+            const auto &candidate_edge_stop = candidates[to].edges[target];
+            const auto &goal = _network.graph().source(candidate_edge_stop.edge_desc);
+            const auto &node_goal = _network.vertex(goal);
+
+            const auto max_distance = geometry::point_distance(node_start.point, node_goal.point);
+
+            return _network.a_star_shortest_paths(
+                    vertex_start, goal, max_distance, max_distance_factor,
+                    _predecessors, _distances, _colors, _queue);
+        }
+
         [[nodiscard]] const route_type &route(
                 const std::vector<candidate_type> &candidates,
                 const std::size_t from, const std::size_t source, const std::size_t to, const std::size_t target,
-                const double max_distance_factor = 10.0) const {
+                const bool a_star = false, const double max_distance_factor = 10.0) const {
             const auto from_target = _network.graph().target(candidates[from].edges[source].edge_desc);
             const auto to_source = _network.graph().source(candidates[to].edges[target].edge_desc);
 
@@ -96,7 +115,14 @@ namespace map_matching_2::matching {
             } else {
                 bool found = false;
 
-                const auto shortest_paths = this->shortest_paths(candidates, from, source, to, max_distance_factor);
+                std::vector<std::list<vertex_descriptor>> shortest_paths;
+                if (a_star) {
+                    shortest_paths.emplace_back(
+                            this->shortest_path(candidates, from, source, to, target, max_distance_factor));
+                } else {
+                    shortest_paths = this->shortest_paths(candidates, from, source, to, max_distance_factor);
+                }
+
                 for (const auto &shortest_path : shortest_paths) {
                     route_cache_key_type new_key{shortest_path.front(), shortest_path.back()};
 
@@ -135,7 +161,8 @@ namespace map_matching_2::matching {
         [[nodiscard]] route_type candidate_route(
                 const std::vector<candidate_type> &candidates,
                 const std::size_t from, const std::size_t source, const std::size_t to, const std::size_t target,
-                const bool within_edge_turns = false, const double max_distance_factor = 10.0) const {
+                const bool within_edge_turns = false, const bool a_star = false,
+                const double max_distance_factor = 10.0) const {
             const auto &candidate_from = candidates[from].edges[source];
             const auto &candidate_to = candidates[to].edges[target];
 
@@ -168,7 +195,7 @@ namespace map_matching_2::matching {
                 }
             }
 
-            const route_type &route = this->route(candidates, from, source, to, target, max_distance_factor);
+            const route_type &route = this->route(candidates, from, source, to, target, a_star, max_distance_factor);
 
             if (not route.is_invalid()) {
                 route_type start_route{std::cref(*start)};
@@ -223,7 +250,7 @@ namespace map_matching_2::matching {
         [[nodiscard]] route_type candidates_route(
                 const std::vector<candidate_type> &candidates, const policy_type &policy,
                 const bool within_edge_turns = false, const bool join_merges = true,
-                const double max_distance_factor = 10.0) const {
+                const bool a_star = false, const double max_distance_factor = 10.0) const {
             std::vector<route_type> routes;
             routes.reserve(not candidates.empty() ? candidates.size() - 1 : 0);
             bool skipped = false;
@@ -246,7 +273,7 @@ namespace map_matching_2::matching {
                 const auto target = to_policy_pair.second;
 
                 route_type route = candidate_route(candidates, from, source, to, target,
-                        within_edge_turns, max_distance_factor);
+                        within_edge_turns, a_star, max_distance_factor);
 
                 if (join_merges and not skipped and
                     not routes.empty() and not route.is_invalid() and not route.rich_lines().empty()) {

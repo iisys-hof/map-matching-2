@@ -176,7 +176,7 @@ namespace map_matching_2::environment {
                         for (std::size_t source = 0; source < from_candidate.edges.size(); ++source) {
                             const auto route = _algorithms.router.candidate_route(
                                     _candidates, from, source, to, target, _settings.within_edge_turns,
-                                    _settings.routing_max_distance_factor);
+                                    _settings.a_star, _settings.routing_max_distance_factor);
 
                             if (route.is_invalid()) {
                                 // invalid route, not possible
@@ -342,7 +342,7 @@ namespace map_matching_2::environment {
                 const std::vector<std::pair<std::size_t, std::size_t>> &policy) const {
             return _algorithms.router.candidates_route(
                     _candidates, policy, _settings.within_edge_turns, _settings.join_merges,
-                    _settings.routing_max_distance_factor);
+                    _settings.a_star, _settings.routing_max_distance_factor);
         }
 
     private:
