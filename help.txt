@@ -936,6 +936,20 @@ Matching Options:
                                         correctness of the results as no larger
                                         detours are taken that could not be 
                                         collapsed without candidate-adoption
+  --a-star                              use the A* shortest path algorithm 
+                                        instead of Dijkstra's shortest path 
+                                        algorithm, may in fact decrease 
+                                        performance in most situations, because
+                                        the A* algorithm is a 
+                                        single-source-single-target algorithm 
+                                        and this software benefits from 
+                                        single-source-multiple-target queries 
+                                        as Dijsktra's algorithm provides; 
+                                        moreover the accuracy might be worse, 
+                                        because the A* algorithm might not 
+                                        yield optimal resultsin geographic and 
+                                        spherical coordinate systems due to the
+                                        heuristic method not being admissible
   --routing-max-distance-factor arg (=5.0)
                                         max distance factor for upper bound for
                                         routing algorithm, removes all nodes 
@@ -943,7 +957,9 @@ Matching Options:
                                         the search area between a start and end
                                         node, dramatically reduces routing 
                                         duration in networks significantly 
-                                        larger than the given track
+                                        larger than the given track, any 
+                                        negative value (i.e., -1) disables this
+                                        setting
   --candidate-adoption-siblings arg (=on)
                                         for each measurement, adopt candidates 
                                         from preceding and succeeding 
