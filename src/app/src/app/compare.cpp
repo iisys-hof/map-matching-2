@@ -105,6 +105,9 @@ namespace map_matching_2::app {
         _read_ground_truth(forwarder_data, data);
         _read_matches(forwarder_data, data);
 
+        // finish remaining ground truths in forwarder_data
+        forwarder_data.finish();
+
         // reading finished, close queue
         comparator->stop();
     }

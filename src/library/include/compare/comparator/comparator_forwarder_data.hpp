@@ -38,6 +38,8 @@ namespace map_matching_2::compare {
 
         [[nodiscard]] static std::string id(const multi_track_variant_type &multi_track_variant);
 
+        void finish();
+
     };
 
 }

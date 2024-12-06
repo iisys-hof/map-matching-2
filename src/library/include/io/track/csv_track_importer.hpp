@@ -22,6 +22,7 @@
 
 #include <boost/geometry/io/wkt/read.hpp>
 
+#include <boost/unordered/unordered_flat_set.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
 
 #include "types/geometry/track/multi_track.hpp"
@@ -43,19 +44,19 @@ namespace map_matching_2::io::track {
 
         using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
 
-        constexpr csv_track_importer(std::vector<std::string> filenames, std::vector<std::string> selectors,
+        constexpr csv_track_importer(std::vector<std::string> filenames, const std::vector<std::string> &selectors,
                 io::csv_settings csv_settings, forwarder_type &forwarder, const geometry::srs_transform &srs_transform,
                 const geometry::point_reprojector_variant &reprojector_variant)
             : csv_importer{std::move(filenames), csv_settings.skip_lines},
             _forwarder{forwarder}, _srs_transform{srs_transform}, _reprojector_variant{reprojector_variant},
-            _csv_settings{std::move(csv_settings)}, _selectors{std::move(selectors)} {}
+            _csv_settings{std::move(csv_settings)}, _selectors{std::cbegin(selectors), std::cend(selectors)} {}
 
     protected:
         forwarder_type &_forwarder;
         const geometry::srs_transform &_srs_transform;
         const geometry::point_reprojector_variant &_reprojector_variant;
         io::csv_settings _csv_settings;
-        std::vector<std::string> _selectors;
+        boost::unordered_flat_set<std::string> _selectors;
 
         void configure_format(csv::CSVFormat &format) override {
             if (_csv_settings.no_header) {
@@ -160,21 +161,27 @@ namespace map_matching_2::io::track {
                                 if (_csv_settings.no_id) {
                                     id = std::to_string(row_num);
                                 }
-                                line_type_in line;
-                                boost::geometry::read_wkt(wkt_string, line);
-                                _forwarder.pass(multi_track_type{id, std::move(line), _reprojector_variant});
+                                if (_selectors.empty() or _selectors.contains(id)) {
+                                    line_type_in line;
+                                    boost::geometry::read_wkt(wkt_string, line);
+                                    _forwarder.pass(multi_track_type{id, std::move(line), _reprojector_variant});
+                                }
                             } else if (wkt_string.starts_with("MULTILINESTRING")) {
                                 if (_csv_settings.no_id) {
                                     id = std::to_string(row_num);
                                 }
-                                multi_line_type_in multi_line;
-                                boost::geometry::read_wkt(wkt_string, multi_line);
-                                _forwarder.pass(multi_track_type{id, std::move(multi_line), _reprojector_variant});
+                                if (_selectors.empty() or _selectors.contains(id)) {
+                                    multi_line_type_in multi_line;
+                                    boost::geometry::read_wkt(wkt_string, multi_line);
+                                    _forwarder.pass(multi_track_type{id, std::move(multi_line), _reprojector_variant});
+                                }
                             } else if (wkt_string.starts_with("GEOMETRYCOLLECTION EMPTY")) {
                                 if (_csv_settings.no_id) {
                                     id = std::to_string(row_num);
                                 }
-                                _forwarder.pass(multi_track_type{id, line_type_in{}, _reprojector_variant});
+                                if (_selectors.empty() or _selectors.contains(id)) {
+                                    _forwarder.pass(multi_track_type{id, line_type_in{}, _reprojector_variant});
+                                }
                             } else {
                                 std::clog << "Could not parse the following track with id "
                                         << id << ", skipping ...\n" << wkt_string << std::endl;
@@ -216,12 +223,15 @@ namespace map_matching_2::io::track {
 
                 for (auto &measurement_pair : _measurements) {
                     const auto &id = measurement_pair.first;
-                    auto &measurements = std::any_cast<std::vector<measurement_type_out> &>(measurement_pair.second);
-                    std::sort(std::begin(measurements), std::end(measurements));
-                    _forwarder.pass(multi_track_type{
-                            id,
-                            geometry::measurements2line<measurement_type_out, line_type_out>(std::move(measurements))
-                    });
+                    if (_selectors.empty() or _selectors.contains(id)) {
+                        auto &measurements = std::any_cast<std::vector<measurement_type_out> &>(
+                                measurement_pair.second);
+                        std::sort(std::begin(measurements), std::end(measurements));
+                        _forwarder.pass(multi_track_type{
+                                id, geometry::measurements2line<measurement_type_out, line_type_out>(
+                                        std::move(measurements))
+                        });
+                    }
                 }
                 _measurements.clear();
             });

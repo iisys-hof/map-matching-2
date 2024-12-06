@@ -41,6 +41,7 @@ namespace map_matching_2::app {
         settings.median_merge = data.matching.median_merge;
         settings.adaptive_median_merge = data.matching.adaptive_median_merge;
         settings.within_edge_turns = data.matching.within_edge_turns;
+        settings.a_star = data.matching.a_star;
         settings.candidate_adoption_siblings = data.matching.candidate_adoption_siblings;
         settings.candidate_adoption_nearby = data.matching.candidate_adoption_nearby;
         settings.candidate_adoption_reverse = data.matching.candidate_adoption_reverse;

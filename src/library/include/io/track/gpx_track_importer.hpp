@@ -23,6 +23,8 @@
 
 #include <gpx/Parser.h>
 
+#include <boost/unordered/unordered_flat_set.hpp>
+
 #include "types/geometry/track/multi_track.hpp"
 #include "types/geometry/reprojector.hpp"
 
@@ -41,14 +43,14 @@ namespace map_matching_2::io::track {
 
         using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
 
-        constexpr gpx_track_importer(std::vector<std::string> filenames, std::vector<std::string> selectors,
+        constexpr gpx_track_importer(std::vector<std::string> filenames, const std::vector<std::string> &selectors,
                 const bool no_id, std::string time_format, const bool no_parse_time, forwarder_type &forwarder,
                 const geometry::srs_transform &srs_transform,
                 const geometry::point_reprojector_variant &reprojector_variant)
             : importer{std::move(filenames)},
             _forwarder{forwarder}, _srs_transform{srs_transform}, _reprojector_variant{reprojector_variant},
-            _selectors{std::move(selectors)}, _no_id{no_id}, _no_parse_time{no_parse_time},
-            _time_format{std::move(time_format)} {}
+            _selectors{std::cbegin(selectors), std::cend(selectors)}, _no_id{no_id},
+            _no_parse_time{no_parse_time}, _time_format{std::move(time_format)} {}
 
         void read() override {
             const auto &filenames = this->filenames();
@@ -83,7 +85,7 @@ namespace map_matching_2::io::track {
         forwarder_type &_forwarder;
         const geometry::srs_transform &_srs_transform;
         const geometry::point_reprojector_variant &_reprojector_variant;
-        std::vector<std::string> _selectors;
+        boost::unordered_flat_set<std::string> _selectors;
 
         bool _no_id, _no_parse_time;
         std::string _time_format;
@@ -125,7 +127,9 @@ namespace map_matching_2::io::track {
                             }
                         }
 
-                        _forwarder.pass(multi_track_type{id_str, std::move(multi_line)});
+                        if (_selectors.empty() or _selectors.contains(id_str)) {
+                            _forwarder.pass(multi_track_type{id_str, std::move(multi_line)});
+                        }
                     }
                 }
             });
