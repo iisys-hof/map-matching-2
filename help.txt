@@ -1467,6 +1467,11 @@ Tracks Options:
                                         direction
 
 Comparison Options:
+  --ignore-non-existent                 ignore comparison tracks that do not 
+                                        exist in the matches,without this 
+                                        option, an empty match is presumed for 
+                                        not existing matches, which decreases 
+                                        the overall correct fraction
   --compare-simplify-distance-tolerance arg (=0.1)
                                         compare simplify distance tolerance in 
                                         meters around comparison lines for 
