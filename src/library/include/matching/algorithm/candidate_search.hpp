@@ -64,7 +64,7 @@ namespace map_matching_2::matching {
             for (std::size_t i = 0; i < track.rich_line.size(); ++i) {
                 _candidate_search_individual(candidate_edge_sets[i], track, i, match_settings);
 
-                if(_time_helper.update_and_has_reached()) {
+                if (_time_helper.update_and_has_reached()) {
                     return {};
                 }
             }
@@ -410,6 +410,10 @@ namespace map_matching_2::matching {
                             candidates_number++;
                         }
                     }
+
+                    if (_time_helper.update_and_has_reached()) {
+                        return {};
+                    }
                 }
 
                 std::vector<index_value_type> candidates_index_values;
@@ -426,9 +430,17 @@ namespace map_matching_2::matching {
                                     });
                         }
                     }
+
+                    if (_time_helper.update_and_has_reached()) {
+                        return {};
+                    }
                 }
 
                 index_type candidates_index{std::move(candidates_index_values)};
+
+                if (_time_helper.update_and_has_reached()) {
+                    return {};
+                }
 
                 // search in index for adopting nearby candidates not directly attached
                 for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
@@ -467,6 +479,10 @@ namespace map_matching_2::matching {
                             }
                         }
                     }
+
+                    if (_time_helper.update_and_has_reached()) {
+                        return {};
+                    }
                 }
             }
 
@@ -492,6 +508,10 @@ namespace map_matching_2::matching {
                                 add_candidate(point, candidate_edge, edge_set);
                             }
                         }
+                    }
+
+                    if (_time_helper.update_and_has_reached()) {
+                        return {};
                     }
                 }
             }
@@ -550,6 +570,10 @@ namespace map_matching_2::matching {
                     auto &candidate = candidates[index];
                     candidate.nodes = std::move(nodes);
                     candidate.edges = std::move(edges);
+                }
+
+                if (_time_helper.update_and_has_reached()) {
+                    return {};
                 }
             }
 
