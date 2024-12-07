@@ -97,7 +97,9 @@ namespace map_matching_2::geometry {
         friend class boost::serialization::access;
 
         template<typename Archive>
-        void serialize(Archive &ar, const unsigned int version) {
+        void serialize(Archive &ar, const unsigned int version) requires
+            (std::default_initializable<length_container_type> and std::default_initializable<angle_container_type> and
+                std::default_initializable<allocator_type>) {
             ar & boost::serialization::base_object<base_type>(*this);
         }
 

@@ -64,7 +64,7 @@ namespace map_matching_2::app {
     template<typename Network>
     void _open_network(std::unique_ptr<Network> &network, const match_data &data) {
         if (not data.memory.mmap_tags or not data.memory.mmap_indices or not data.memory.mmap_graph) {
-            verbose_frame("Deserialize Network", [&]() {
+            verbose_frame("Deserialize", [&]() {
                 load_network(*network, data);
             });
         }

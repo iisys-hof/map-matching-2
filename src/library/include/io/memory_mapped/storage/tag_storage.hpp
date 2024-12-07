@@ -24,6 +24,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 
 #include <boost/unordered/unordered_flat_map.hpp>
 
@@ -309,16 +310,18 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         template<typename Archive>
         void serialize(Archive &ar, const unsigned int version) {
-            ar & *_id_key_map;
-            ar & *_key_id_map;
-            ar & *_id_value_map;
-            ar & *_value_id_map;
-            ar & *_tags_map;
-            ar & *_ids_map;
-            ar & *_nodes_map;
-            ar & *_edges_map;
-            ar & *_empty_tags;
             ar & _finalized;
+            ar & _id_key_map;
+            ar & _id_value_map;
+            ar & _tags_map;
+            ar & _nodes_map;
+            ar & _edges_map;
+            ar & _empty_tags;
+            if (not _finalized) {
+                ar & _key_id_map;
+                ar & _value_id_map;
+                ar & _ids_map;
+            }
         }
 
     private:

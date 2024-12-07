@@ -20,6 +20,7 @@
 #include <memory_resource>
 
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 
 #include "graph/traits/graph.hpp"
 #include "io/allocator/concepts.hpp"
@@ -124,7 +125,7 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         template<typename Archive>
         void serialize(Archive &ar, const unsigned int version) {
-            ar & *_graph;
+            ar & _graph;
         }
 
     private:

@@ -164,7 +164,8 @@ namespace map_matching_2::geometry::network {
         friend class boost::serialization::access;
 
         template<typename Archive>
-        void serialize(Archive &ar, const unsigned int version) {
+        void serialize(Archive &ar, const unsigned int version) requires
+            (std::default_initializable<rich_line_type>) {
             ar & id;
             ar & rich_line;
         }
