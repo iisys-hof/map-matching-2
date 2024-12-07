@@ -27,20 +27,22 @@ namespace map_matching_2::compare {
     }
 
     void comparator_forwarder_data::finish() {
-        // for every ground truth that has no match, compare to an empty "non-existing" match
-        for (const auto &compare_entry : compares) {
-            const auto &id = compare_entry.first;
-            const auto &multi_track = compare_entry.second;
+        if (not settings.ignore_non_existent) {
+            // for every ground truth that has no match, compare to an empty "non-existing" match
+            for (const auto &compare_entry : compares) {
+                const auto &id = compare_entry.first;
+                const auto &multi_track = compare_entry.second;
 
-            std::visit([this, &id]<typename MultiTrack>(const MultiTrack &ground_truth) {
-                using multi_track_type = std::remove_reference_t<MultiTrack>;
-                using multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
-                using point_type = typename multi_rich_line_type::point_type;
+                std::visit([this, &id]<typename MultiTrack>(const MultiTrack &ground_truth) {
+                    using multi_track_type = std::remove_reference_t<MultiTrack>;
+                    using multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
+                    using point_type = typename multi_rich_line_type::point_type;
 
-                geometry::track::multi_track_type<point_type> empty_match{id, multi_rich_line_type{}};
+                    geometry::track::multi_track_type<point_type> empty_match{id, multi_rich_line_type{}};
 
-                comparator_ref.compare(std::move(empty_match), ground_truth, settings);
-            }, multi_track);
+                    comparator_ref.compare(std::move(empty_match), ground_truth, settings);
+                }, multi_track);
+            }
         }
     }
 

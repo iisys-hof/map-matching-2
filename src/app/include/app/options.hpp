@@ -239,6 +239,7 @@ namespace map_matching_2::app {
     };
 
     struct comparison_data : tracks_data {
+        bool ignore_non_existent;
         double simplifying_tolerance, simplifying_reverse_tolerance,
                 adoption_distance_tolerance,
                 split_distance_tolerance, split_direction_tolerance;

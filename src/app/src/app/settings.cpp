@@ -113,6 +113,7 @@ namespace map_matching_2::app {
 
         settings.console = data.console.console;
 
+        settings.ignore_non_existent = data.comparison.ignore_non_existent;
         settings.simplifying_tolerance = data.comparison.simplifying_tolerance;
         settings.simplifying_reverse_tolerance = data.comparison.simplifying_reverse_tolerance;
         settings.adoption_distance_tolerance = data.comparison.adoption_distance_tolerance;

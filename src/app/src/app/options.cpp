@@ -1221,6 +1221,10 @@ namespace map_matching_2::app {
         po::options_description options("Comparison Options", global.console.cols);
 
         options.add_options()
+                ("ignore-non-existent", po::bool_switch(&data.ignore_non_existent),
+                        "ignore comparison tracks that do not exist in the matches,"
+                        "without this option, an empty match is presumed for not existing matches, "
+                        "which decreases the overall correct fraction")
                 ("compare-simplify-distance-tolerance",
                         po::value<double>(&data.simplifying_tolerance)->default_value(0.1, "0.1"),
                         "compare simplify distance tolerance in meters around comparison lines for Douglas-Peucker algorithm")

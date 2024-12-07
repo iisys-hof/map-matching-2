@@ -30,7 +30,7 @@ namespace map_matching_2::compare {
 
         std::string output{}, filename{};
 
-        bool console{false};
+        bool console{false}, ignore_non_existent{false};
 
         double simplifying_tolerance{0.1}, simplifying_reverse_tolerance{0.1}, adoption_distance_tolerance{0.1},
                 split_distance_tolerance{1.0}, split_direction_tolerance{90.0};
