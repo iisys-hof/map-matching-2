@@ -28,7 +28,8 @@ namespace map_matching_2::geometry {
     length(const Geometry &geometry) {
         using coordinate_system_type = typename boost::geometry::coordinate_system<Geometry>::type;
         if constexpr (std::same_as<coordinate_system_type, cs_spherical_equatorial>) {
-            return boost::geometry::length(geometry, boost::geometry::strategy::distance::haversine(6371));
+            return boost::geometry::length(geometry,
+                    boost::geometry::strategy::distance::haversine(EARTH_RADIUS_METER));
         } else {
             return boost::geometry::length(geometry);
         }

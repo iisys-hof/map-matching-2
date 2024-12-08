@@ -51,10 +51,18 @@ namespace map_matching_2::geometry {
         const buffer_distance_strategy buffer_distance{buffer_radius};
 
         using coordinate_system_type = typename data<Point>::coordinate_system_type;
+        using coordinate_type = typename data<Point>::coordinate_type;
 
-        if constexpr (std::is_same_v<coordinate_system_type, cs_geographic> or
-            std::is_same_v<coordinate_system_type, cs_spherical_equatorial>) {
-            using buffer_point_strategy = boost::geometry::strategy::buffer::geographic_point_circle<>;
+        if constexpr (std::is_same_v<coordinate_system_type, cs_geographic>) {
+            using buffer_point_strategy = boost::geometry::strategy::buffer::geographic_point_circle<
+                boost::geometry::strategy::andoyer, boost::geometry::srs::spheroid<coordinate_type>>;
+            const buffer_point_strategy buffer_point{buffer_points};
+
+            boost::geometry::buffer(
+                    point, buffer, buffer_distance, _buffer_side, _buffer_join, _buffer_end, buffer_point);
+        } else if constexpr (std::is_same_v<coordinate_system_type, cs_spherical_equatorial>) {
+            using buffer_point_strategy = boost::geometry::strategy::buffer::geographic_point_circle<
+                boost::geometry::strategy::andoyer, boost::geometry::srs::sphere<coordinate_type>>;
             const buffer_point_strategy buffer_point{buffer_points};
 
             boost::geometry::buffer(

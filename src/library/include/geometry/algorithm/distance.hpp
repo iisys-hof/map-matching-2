@@ -21,6 +21,9 @@
 
 namespace map_matching_2::geometry {
 
+    // https://en.wikipedia.org/wiki/Earth_radius
+    constexpr double EARTH_RADIUS_METER = 6378137.0;
+
     template<typename GeometryA, typename GeometryB>
     [[nodiscard]] typename boost::geometry::default_distance_result<GeometryA, GeometryB>::type
     distance(const GeometryA &a, const GeometryB &b) {
@@ -28,8 +31,8 @@ namespace map_matching_2::geometry {
         using coordinate_system_type_b = typename boost::geometry::coordinate_system<GeometryB>::type;
         if constexpr (std::same_as<coordinate_system_type_a, cs_spherical_equatorial> and
             std::same_as<coordinate_system_type_b, cs_spherical_equatorial>) {
-            // mean radius of earth is 6371 km, and we want the result in meter
-            return boost::geometry::distance(a, b, boost::geometry::strategy::distance::haversine(6371.0 * 1000));
+            return boost::geometry::distance(a, b,
+                    boost::geometry::strategy::distance::haversine(EARTH_RADIUS_METER));
         } else {
             return boost::geometry::distance(a, b);
         }
