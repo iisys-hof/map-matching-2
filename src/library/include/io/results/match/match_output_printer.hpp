@@ -70,7 +70,7 @@ namespace map_matching_2::io::results {
         }
 
     protected:
-        std::size_t _track_points{}, _prepared_points{}, _candidates{}, _combinations{};
+        std::size_t _aborted{}, _track_points{}, _prepared_points{}, _candidates{}, _combinations{};
 
         [[nodiscard]] std::string parse_task(task_type &&task) {
             if (this->is_active()) {
@@ -82,6 +82,10 @@ namespace map_matching_2::io::results {
                     _prepared_points += task.prepared_points;
                     _candidates += task.edges;
                     _combinations += task.combinations;
+
+                    if (task.aborted) {
+                        ++_aborted;
+                    }
 
                     return std::format(
                             "Match {} with id '{}' {} {:.3f} s, "
@@ -96,11 +100,12 @@ namespace map_matching_2::io::results {
         [[nodiscard]] std::string parse_aggregated_result() {
             if (this->is_active()) {
                 if (this->_counter > 0) {
+                    _aborted = _aborted > this->_counter ? this->_counter : _aborted;
                     return std::format(
-                            "Matches count: {}, total duration: {:.3f} s, "
+                            "Matches count: {}, finished: {}, aborted: {}, total duration: {:.3f} s, "
                             "tracks points: {}, prepared points: {}, candidates: {}, combinations: {}",
-                            this->_counter, this->_duration, _track_points, _prepared_points,
-                            _candidates, _combinations);
+                            this->_counter, this->_counter - _aborted, _aborted, this->_duration,
+                            _track_points, _prepared_points, _candidates, _combinations);
                 }
             }
             return "";
