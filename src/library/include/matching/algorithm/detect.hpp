@@ -39,7 +39,7 @@ namespace map_matching_2::matching {
         [[nodiscard]] static std::vector<set_type> detect(
                 const rich_line_type &rich_line, const bool detect_duplicates = true,
                 const bool detect_forward_backward = false) {
-            std::vector<set_type> defects{rich_line.size(), set_type{defect::none}};
+            std::vector<set_type> defects(rich_line.size(), set_type{});
 
             if (detect_duplicates) {
                 for (std::size_t from = 0, to = 1; to < rich_line.size(); ++from, ++to) {
@@ -67,14 +67,14 @@ namespace map_matching_2::matching {
             }
 
             for (auto &defect_set : defects) {
-                if (not defect_set.empty()) {
-                    defect_set.erase(defect::none);
+                if (defect_set.empty()) {
+                    defect_set.emplace(defect::none);
                 }
             }
 
             // debug output
             // for (std::size_t i = 0; i < defects.size(); ++i) {
-            //     std::set<defect> defect_set = defects.at(i);
+            //     const auto &defect_set = defects.at(i);
             //     if (not defect_set.contains(defect::none)) {
             //         std::cout << "Defect at " << i << ": " << defect_set << std::endl;
             //     }

@@ -15,9 +15,12 @@
 
 #include "matching/defect.hpp"
 
+#include <string>
+#include <iostream>
+
 namespace map_matching_2::matching {
 
-    std::ostream &operator<<(std::ostream &out, const boost::container::set<defect> &defect_set) {
+    std::ostream &operator<<(std::ostream &out, const boost::unordered_flat_set<defect> &defect_set) {
         std::string defect_str;
         if (defect_set.contains(defect::none)) {
             defect_str.append("none, ");
@@ -28,7 +31,7 @@ namespace map_matching_2::matching {
         if (defect_set.contains(defect::forward_backward)) {
             defect_str.append("forward_backward, ");
         }
-        if (defect_str.length() > 0 and defect_str.ends_with(", ")) {
+        if (not defect_str.empty() and defect_str.ends_with(", ")) {
             defect_str.erase(defect_str.length() - 2);
         }
         out << defect_str;

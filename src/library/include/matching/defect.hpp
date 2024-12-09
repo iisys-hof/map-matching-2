@@ -16,9 +16,7 @@
 #ifndef MAP_MATCHING_2_MATCHING_DEFECT_HPP
 #define MAP_MATCHING_2_MATCHING_DEFECT_HPP
 
-#include <iostream>
-
-#include <boost/container/set.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
 
 namespace map_matching_2::matching {
 
@@ -28,7 +26,7 @@ namespace map_matching_2::matching {
         forward_backward
     };
 
-    std::ostream &operator<<(std::ostream &out, const boost::container::set<defect> &defect_set);
+    std::ostream &operator<<(std::ostream &out, const boost::unordered_flat_set<defect> &defect_set);
 
 }
 
