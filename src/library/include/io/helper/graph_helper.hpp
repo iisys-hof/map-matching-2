@@ -53,6 +53,7 @@ namespace map_matching_2::io::helper {
         using vertex_descriptor = typename graph::graph_traits<graph_type>::vertex_descriptor;
         using vertex_size_type = typename graph::graph_traits<graph_type>::vertex_size_type;
         using edge_descriptor = typename graph::graph_traits<graph_type>::edge_descriptor;
+        using edge_size_type = typename graph::graph_traits<graph_type>::edge_size_type;
         using rich_line_type = typename edge_data_type::rich_line_type;
 
         constexpr graph_helper(graph_storage_type graph_storage = {}, tag_helper_type tag_helper = {})

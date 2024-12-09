@@ -58,32 +58,36 @@ namespace map_matching_2::app {
 
     template<typename GraphHelper>
     void _import_arc_node(GraphHelper &graph_helper, const prepare_data &data) {
+        const auto reprojector_variant = geometry::create_point_reprojector(data.srs.srs_transform);
         io::network::arc_node_importer arc_node_importer{
-                data.network.files, graph_helper, geometry::create_point_reprojector(data.srs.srs_transform)
+                data.network.files, graph_helper, data.srs.srs_transform, reprojector_variant
         };
         arc_node_importer.read();
     }
 
     template<typename GraphHelper>
     void _import_seattle(GraphHelper &graph_helper, const prepare_data &data) {
+        const auto reprojector_variant = geometry::create_point_reprojector(data.srs.srs_transform);
         io::network::seattle_importer seattle_importer{
-                data.network.files, graph_helper, geometry::create_point_reprojector(data.srs.srs_transform)
+                data.network.files, graph_helper, data.srs.srs_transform, reprojector_variant
         };
         seattle_importer.read();
     }
 
     template<typename GraphHelper>
     void _import_melbourne(GraphHelper &graph_helper, const prepare_data &data) {
+        const auto reprojector_variant = geometry::create_point_reprojector(data.srs.srs_transform);
         io::network::melbourne_importer melbourne_importer{
-                data.network.files, graph_helper, geometry::create_point_reprojector(data.srs.srs_transform)
+                data.network.files, graph_helper, data.srs.srs_transform, reprojector_variant
         };
         melbourne_importer.read();
     }
 
     template<typename GraphHelper>
     void _import_giscup(GraphHelper &graph_helper, const prepare_data &data) {
+        const auto reprojector_variant = geometry::create_point_reprojector(data.srs.srs_transform);
         io::network::giscup_importer giscup_importer{
-                data.network.files, graph_helper, geometry::create_point_reprojector(data.srs.srs_transform)
+                data.network.files, graph_helper, data.srs.srs_transform, reprojector_variant
         };
         giscup_importer.read();
     }
