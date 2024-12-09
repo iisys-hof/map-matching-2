@@ -57,7 +57,7 @@ namespace map_matching_2::app {
             return tag_helper_type{};
         } else {
             static_assert(util::dependent_false_v<tag_helper_type>,
-                    "TagHelper is neither from type memory or mmap.");
+                    "tag_helper is neither from type memory or mmap");
         }
     }
 
@@ -80,7 +80,7 @@ namespace map_matching_2::app {
             return tag_helper_type{};
         } else {
             static_assert(util::dependent_false_v<tag_helper_type>,
-                    "TagHelper is neither from type memory or mmap.");
+                    "tag_helper is neither from type memory or mmap");
         }
     }
 
@@ -104,7 +104,7 @@ namespace map_matching_2::app {
             return tag_helper_type{};
         } else {
             static_assert(util::dependent_false_v<tag_helper_type>,
-                    "TagHelper is neither from type memory or mmap.");
+                    "tag_helper is neither from type memory or mmap");
         }
     }
 
@@ -125,7 +125,7 @@ namespace map_matching_2::app {
             return tag_helper_type{};
         } else {
             static_assert(util::dependent_false_v<tag_helper_type>,
-                    "TagHelper is neither from type memory or mmap.");
+                    "tag_helper is neither from type memory or mmap");
         }
     }
 
@@ -149,7 +149,7 @@ namespace map_matching_2::app {
             return index_build_helper_type{};
         } else {
             static_assert(util::dependent_false_v<index_build_helper_type>,
-                    "IndexBuildHelper is neither from type memory or mmap.");
+                    "index_build_helper is neither from type memory or mmap");
         }
     }
 
@@ -182,7 +182,7 @@ namespace map_matching_2::app {
             };
         } else {
             static_assert(util::dependent_false_v<index_helper_type>,
-                    "IndexHelper is neither from type memory or mmap.");
+                    "index_helper is neither from type memory or mmap");
         }
     }
 
@@ -210,7 +210,7 @@ namespace map_matching_2::app {
             };
         } else {
             static_assert(util::dependent_false_v<index_helper_type>,
-                    "IndexHelper is neither from type memory or mmap.");
+                    "index_helper is neither from type memory or mmap");
         }
     }
 
@@ -245,7 +245,7 @@ namespace map_matching_2::app {
                     });
         } else {
             static_assert(util::dependent_false_v<graph_helper_type>,
-                    "GraphHelper is neither from type memory or mmap.");
+                    "graph_helper is neither from type memory or mmap");
         }
     }
 
@@ -286,7 +286,7 @@ namespace map_matching_2::app {
                     std::move(index_helper));
         } else {
             static_assert(util::dependent_false_v<graph_helper_type>,
-                    "GraphHelper is neither from type memory or mmap.");
+                    "graph_helper is neither from type memory or mmap.");
         }
     }
 
@@ -324,7 +324,7 @@ namespace map_matching_2::app {
                     std::move(index_helper));
         } else {
             static_assert(util::dependent_false_v<graph_helper_type>,
-                    "GraphHelper is neither from type memory or mmap.");
+                    "graph_helper is neither from type memory or mmap");
         }
     }
 
@@ -362,7 +362,7 @@ namespace map_matching_2::app {
                     });
         } else {
             static_assert(util::dependent_false_v<osm_handler_helper_type>,
-                    "OSMHandlerHelper is neither from type memory or mmap.");
+                    "osm_handler_helper is neither from type memory or mmap");
         }
     }
 

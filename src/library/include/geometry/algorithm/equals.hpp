@@ -52,8 +52,8 @@ namespace map_matching_2::geometry {
         } else if constexpr (geometry::is_pointing_segment<Segment>) {
             return geometry::equals_points(*(segment.first), *(segment.second));
         } else {
-            static_assert(util::dependent_false_v<Segment>, "Invalid segment type");
-            throw std::invalid_argument{"Invalid segment type"};
+            static_assert(util::dependent_false_v<Segment>, "invalid segment type");
+            throw std::invalid_argument{"invalid segment type"};
         }
     }
 

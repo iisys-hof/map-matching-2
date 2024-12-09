@@ -77,7 +77,7 @@ namespace map_matching_2::geometry {
         using coordinate_system_type = typename data<Point>::coordinate_system_type;
 
         constexpr std::size_t dimension = boost::geometry::dimension<Point>::value;
-        static_assert(dimension >= 1 and dimension <= 3, "Invalid dimension");
+        static_assert(dimension >= 1 and dimension <= 3, "invalid dimension");
 
         if constexpr (std::same_as<coordinate_system_type, cs_geographic> or
             std::same_as<coordinate_system_type, cs_spherical_equatorial>) {
@@ -125,8 +125,8 @@ namespace map_matching_2::geometry {
                 return {boost::geometry::get<0>(point), boost::geometry::get<1>(point), boost::geometry::get<2>(point)};
             }
         } else {
-            static_assert(util::dependent_false_v<coordinate_system_type>, "Invalid coordinate system");
-            throw std::invalid_argument{"Invalid coordinate system"};
+            static_assert(util::dependent_false_v<coordinate_system_type>, "invalid coordinate system");
+            throw std::invalid_argument{"invalid coordinate system"};
         }
     }
 
@@ -139,13 +139,13 @@ namespace map_matching_2::geometry {
         constexpr std::size_t dimension_a = boost::geometry::dimension<PointA>::value;
         constexpr std::size_t dimension_b = boost::geometry::dimension<PointB>::value;
 
-        static_assert(dimension_a == dimension_b, "Dimensions do not match");
+        static_assert(dimension_a == dimension_b, "dimensions do not match");
 
         using coordinate_system_type_a = typename data<PointA>::coordinate_system_type;
         using coordinate_system_type_b = typename data<PointB>::coordinate_system_type;
 
         static_assert(std::same_as<coordinate_system_type_a, coordinate_system_type_b>,
-                "Coordinate systems do not match");
+                "coordinate systems do not match");
 
         constexpr auto TWO = default_float_type<
             typename boost::geometry::default_distance_result<PointA, PointB>::type>::v2;

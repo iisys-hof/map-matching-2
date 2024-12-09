@@ -74,8 +74,8 @@ namespace map_matching_2::geometry {
             boost::geometry::buffer(
                     point, buffer, buffer_distance, _buffer_side, _buffer_join, _buffer_end, buffer_point);
         } else {
-            static_assert(util::dependent_false_v<coordinate_system_type>, "Invalid coordinate system");
-            throw std::invalid_argument{"Invalid coordinate system"};
+            static_assert(util::dependent_false_v<coordinate_system_type>, "invalid coordinate system");
+            throw std::invalid_argument{"invalid coordinate system"};
         }
 
         return buffer;

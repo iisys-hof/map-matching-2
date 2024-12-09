@@ -152,8 +152,8 @@ namespace map_matching_2::geometry {
             } else if constexpr (is_pointing_segment<segment_type>) {
                 return *(_segment.first);
             } else {
-                static_assert(util::dependent_false_v<segment_type>, "Invalid segment type");
-                throw std::runtime_error{"Invalid segment type"};
+                static_assert(util::dependent_false_v<segment_type>, "invalid segment type");
+                throw std::runtime_error{"invalid segment type"};
             }
         }
 
@@ -167,8 +167,8 @@ namespace map_matching_2::geometry {
             } else if constexpr (is_pointing_segment<segment_type>) {
                 return *(_segment.second);
             } else {
-                static_assert(util::dependent_false_v<segment_type>, "Invalid segment type");
-                throw std::runtime_error{"Invalid segment type"};
+                static_assert(util::dependent_false_v<segment_type>, "invalid segment type");
+                throw std::runtime_error{"invalid segment type"};
             }
         }
 

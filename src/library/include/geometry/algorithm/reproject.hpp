@@ -35,14 +35,16 @@ namespace map_matching_2::geometry {
                     out_point = reprojector(in_point);
                 } else {
                     static_assert(not(std::same_as<out_point_type, OutPoint> and std::same_as<in_point_type, InPoint>),
-                            "reprojector not called because types mismatch.");
+                            "reprojector not called because types mismatch");
+                    throw std::invalid_argument{"reprojector not called because types mismatch"};
                 }
             } else {
                 if constexpr (std::same_as<InPoint, OutPoint>) {
                     out_point = in_point;
                 } else {
                     static_assert(not std::same_as<InPoint, OutPoint>,
-                            "no transform reprojector and types mismatch.");
+                            "no transform reprojector and types mismatch");
+                    throw std::invalid_argument{"no transform reprojector and types mismatch"};
                 }
             }
         }, reprojector_variant);
