@@ -98,8 +98,8 @@ namespace map_matching_2::environment {
             _track = std::move(track);
 
             if (_settings.filter_duplicates) {
-                const auto defects = _algorithms.detector.detect(track.rich_line, _settings.filter_duplicates);
-                _algorithms.detector.remove_defects(track.rich_line, defects);
+                const auto defects = _algorithms.detector.detect(_track.rich_line, _settings.filter_duplicates);
+                _algorithms.detector.remove_defects(_track.rich_line, defects);
 
                 if (abort()) {
                     return;
