@@ -1,7 +1,7 @@
 # protozero
 FetchContent_Declare(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git
-        GIT_TAG v1.7.1
+        GIT_TAG v1.8.0
         EXCLUDE_FROM_ALL)
 
 set(BUILD_TESTING OFF CACHE BOOL "do not build protozero tests" FORCE)

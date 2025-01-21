@@ -2,7 +2,7 @@
 option(ENABLE_ZLIB "Enable adding library zlib" ON)
 option(ENABLE_BZ2 "Enable adding library bz2" ON)
 option(ENABLE_EXPAT "Enable adding library expat" ON)
-option(ENABLE_PROTOBUF "Enable adding library protobuf" ON)
+option(ENABLE_PROTOBUF "Enable adding library protobuf" OFF)
 option(ENABLE_PROTOZERO "Enable adding library protozero" ON)
 option(ENABLE_DATE "Enable adding library date" ON)
 option(ENABLE_CSV_PARSER "Enable adding library csv-parser" ON)

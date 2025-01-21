@@ -1,7 +1,7 @@
 # boost
 FetchContent_Declare(boost
-        URL https://archives.boost.io/release/1.86.0/source/boost_1_86_0.tar.bz2
-        URL_HASH SHA256=1bed88e40401b2cb7a1f76d4bab499e352fa4d0c5f31c0dbae64e24d34d7513b)
+        URL https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
+        URL_HASH SHA256=af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89)
 
 FetchContent_GetProperties(boost)
 if (NOT boost_POPULATED)
