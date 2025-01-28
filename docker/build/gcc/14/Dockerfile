@@ -7,7 +7,7 @@ FROM debian:12 AS build
 ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
 ARG GCC_VERSION=14.2.0
-ARG CMAKE_VERSION=3.28.6
+ARG CMAKE_VERSION=3.30.5
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
