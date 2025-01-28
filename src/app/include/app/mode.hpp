@@ -13,30 +13,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#ifndef MAP_MATCHING_2_APP_COMPARE_HPP
-#define MAP_MATCHING_2_APP_COMPARE_HPP
-
-#include <memory>
+#ifndef MAP_MATCHING_2_MODE_HPP
+#define MAP_MATCHING_2_MODE_HPP
 
 #include "global.hpp"
 #include "options.hpp"
 
-#include "compare/comparator.hpp"
-
 namespace map_matching_2::app {
 
-    [[nodiscard]] std::unique_ptr<compare::comparator> _start_comparator(const compare_data &data);
+    void _mode(const mode_data &data);
 
-    void _join_comparator(std::unique_ptr<compare::comparator> &comparator);
-
-    void _read_compares(std::unique_ptr<compare::comparator> &comparator, const compare_data &data);
-
-    void _start_comparison(const compare_data &data);
-
-    void _compare(const compare_data &data);
-
-    int compare(int argc, char *argv[]);
+    int mode(int argc, char *argv[]);
 
 }
 
-#endif //MAP_MATCHING_2_APP_COMPARE_HPP
+#endif //MAP_MATCHING_2_MODE_HPP

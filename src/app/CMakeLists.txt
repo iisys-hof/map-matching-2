@@ -8,10 +8,10 @@ add_library(app STATIC)
 target_sources(app
         PRIVATE
         src/app/compare.cpp
-        src/app/general.cpp
         src/app/global.cpp
         src/app/match.cpp
         src/app/match_cli.cpp
+        src/app/mode.cpp
         src/app/network.cpp
         src/app/options.cpp
         src/app/prepare.cpp

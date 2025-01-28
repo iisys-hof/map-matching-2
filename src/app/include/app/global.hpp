@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Adrian Wöltche
+// Copyright (C) 2022-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -13,18 +13,53 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
-#ifndef MAP_MATCHING_2_GLOBAL_HPP
-#define MAP_MATCHING_2_GLOBAL_HPP
+#ifndef MAP_MATCHING_2_APP_GLOBAL_HPP
+#define MAP_MATCHING_2_APP_GLOBAL_HPP
 
-#include "general.hpp"
-#include "options.hpp"
+#include <string>
+#include <format>
+#include <iostream>
+
+#include "util/benchmark.hpp"
 
 namespace map_matching_2::app {
 
-    void _mode(const mode_data &data);
+    struct console_size {
+        std::size_t cols = 80;
+        std::size_t rows = 24;
+    };
 
-    int mode(int argc, char *argv[]);
+    struct global_storage {
+        bool verbose = false;
+        bool quiet = false;
+        console_size console{};
+    };
+
+    extern global_storage global;
+
+    [[nodiscard]] console_size get_console_size();
+
+    constexpr void set_global_verbose_quiet(const bool verbose, const bool quiet) {
+        global.verbose = verbose;
+        global.quiet = quiet;
+    }
+
+    constexpr void set_global_console_size(const console_size &console_size) {
+        global.console = console_size;
+    }
+
+    template<typename Func>
+    void verbose_frame(const std::string &start_message, const Func &func,
+            const std::string &end_message = "done in {:.3f} s") {
+        if (global.verbose) {
+            std::cout << start_message << " ... " << std::flush;
+            auto duration = util::benchmark(func);
+            std::cout << std::vformat(end_message, std::make_format_args(duration)) << std::endl;
+        } else {
+            func();
+        }
+    }
 
 }
 
-#endif //MAP_MATCHING_2_GLOBAL_HPP
+#endif //MAP_MATCHING_2_APP_GLOBAL_HPP

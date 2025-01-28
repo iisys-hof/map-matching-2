@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Adrian Wöltche
+// Copyright (C) 2022-2024 Adrian Wöltche
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -15,62 +15,42 @@
 
 #include "app/global.hpp"
 
-#include "app/prepare.hpp"
-#include "app/match_cli.hpp"
-#include "app/match_web.hpp"
-#include "app/compare.hpp"
+#include "util/macros.hpp"
+
+#if defined(MM2_WINDOWS)
+#include <windows.h>
+#elif defined(MM2_LINUX)
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
 
 namespace map_matching_2::app {
 
-    namespace po = boost::program_options;
+    global_storage global;
 
-    void _mode(const mode_data &data, int argc, char *argv[]) {
-        if (data.global.mode == MODE::PREPARE) {
-            geometry::disable_cache();
-            prepare(argc, argv);
-        } else if (data.global.mode == MODE::MATCH) {
-            geometry::enable_cache();
-            match_cli(argc, argv);
-        } else if (data.global.mode == MODE::SERVER) {
-            geometry::enable_cache();
-            // match_web(argc, argv);
-        } else if (data.global.mode == MODE::COMPARE) {
-            geometry::enable_cache();
-            compare(argc, argv);
+    console_size get_console_size() {
+#if defined(MM2_WINDOWS)
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+        std::size_t columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+        std::size_t rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+#elif defined(MM2_LINUX)
+        struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+        std::size_t columns = w.ws_col;
+        std::size_t rows = w.ws_row;
+#else
+        std::size_t columns = 80;
+        std::size_t rows = 24;
+#endif
+        if (columns < 80) {
+            columns = 80;
         }
-    }
-
-    int mode(int argc, char *argv[]) {
-        // works, but some default options are so long that they distort the whole output, default works better
-        // console_size console_size = get_console_size();
-        // set_global_console_size(console_size);
-
-        mode_data data;
-
-        auto all = options_mode(data);
-
-        po::variables_map vm;
-        if (not process(argc, argv, vm, all, MODE::NONE)) {
-            return 1;
+        if (rows < 24) {
+            rows = 24;
         }
 
-        try {
-            data.correct(vm);
-        } catch (std::exception &e) {
-            show_error(e, all);
-            return 2;
-        }
-
-        set_global_verbose_quiet(data.all.verbose, data.all.quiet);
-
-        try {
-            _mode(data, argc, argv);
-        } catch (std::exception &e) {
-            show_error(e, all);
-            return 3;
-        }
-
-        return 0;
+        return console_size{columns, rows};
     }
 
 }

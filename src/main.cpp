@@ -17,7 +17,7 @@
 #include <rpmalloc.h>
 #endif
 
-#include "app/global.hpp"
+#include "app/mode.hpp"
 
 int main(int argc, char *argv[]) {
 #ifdef MM2_ENABLE_RPMALLOC

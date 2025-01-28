@@ -14,7 +14,7 @@
 // along with this program. If not, see https://www.gnu.org/licenses/.
 
 #include "app/options.hpp"
-#include "app/general.hpp"
+#include "app/global.hpp"
 
 #include <format>
 #include <thread>
@@ -254,9 +254,8 @@ namespace map_matching_2::app {
 
             boost::to_lower(file_extension);
 
-            if (file_extension != FILE_TYPE_CSV and file_extension != FILE_TYPE_GPX and file_extension != FILE_TYPE_LIST
-                and
-                file_extension != FILE_TYPE_SEATTLE) {
+            if (file_extension != FILE_TYPE_CSV and file_extension != FILE_TYPE_GPX and
+                file_extension != FILE_TYPE_LIST and file_extension != FILE_TYPE_SEATTLE) {
                 throw std::invalid_argument{
                         std::format("track file extension {} unsupported, please see help.", file_extension)
                 };

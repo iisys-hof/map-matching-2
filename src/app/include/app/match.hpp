@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "general.hpp"
+#include "global.hpp"
 
 #include "options.hpp"
 #include "network.hpp"
