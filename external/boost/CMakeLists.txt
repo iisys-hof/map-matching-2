@@ -1,12 +1,10 @@
 # boost
 FetchContent_Declare(boost
         URL https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
-        URL_HASH SHA256=af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89)
+        URL_HASH SHA256=af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89
+        SOURCE_SUBDIR this-directory-does-not-exist)
 
-FetchContent_GetProperties(boost)
-if (NOT boost_POPULATED)
-    FetchContent_Populate(boost)
-endif ()
+FetchContent_MakeAvailable(boost)
 
 if (WIN32)
     set(_boost_b2 "${boost_SOURCE_DIR}/b2.exe")

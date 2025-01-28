@@ -2,14 +2,13 @@
 FetchContent_Declare(rpmalloc
         GIT_REPOSITORY https://github.com/mjansson/rpmalloc.git
         GIT_TAG 1.4.5
+        SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
-FetchContent_GetProperties(rpmalloc)
-if (NOT rpmalloc_POPULATED)
-    FetchContent_Populate(rpmalloc)
+FetchContent_MakeAvailable(rpmalloc)
 
-    file(WRITE "${rpmalloc_SOURCE_DIR}/CMakeLists.txt"
-            [[
+file(WRITE "${rpmalloc_SOURCE_DIR}/CMakeLists.txt"
+        [[
 project(rpmalloc
         VERSION 1.4.5
         DESCRIPTION "rpmalloc"
@@ -38,8 +37,7 @@ target_link_libraries(rpmalloc
         ${CMAKE_DL_LIBS})
 ]])
 
-    add_subdirectory("${rpmalloc_SOURCE_DIR}" "${rpmalloc_BINARY_DIR}" EXCLUDE_FROM_ALL)
-endif ()
+add_subdirectory("${rpmalloc_SOURCE_DIR}" "${rpmalloc_BINARY_DIR}" EXCLUDE_FROM_ALL)
 
 set(RPMALLOC_INCLUDE_DIR "${rpmalloc_SOURCE_DIR}/rpmalloc" CACHE PATH "rpmalloc include dir" FORCE)
 

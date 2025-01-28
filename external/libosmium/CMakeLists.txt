@@ -2,15 +2,14 @@
 FetchContent_Declare(libosmium
         GIT_REPOSITORY https://github.com/osmcode/libosmium.git
         GIT_TAG v2.21.0
+        GIT_SUBMODULES ""
+        SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
 set(BUILD_EXAMPLES OFF CACHE BOOL "do not build libosmium examples" FORCE)
 set(BUILD_TESTING OFF CACHE BOOL "do not build libosmium tests" FORCE)
 
-FetchContent_GetProperties(libosmium)
-if (NOT libosmium_POPULATED)
-    FetchContent_Populate(libosmium)
-endif ()
+FetchContent_MakeAvailable(libosmium)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${libosmium_SOURCE_DIR}/cmake" CACHE STRING "cmake module path" FORCE)
 set(Osmium_ROOT "${libosmium_SOURCE_DIR}" CACHE PATH "osmium root path" FORCE)
