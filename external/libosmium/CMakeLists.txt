@@ -1,4 +1,10 @@
 # libosmium
+set(libosmium_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/libosmium-src")
+if (EXISTS "${libosmium_SOURCE_DIR}")
+    set(libosmium_EXISTS ON)
+    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+endif ()
+
 FetchContent_Declare(libosmium
         GIT_REPOSITORY https://github.com/osmcode/libosmium.git
         GIT_TAG v2.21.0
@@ -21,3 +27,5 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${libosmium_SOURCE_DIR}/LICENSE"
             DESTINATION doc/libosmium)
 endif ()
+
+unset(FETCHCONTENT_FULLY_DISCONNECTED)

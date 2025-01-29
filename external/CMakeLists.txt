@@ -7,7 +7,6 @@ option(ENABLE_PROTOZERO "Enable adding library protozero" ON)
 option(ENABLE_DATE "Enable adding library date" ON)
 option(ENABLE_CSV_PARSER "Enable adding library csv-parser" ON)
 option(ENABLE_GPX "Enable adding library gpx" ON)
-option(ENABLE_RPMALLOC "Enable adding library rpmalloc" ON)
 option(ENABLE_BOOST "Enable adding library Boost" ON)
 option(ENABLE_LIBOSMIUM "Enable adding library libosmium" ON)
 

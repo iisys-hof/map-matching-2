@@ -1,4 +1,10 @@
 # protozero
+set(protozero_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/protozero-src")
+if (EXISTS "${protozero_SOURCE_DIR}")
+    set(protozero_EXISTS ON)
+    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+endif ()
+
 FetchContent_Declare(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git
         GIT_TAG v1.8.0
@@ -18,3 +24,5 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${protozero_SOURCE_DIR}/LICENSE.md"
             DESTINATION doc/protozero)
 endif ()
+
+unset(FETCHCONTENT_FULLY_DISCONNECTED)

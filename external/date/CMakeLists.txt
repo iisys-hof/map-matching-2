@@ -1,4 +1,10 @@
 # date
+set(date_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/date-src")
+if (EXISTS "${date_SOURCE_DIR}")
+    set(date_EXISTS ON)
+    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+endif ()
+
 FetchContent_Declare(date
         GIT_REPOSITORY https://github.com/HowardHinnant/date.git
         GIT_TAG v3.0.3
@@ -13,3 +19,5 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${date_SOURCE_DIR}/LICENSE.txt"
             DESTINATION doc/date)
 endif ()
+
+unset(FETCHCONTENT_FULLY_DISCONNECTED)

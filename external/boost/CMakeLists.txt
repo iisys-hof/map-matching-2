@@ -1,4 +1,10 @@
 # boost
+set(boost_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/boost-src")
+if (EXISTS "${boost_SOURCE_DIR}")
+    set(boost_EXISTS ON)
+    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
+endif ()
+
 FetchContent_Declare(boost
         URL https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
         URL_HASH SHA256=af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89
@@ -6,48 +12,48 @@ FetchContent_Declare(boost
 
 FetchContent_MakeAvailable(boost)
 
-if (WIN32)
-    set(_boost_b2 "${boost_SOURCE_DIR}/b2.exe")
-else ()
-    set(_boost_b2 "${boost_SOURCE_DIR}/b2")
-endif ()
-
-if (NOT EXISTS "${_boost_b2}" AND NOT Boost_FOUND)
-    string(REGEX MATCH "^([0-9]+)" CXX_COMPILER_VERSION_MAJOR ${CMAKE_CXX_COMPILER_VERSION})
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(_compiler "gcc")
-        set(_compiler_version "${CXX_COMPILER_VERSION_MAJOR}")
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(_compiler "clang")
-        set(_compiler_version "${CXX_COMPILER_VERSION_MAJOR}")
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        set(_compiler "msvc")
-        set(_compiler_version "${MSVC_TOOLSET_VERSION}")
-    else ()
-        message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
-    endif ()
-
-    set(USER_CONFIG_FILE "${boost_SOURCE_DIR}/tools/build/src/user-config.jam")
-
-    file(WRITE "${USER_CONFIG_FILE}"
-            "using ${_compiler} : ${_compiler_version} : \"${CMAKE_CXX_COMPILER}\" ;")
-    set(_toolset "toolset=${_compiler}")
-
-    message(STATUS "Set boost toolset to ${_toolset}")
-endif ()
-
-if (NOT EXISTS "${_boost_b2}")
+if (NOT boost_EXISTS)
     if (WIN32)
-        set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.bat)
-        set(_bootstrap_cxx "${_compiler}")
+        set(_boost_b2 "${boost_SOURCE_DIR}/b2.exe")
     else ()
-        set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.sh)
-        set(_bootstrap_cxx "--with-${_toolset} --prefix=${boost_BINARY_DIR}")
+        set(_boost_b2 "${boost_SOURCE_DIR}/b2")
     endif ()
 
-    execute_process(COMMAND ${_bootstrap_path} ${_bootstrap_cxx}
-            WORKING_DIRECTORY "${boost_SOURCE_DIR}")
+    if (NOT EXISTS "${_boost_b2}")
+        string(REGEX MATCH "^([0-9]+)" CXX_COMPILER_VERSION_MAJOR ${CMAKE_CXX_COMPILER_VERSION})
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            set(_compiler "gcc")
+            set(_compiler_version "${CXX_COMPILER_VERSION_MAJOR}")
+        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            set(_compiler "clang")
+            set(_compiler_version "${CXX_COMPILER_VERSION_MAJOR}")
+        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            set(_compiler "msvc")
+            set(_compiler_version "${MSVC_TOOLSET_VERSION}")
+        else ()
+            message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
+        endif ()
+
+        set(USER_CONFIG_FILE "${boost_SOURCE_DIR}/tools/build/src/user-config.jam")
+
+        file(WRITE "${USER_CONFIG_FILE}"
+                "using ${_compiler} : ${_compiler_version} : \"${CMAKE_CXX_COMPILER}\" ;")
+        set(_toolset "toolset=${_compiler}")
+
+        message(STATUS "Set boost toolset to ${_toolset}")
+
+        if (WIN32)
+            set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.bat)
+            set(_bootstrap_cxx "${_compiler}")
+        else ()
+            set(_bootstrap_path ${boost_SOURCE_DIR}/bootstrap.sh)
+            set(_bootstrap_cxx "--with-${_toolset} --prefix=${boost_BINARY_DIR}")
+        endif ()
+
+        execute_process(COMMAND ${_bootstrap_path} ${_bootstrap_cxx}
+                WORKING_DIRECTORY "${boost_SOURCE_DIR}")
+    endif ()
 endif ()
 
 set(BOOST_ROOT "${boost_BINARY_DIR}" CACHE PATH "Boost root" FORCE)
@@ -115,3 +121,5 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${boost_SOURCE_DIR}/LICENSE_1_0.txt"
             DESTINATION doc/boost)
 endif ()
+
+unset(FETCHCONTENT_FULLY_DISCONNECTED)
