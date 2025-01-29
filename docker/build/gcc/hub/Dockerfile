@@ -9,7 +9,7 @@ ARG CMAKE_VERSION=3.30.5
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
-        tzdata make wget file libssl-dev && \
+        tzdata make wget file xz-utils libssl-dev && \
     apt-get install -y \
         build-essential && \
     # CMake

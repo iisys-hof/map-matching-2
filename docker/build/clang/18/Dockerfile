@@ -11,7 +11,7 @@ ARG CMAKE_VERSION=3.30.5
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
-        tzdata make lsb-release ca-certificates wget software-properties-common gnupg libssl-dev && \
+        tzdata make lsb-release ca-certificates wget software-properties-common gnupg xz-utils libssl-dev && \
     # https://github.com/hof/bookworm-apt-add-repository-issue
     [ ! -e /etc/apt/sources.list ] && echo "#" | tee /etc/apt/sources.list && \
     # LLVM

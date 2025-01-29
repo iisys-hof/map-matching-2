@@ -7,16 +7,19 @@ FROM ubuntu:20.04 AS build
 ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
 ARG GCC_VERSION=14.2.0
+ARG GDB_VERSION=15.2
 ARG CMAKE_VERSION=3.30.5
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
-        tzdata make wget file libssl-dev && \
+        tzdata make wget file xz-utils libssl-dev && \
     apt-get install -y \
         build-essential dpkg-dev flex bison texinfo libgmp3-dev libmpfr-dev libmpc-dev libisl-dev && \
+    apt-get install -y \
+        python3-dev libipt-dev libexpat1-dev liblzma-dev libbabeltrace-dev && \
     # GCC
     mkdir /opt/build && cd /opt/build && \
-    wget -r -l 1 -nH -nd -np -A '*.tar.xz' "https://gcc.gnu.org/pub/gcc/releases/gcc-$GCC_VERSION/" && \
+    wget -r -l 1 -nH -nd -np -A '*.tar.xz' "https://gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/" && \
     GCC_FILE=$(ls -1 gcc-*.tar.xz) && \
     tar -xf "$GCC_FILE" && \
     GCC_PATH=$(basename "$GCC_FILE" '.tar.xz') && \
@@ -39,8 +42,19 @@ RUN apt-get update && apt-get dist-upgrade -y && \
     ./bootstrap --parallel=$(nproc) && make -j $(nproc) && make install && \
     cd .. && rm -rf "cmake-${CMAKE_VERSION}" && \
     update-alternatives --install /usr/bin/cmake cmake /usr/local/bin/cmake 100 && \
+    # gdb
+    mkdir /opt/build && cd /opt/build && \
+    wget "https://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.xz" && \
+    GDB_FILE=$(ls -1 gdb-*.tar.xz) && \
+    tar -xf "$GDB_FILE" && \
+    GDB_PATH=$(basename "$GDB_FILE" '.tar.xz') && \
+    cd "$GDB_PATH" && mkdir objdir && cd objdir && \
+    ../configure --build=x86_64-linux-gnu --host=x86_64-linux-gnu --with-expat --with-lzma --with-babeltrace --with-python=python3 && \
+    make -j "$(nproc)" && make install && \
+    cd / && rm -rf /opt/build && ldconfig -v && \
+    update-alternatives --install /usr/bin/gdb gdb /usr/local/bin/gdb 100 && \
     # debug tools
     apt-get install --no-install-recommends -y \
-        gdb clang ninja-build autoconf automake libtool valgrind \
+        clang ninja-build autoconf automake libtool valgrind \
         locales-all dos2unix rsync tar python3 python3-dev linux-tools-$(uname -r) time git && \
     rm -rf /var/lib/apt/lists/*
