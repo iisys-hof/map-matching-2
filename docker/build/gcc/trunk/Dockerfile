@@ -43,7 +43,7 @@ RUN apt-get update && apt-get dist-upgrade -y && \
     # gdb
     mkdir /opt/build && cd /opt/build && \
     wget "https://gcc.gnu.org/pub/gdb/snapshots/current/gdb.tar.xz" && \
-    GDB_FILE=$(ls -1 gdb-*.tar.xz) && \
+    GDB_FILE=$(ls -1 gdb.tar.xz) && \
     tar -xf "$GDB_FILE" && \
     GDB_PATH=$(basename "$GDB_FILE" '.tar.xz') && \
     cd "$GDB_PATH" && mkdir objdir && cd objdir && \
