@@ -125,7 +125,6 @@ namespace map_matching_2::io::memory_mapped::storage {
 #else
             _storage = new mmap_type{boost::interprocess::create_only, name.c_str(), size};
             process_info(boost::interprocess::create_only, *_storage, name);
-            check_sanity(*_storage, name);
 #endif
         }
 
@@ -138,26 +137,22 @@ namespace map_matching_2::io::memory_mapped::storage {
 #else
             _storage = new mmap_type{boost::interprocess::open_or_create, name.c_str(), size};
             process_info(boost::interprocess::open_or_create, *_storage, name);
-            check_sanity(*_storage, name);
 #endif
         }
 
         void open_read_only(const std::string &name) {
             _storage = new mmap_type{boost::interprocess::open_read_only, name.c_str()};
             process_info(boost::interprocess::open_read_only, *_storage, name);
-            check_sanity(*_storage, name);
         }
 
         void open(const std::string &name) {
             _storage = new mmap_type{boost::interprocess::open_only, name.c_str()};
             process_info(boost::interprocess::open_only, *_storage, name);
-            check_sanity(*_storage, name);
         }
 
         void open_copy_on_write(const std::string &name) {
             _storage = new mmap_type{boost::interprocess::open_copy_on_write, name.c_str()};
             process_info(boost::interprocess::open_copy_on_write, *_storage, name);
-            check_sanity(*_storage, name);
         }
 
         [[nodiscard]] static auto *find_info(mmap_type &storage) {
@@ -251,16 +246,6 @@ namespace map_matching_2::io::memory_mapped::storage {
             } else {
                 throw std::invalid_argument{"unknown creation_tag"};
             }
-        }
-
-        static bool check_sanity(const mmap_type &storage, const std::string &name) {
-            if (storage.get_segment_manager()->check_sanity()) {
-                return true;
-            }
-
-            throw std::runtime_error{
-                    std::format("storage '{}' is corrupted, please rebuild storage", name)
-            };
         }
 
     public:
