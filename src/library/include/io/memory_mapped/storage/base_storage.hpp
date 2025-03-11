@@ -260,14 +260,12 @@ namespace map_matching_2::io::memory_mapped::storage {
         void flush() {
             if constexpr (is_managed_mapped_file<types>) {
                 if (_storage) {
-                    // flush is not necessary and leads to Valgrind warning:
-                    // syscall param msync(start) points to uninitialized bytes
-                    // _storage->flush();
+                    _storage->flush();
                 }
             }
         }
 
-        void close(const bool flush = true) {
+        void close(const bool flush = false) {
             if (_storage) {
                 if (flush) {
                     this->flush();
@@ -363,7 +361,7 @@ namespace map_matching_2::io::memory_mapped::storage {
         }
 
         void destroy() {
-            this->close(false);
+            this->close();
             boost::interprocess::shared_memory_object::remove(_name.c_str());
         }
 
@@ -397,8 +395,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             }
         }
 
-        void shrink_to_fit(bool reopen = true) {
-            this->close();
+        void shrink_to_fit(bool reopen = false, bool flush = false) {
+            this->close(flush);
             if (not _name.empty()) {
                 mmap_type::shrink_to_fit(_name.c_str());
             }
@@ -463,7 +461,7 @@ namespace map_matching_2::io::memory_mapped::storage {
         }
 
         void destroy() {
-            this->close(false);
+            this->close();
             boost::interprocess::file_mapping::remove(_path.c_str());
         }
 
@@ -502,8 +500,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             }
         }
 
-        void shrink_to_fit(bool reopen = true) {
-            this->close();
+        void shrink_to_fit(bool reopen = false, bool flush = false) {
+            this->close(flush);
             if (not _path.empty() and std::filesystem::exists(_path)) {
                 mmap_type::shrink_to_fit(_path.c_str());
             }
