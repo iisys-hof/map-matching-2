@@ -111,7 +111,7 @@ namespace map_matching_2::io::helper {
                             points().reserve(size);
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        }, index_build_storage().max_retries());
+                        }, _critical, index_build_storage().max_retries());
             } else if constexpr (is_memory_index_build_helper<index_build_helper>) {
                 points().reserve(size);
             } else {
@@ -125,7 +125,7 @@ namespace map_matching_2::io::helper {
                             segments().reserve(size);
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        }, index_build_storage().max_retries());
+                        }, _critical, index_build_storage().max_retries());
             } else if constexpr (is_memory_index_build_helper<index_build_helper>) {
                 segments().reserve(size);
             } else {
@@ -139,7 +139,7 @@ namespace map_matching_2::io::helper {
                             points().emplace_back(std::move(point));
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_index_build_helper<index_build_helper>) {
                 points().emplace_back(std::move(point));
             } else {
@@ -153,7 +153,7 @@ namespace map_matching_2::io::helper {
                             segments().emplace_back(std::move(segment));
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_index_build_helper<index_build_helper>) {
                 segments().emplace_back(std::move(segment));
             } else {
@@ -167,6 +167,7 @@ namespace map_matching_2::io::helper {
 
     private:
         index_build_storage_type _index_build_storage;
+        bool _critical{false};
 
         void handle_bad_alloc(auto &ex) {
             if constexpr (io::memory_mapped::has_grow<index_build_storage_type>) {

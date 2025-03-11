@@ -81,7 +81,7 @@ namespace map_matching_2::io::helper {
             return _tag_storage;
         }
 
-        [[nodiscard]] std::uint64_t id(const std::string &key, const std::string &value, bool retry = true) {
+        [[nodiscard]] std::uint64_t id(const std::string &key, const std::string &value) {
             if (_tag_storage.is_finalized()) {
                 throw std::runtime_error{"cannot add new tag, tag_storage is finalized"};
             }
@@ -142,15 +142,11 @@ namespace map_matching_2::io::helper {
                 static_assert(not std::is_same_v<key_type, std::string> or
                         not std::is_same_v<value_type, std::string>,
                         "mmap key_type and value_type cannot be std::string, does not work with mmap");
-                if (retry) {
-                    return memory_mapped::retry_alloc([&]() {
-                                return _id();
-                            }, [&](auto &ex) {
-                                handle_bad_alloc(ex);
-                            });
-                } else {
-                    return _id();
-                }
+                return memory_mapped::retry_alloc([&]() {
+                            return _id();
+                        }, [&](auto &ex) {
+                            handle_bad_alloc(ex);
+                        }, _critical);
             } else {
                 return _id();
             }
@@ -234,6 +230,7 @@ namespace map_matching_2::io::helper {
 
     private:
         tag_storage_type _tag_storage;
+        bool _critical{false};
 
         enum MAP_TAGS {
             NODES_MAP, EDGES_MAP
@@ -268,7 +265,7 @@ namespace map_matching_2::io::helper {
                 tag_vector_type tags_container = _tag_storage.tags();
                 tags_container.reserve(tag_list.size());
                 for (const auto &tag : tag_list) {
-                    tags_container.emplace_back(id(tag.key(), tag.value(), false));
+                    tags_container.emplace_back(id(tag.key(), tag.value()));
                 }
                 return tags_container;
             };
@@ -278,7 +275,7 @@ namespace map_matching_2::io::helper {
                             return _tags();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else {
                 return _tags();
             }
@@ -298,7 +295,7 @@ namespace map_matching_2::io::helper {
                             return _copy_tags();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else {
                 return _copy_tags();
             }
@@ -312,7 +309,7 @@ namespace map_matching_2::io::helper {
                 for (const auto &tag_id : tags) {
                     // clones tag data from other tag_storage to this tag_storage
                     auto tag = other.tag(tag_id);
-                    tags_container.emplace_back(id(tag.first, tag.second, false));
+                    tags_container.emplace_back(id(tag.first, tag.second));
                 }
                 return tags_container;
             };
@@ -322,7 +319,7 @@ namespace map_matching_2::io::helper {
                             return _clone_tags();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else {
                 return _clone_tags();
             }
@@ -340,7 +337,7 @@ namespace map_matching_2::io::helper {
                                 _set_map_tags();
                             }, [&](auto &ex) {
                                 handle_bad_alloc(ex);
-                            });
+                            }, _critical);
                 } else {
                     _set_map_tags();
                 }
@@ -367,7 +364,7 @@ namespace map_matching_2::io::helper {
                             _copy_map_tags();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else {
                 _copy_map_tags();
             }
@@ -387,7 +384,7 @@ namespace map_matching_2::io::helper {
                             _clone_map_tags();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else {
                 _clone_map_tags();
             }
@@ -430,7 +427,7 @@ namespace map_matching_2::io::helper {
                                 _merge_map_tags();
                             }, [&](auto &ex) {
                                 handle_bad_alloc(ex);
-                            });
+                            }, _critical);
                 } else {
                     _merge_map_tags();
                 }

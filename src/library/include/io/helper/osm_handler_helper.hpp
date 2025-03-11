@@ -127,7 +127,7 @@ namespace map_matching_2::io::helper {
                             _add_node();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else {
                 _add_node();
             }
@@ -218,7 +218,7 @@ namespace map_matching_2::io::helper {
 
         osm_handler_storage_type _osm_handler_storage;
         tag_helper_type _tag_helper;
-        bool _sort_vertices{false};
+        bool _critical{false}, _sort_vertices{false};
 
         void handle_bad_alloc(auto &ex) {
             if constexpr (io::memory_mapped::has_grow<osm_handler_storage_type>) {

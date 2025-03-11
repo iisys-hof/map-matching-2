@@ -70,15 +70,30 @@ namespace map_matching_2::io::memory_mapped {
     }
 
     template<typename Try, typename Catch>
-    auto retry_alloc(const Try &try_function, const Catch &catch_function, const std::size_t retries = 1) {
-        std::size_t tries = 0;
-        while (tries <= retries) {
-            try {
-                return try_function();
-            } catch (boost::interprocess::bad_alloc &ex) {
-                catch_function(ex);
-                if (++tries > retries) {
-                    throw;
+    auto retry_alloc(const Try &try_function, const Catch &catch_function, bool &critical,
+            const std::size_t retries = 1) {
+        if (critical) {
+            return try_function();
+        } else {
+            std::size_t tries = 0;
+            while (tries <= retries) {
+                try {
+                    critical = true;
+                    if constexpr (std::is_void_v<std::invoke_result_t<Try>>) {
+                        try_function();
+                        critical = false;
+                        return;
+                    } else {
+                        auto ret = try_function();
+                        critical = false;
+                        return ret;
+                    }
+                } catch (boost::interprocess::bad_alloc &ex) {
+                    catch_function(ex);
+                    if (++tries > retries) {
+                        critical = false;
+                        throw;
+                    }
                 }
             }
         }
@@ -86,11 +101,23 @@ namespace map_matching_2::io::memory_mapped {
         throw boost::interprocess::bad_alloc{};
     }
 
+    template<typename Try, typename Catch>
+    auto retry_alloc(const Try &try_function, const Catch &catch_function, const std::size_t retries = 1) {
+        bool critical = false;
+        return retry_alloc(try_function, catch_function, critical, retries);
+    }
+
     template<typename Try>
-    auto retry_alloc(const Try &try_function, const std::size_t retries = 1) {
+    auto retry_alloc(const Try &try_function, bool &critical, const std::size_t retries = 1) {
         const auto &catch_function = [](auto &ex) constexpr -> void {};
 
-        return retry_alloc(try_function, catch_function, retries);
+        return retry_alloc(try_function, catch_function, critical, retries);
+    }
+
+    template<typename Try>
+    auto retry_alloc(const Try &try_function, const std::size_t retries = 1) {
+        bool critical = false;
+        return retry_alloc(try_function, critical, retries);
     }
 
     [[nodiscard]] std::size_t get_total_memory();

@@ -148,7 +148,7 @@ namespace map_matching_2::io::helper {
                                     vertex_converter, edge_converter);
                         }, [&](auto &ex) {
                             drop_handle_bad_alloc(ex);
-                        }, graph_storage().max_retries());
+                        }, _critical, graph_storage().max_retries());
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 graph().from_adjacency_list(other_graph_helper.graph(), allocator(),
                         vertex_converter, edge_converter);
@@ -175,7 +175,7 @@ namespace map_matching_2::io::helper {
                             network.simplify(simplify_network_complete);
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 network.simplify(simplify_network_complete);
             } else {
@@ -196,7 +196,7 @@ namespace map_matching_2::io::helper {
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 tag_helper().clone_node_tags(vertex_data.id, other);
                 return graph().add_vertex(vertex_data_type{
@@ -219,7 +219,7 @@ namespace map_matching_2::io::helper {
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 tag_helper().set_node_tags(vertex_data.id, tag_list);
                 return graph().add_vertex(vertex_data_type{
@@ -241,7 +241,7 @@ namespace map_matching_2::io::helper {
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 return graph().add_vertex(vertex_data_type{
                         vertex_data.id, vertex_data.point
@@ -259,7 +259,7 @@ namespace map_matching_2::io::helper {
                             return graph().add_vertex(std::move(vertex_data));
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 return graph().add_vertex(std::move(vertex_data));
             } else {
@@ -285,7 +285,7 @@ namespace map_matching_2::io::helper {
                             return _add();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 return _add();
             } else {
@@ -311,7 +311,7 @@ namespace map_matching_2::io::helper {
                             return _add();
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 return _add();
             } else {
@@ -331,7 +331,7 @@ namespace map_matching_2::io::helper {
                             return _add_to_vertex_index_map(vertex_desc);
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 vertex_descriptor vertex_desc = graph().add_vertex(vertex_data_type{
                         vertex_data.id, vertex_data.point
@@ -351,7 +351,7 @@ namespace map_matching_2::io::helper {
                             return _add_to_vertex_index_map(vertex_desc);
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 vertex_descriptor vertex_desc = graph().add_vertex(std::move(vertex_data));
                 return _add_to_vertex_index_map(vertex_desc);
@@ -381,7 +381,7 @@ namespace map_matching_2::io::helper {
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
@@ -409,7 +409,7 @@ namespace map_matching_2::io::helper {
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
@@ -436,7 +436,7 @@ namespace map_matching_2::io::helper {
                             });
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
@@ -459,7 +459,7 @@ namespace map_matching_2::io::helper {
                             return graph().add_edge(source, target, std::move(edge_data));
                         }, [&](auto &ex) {
                             handle_bad_alloc(ex);
-                        });
+                        }, _critical);
             } else if constexpr (is_memory_graph_helper<graph_helper>) {
                 const vertex_descriptor &source = get_vertex_descriptor_for_index(source_index);
                 const vertex_descriptor &target = get_vertex_descriptor_for_index(target_index);
@@ -485,6 +485,7 @@ namespace map_matching_2::io::helper {
     private:
         graph_storage_type _graph_storage;
         tag_helper_type _tag_helper;
+        bool _critical{false};
 
         void grow() {
             if constexpr (io::memory_mapped::has_grow<graph_storage_type>) {

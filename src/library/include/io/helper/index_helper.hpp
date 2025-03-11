@@ -134,7 +134,7 @@ namespace map_matching_2::io::helper {
                             index_storage().build_segments_index(index_build_helper().segments());
                         }, [&](auto &ex) {
                             drop_handle_bad_alloc(ex);
-                        }, index_storage().max_retries());
+                        }, _critical, index_storage().max_retries());
             } else if constexpr (is_memory_index_helper<index_helper>) {
                 index_storage().build_points_index(index_build_helper().points());
                 index_storage().build_segments_index(index_build_helper().segments());
@@ -154,6 +154,7 @@ namespace map_matching_2::io::helper {
     private:
         index_storage_type _index_storage;
         index_build_helper_type _index_build_helper;
+        bool _critical{false};
 
         void drop_handle_bad_alloc(auto &ex) {
             if constexpr (io::memory_mapped::has_grow<index_storage_type>) {
