@@ -133,11 +133,13 @@ namespace map_matching_2::io::memory_mapped {
 
     void grow_file(const std::string &file, std::size_t size);
 
-    bool flush_file(const std::string &file, void *addr, std::size_t size, bool async = false);
+    bool flush_address(void *addr, std::size_t size);
+
+    bool flush_file(const std::string &file);
 
 #elif defined(MM2_LINUX)
 
-    bool flush_file(void *addr, std::size_t size, bool async = false);
+    bool flush_address(void *addr, std::size_t size, bool async = false);
 
 #endif
 

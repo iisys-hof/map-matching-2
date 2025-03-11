@@ -494,10 +494,11 @@ namespace map_matching_2::io::memory_mapped::storage {
                 auto address = this->_storage->get_address();
                 auto size = this->_storage->get_size();
 #if defined(MM2_WINDOWS)
+                flush_address(address, size);
                 this->close();
-                flush_file(_path.string(), address, size, false);
+                flush_file(_path.string());
 #else
-                flush_file(address, size, false);
+                flush_address(address, size, false);
 #endif
             }
         }
