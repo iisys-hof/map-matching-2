@@ -399,7 +399,9 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         void shrink_to_fit(bool reopen = true) {
             this->close();
-            mmap_type::shrink_to_fit(_name.c_str());
+            if (not _name.empty()) {
+                mmap_type::shrink_to_fit(_name.c_str());
+            }
             if (reopen) {
                 open();
             }
