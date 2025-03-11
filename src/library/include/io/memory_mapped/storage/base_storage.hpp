@@ -260,7 +260,9 @@ namespace map_matching_2::io::memory_mapped::storage {
         void flush() {
             if constexpr (is_managed_mapped_file<types>) {
                 if (_storage) {
-                    _storage->flush();
+                    // flush is not necessary and leads to Valgrind warning:
+                    // syscall param msync(start) points to uninitialized bytes
+                    // _storage->flush();
                 }
             }
         }
