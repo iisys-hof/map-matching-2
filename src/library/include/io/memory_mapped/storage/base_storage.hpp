@@ -259,9 +259,9 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         void flush() {
             if constexpr (is_managed_mapped_file<types>) {
-                // flush is not necessary and leads to Valgrind warning:
-                // syscall param msync(start) points to uninitialized bytes
-                // _storage->flush();
+                if (_storage) {
+                    _storage->flush();
+                }
             }
         }
 
@@ -500,7 +500,9 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         void shrink_to_fit(bool reopen = true) {
             this->close();
-            mmap_type::shrink_to_fit(_path.c_str());
+            if (not _path.empty() and std::filesystem::exists(_path)) {
+                mmap_type::shrink_to_fit(_path.c_str());
+            }
             if (reopen) {
                 open();
             }
