@@ -275,7 +275,7 @@ namespace map_matching_2::io::memory_mapped::storage {
 
         ~osm_handler_storage() {
             if (_shrink_on_close == SHRINK_ON_CLOSE and _destroy_on_close == DO_NOT_DESTROY_ON_CLOSE) {
-                shrink_to_fit(false, true);
+                shrink_to_fit(false);
             } else if (_destroy_on_close == DESTROY_ON_CLOSE) {
                 _container.destroy();
             } else {
@@ -322,8 +322,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             }
         }
 
-        void shrink_to_fit(bool reopen = false, bool flush = false) {
-            _container.shrink_to_fit(reopen, flush);
+        void shrink_to_fit(bool reopen = false) {
+            _container.shrink_to_fit(reopen);
         }
 
         [[nodiscard]] constexpr const allocation_counter_type &allocation_counter() const {

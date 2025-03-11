@@ -20,9 +20,11 @@
 #if defined(MM2_WINDOWS)
 #include <windows.h>
 #include <fileapi.h>
+#include <memoryapi.h>
 #include <winioctl.h>
 #elif defined(MM2_LINUX)
 #include <sys/sysinfo.h>
+#include <sys/mman.h>
 #endif
 
 namespace map_matching_2::io::memory_mapped {
@@ -119,6 +121,34 @@ namespace map_matching_2::io::memory_mapped {
 
         // close file handle
         CloseHandle(hFile);
+    }
+
+    bool flush_file(const std::string &file, void *addr, const std::size_t size, const bool async) {
+        // open file: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+        HANDLE hFile = CreateFile(file.c_str(), GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            throw std::runtime_error{std::format("could not open file {}", file)};
+        }
+
+        // flush file view: https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-flushviewoffile
+        if (not FlushViewOfFile(addr, numbytes)){
+            throw std::runtime_error{std::format("could not flush file view {}", file)};
+        }
+
+        // flush file buffers: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-flushfilebuffers
+        if (not async) {
+            return FlushFileBuffers(hFile);
+        }
+
+        // close file handle
+        CloseHandle(hFile);
+    }
+
+#elif defined(MM2_LINUX)
+
+    bool flush_file(void *addr, const std::size_t size, const bool async) {
+        return msync(addr, size, async ? MS_ASYNC : MS_SYNC) == 0;
     }
 
 #endif

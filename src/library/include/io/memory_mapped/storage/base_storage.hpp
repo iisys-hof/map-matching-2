@@ -257,19 +257,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             return *_storage;
         }
 
-        void flush() {
-            if constexpr (is_managed_mapped_file<types>) {
-                if (_storage) {
-                    _storage->flush();
-                }
-            }
-        }
-
-        void close(const bool flush = false) {
+        void close() {
             if (_storage) {
-                if (flush) {
-                    this->flush();
-                }
                 delete _storage;
                 _storage = nullptr;
             }
@@ -395,8 +384,8 @@ namespace map_matching_2::io::memory_mapped::storage {
             }
         }
 
-        void shrink_to_fit(bool reopen = false, bool flush = false) {
-            this->close(flush);
+        void shrink_to_fit(bool reopen = false) {
+            this->close();
             if (not _name.empty()) {
                 mmap_type::shrink_to_fit(_name.c_str());
             }
@@ -500,8 +489,22 @@ namespace map_matching_2::io::memory_mapped::storage {
             }
         }
 
-        void shrink_to_fit(bool reopen = false, bool flush = false) {
-            this->close(flush);
+        void flush() {
+            if (this->_storage) {
+                auto address = this->_storage->get_address();
+                auto size = this->_storage->get_size();
+#if defined(MM2_WINDOWS)
+                this->close();
+                flush_file(_path.string(), address, size, false);
+#else
+                flush_file(address, size, false);
+#endif
+            }
+        }
+
+        void shrink_to_fit(bool reopen = false) {
+            flush();
+            this->close();
             if (not _path.empty() and std::filesystem::exists(_path)) {
                 mmap_type::shrink_to_fit(_path.c_str());
             }
