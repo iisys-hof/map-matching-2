@@ -396,7 +396,7 @@ Building the software is straightforward. The following tools and versions are t
     - **GCC:** Version 14.2
     - **Clang:** Version 18
 - **On Windows:**
-    - **Visual Studio C++:** Version 17.12.4 (equivalent to MSVC 1940)
+    - **Visual Studio C++:** Version 17.13.3 (equivalent to MSVC 1943)
 - **Architecture:** Only 64-bit compiler and operating system are officially supported
 
 We provide for Linux various Dockerfiles in the [docker](docker) folder. They contain all necessary information for
