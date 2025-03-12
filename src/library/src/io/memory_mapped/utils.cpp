@@ -104,7 +104,7 @@ namespace map_matching_2::io::memory_mapped {
 
         // set end of file: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setendoffile
         if (not SetEndOfFile(hFile)) {
-            throw std::runtime_error{std::format("could grow file {} to size {}", file, size)};
+            throw std::runtime_error{std::format("could not grow file {} to size {}", file, size)};
             CloseHandle(hFile);
         }
 
@@ -139,6 +139,38 @@ namespace map_matching_2::io::memory_mapped {
         // flush file buffers: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-flushfilebuffers
         if (not FlushFileBuffers(hFile)) {
             throw std::runtime_error{std::format("could flush file {}", file)};
+            CloseHandle(hFile);
+        }
+
+        // close file handle
+        CloseHandle(hFile);
+    }
+
+    void shrink_to_fit(const std::string &file, const std::size_t size) {
+        // open file
+        HANDLE hFile = CreateFile(file.c_str(), GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            throw std::runtime_error{std::format("could not open file {}", file)};
+        }
+
+        // set file pointer: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointerex
+        if (size > std::numeric_limits<LONGLONG>::max()) {
+            throw std::runtime_error{
+                    std::format("could not set file {} to size {}, size over max limit", file, size)
+            };
+        }
+
+        LARGE_INTEGER newSize;
+        newSize.QuadPart = static_cast<LONGLONG>(size);
+        if (not SetFilePointerEx(hFile, newSize, NULL, FILE_BEGIN)) {
+            throw std::runtime_error{std::format("could not set file pointer in {} to position {}", file, size)};
+            CloseHandle(hFile);
+        }
+
+        // set end of file: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setendoffile
+        if (not SetEndOfFile(hFile)) {
+            throw std::runtime_error{std::format("could not shrink file {} to size {}", file, size)};
             CloseHandle(hFile);
         }
 

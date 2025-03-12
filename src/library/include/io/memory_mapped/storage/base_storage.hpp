@@ -292,6 +292,21 @@ namespace map_matching_2::io::memory_mapped::storage {
                 storage.get_segment_manager()->grow(size - offset);
             }
         }
+
+        static void _shrink_to_fit(const std::string &filename) {
+            std::size_t new_size = 0;
+
+            try {
+                mmap_type storage{boost::interprocess::open_only, filename.c_str()};
+                process_info(boost::interprocess::open_only, storage, filename);
+                storage.get_segment_manager()->shrink_to_fit();
+                new_size = storage.get_segment_manager()->get_size();
+            } catch (...) {
+                throw;
+            }
+
+            shrink_to_fit(filename, new_size);
+        }
 #endif
 
     };
@@ -504,10 +519,13 @@ namespace map_matching_2::io::memory_mapped::storage {
         }
 
         void shrink_to_fit(bool reopen = false) {
-            flush();
             this->close();
             if (not _path.empty() and std::filesystem::exists(_path)) {
+#if defined(MM2_WINDOWS)
+                base_type::_shrink_to_fit(_path.string());
+#else
                 mmap_type::shrink_to_fit(_path.c_str());
+#endif
             }
             if (reopen) {
                 open();

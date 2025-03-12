@@ -137,6 +137,8 @@ namespace map_matching_2::io::memory_mapped {
 
     bool flush_file(const std::string &file);
 
+    void shrink_to_fit(const std::string &file, std::size_t size);
+
 #elif defined(MM2_LINUX)
 
     bool flush_address(void *addr, std::size_t size, bool async = false);
