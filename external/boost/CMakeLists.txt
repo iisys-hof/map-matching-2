@@ -6,8 +6,8 @@ if (EXISTS "${boost_SOURCE_DIR}")
 endif ()
 
 FetchContent_Declare(boost
-        URL https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
-        URL_HASH SHA256=af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89
+        URL https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.bz2
+        URL_HASH SHA256=46d9d2c06637b219270877c9e16155cbd015b6dc84349af064c088e9b5b12f7b
         SOURCE_SUBDIR this-directory-does-not-exist)
 
 FetchContent_MakeAvailable(boost)

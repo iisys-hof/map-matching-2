@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(protobuf
         GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-        GIT_TAG v29.3
+        GIT_TAG v30.2
         SOURCE_SUBDIR cmake
         EXCLUDE_FROM_ALL
         FIND_PACKAGE_ARGS)

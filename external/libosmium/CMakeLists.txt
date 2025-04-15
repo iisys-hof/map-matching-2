@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(libosmium
         GIT_REPOSITORY https://github.com/osmcode/libosmium.git
-        GIT_TAG v2.21.0
+        GIT_TAG v2.22.0
         GIT_SUBMODULES ""
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
