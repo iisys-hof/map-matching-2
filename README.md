@@ -48,7 +48,10 @@ Both variants also contain the license information of the used third-party libra
 For extracting the AppImage, use on the AppImage binary `--appimage-extract`.
 
 We also provide a Docker container, adjust the paths as necessary:\
-`docker run --rm -it -v $(pwd)/data:/app/data -u $(id -u ${USER}):$(id -g ${USER}) addy90/map-matching-2`
+`docker run --rm -v $(pwd)/data:/app/data -u $(id -u ${USER}):$(id -g ${USER}) addy90/map-matching-2`
+
+Arguments can be appended directly, for example:\
+`docker run --rm -v $(pwd)/data:/app/data -u $(id -u ${USER}):$(id -g ${USER}) addy90/map-matching-2 --help`
 
 ### Example
 

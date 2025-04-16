@@ -1,6 +1,6 @@
 # Build and run from project directory:
 # docker build -t map_matching_2 -f docker/release/Dockerfile .
-# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2
+# docker run --rm -v .:/tmp/map-matching-2 -u $(id -u):$(id -g) map_matching_2
 
 FROM map_matching_2-gcc-ubuntu-2004-build AS build
 
@@ -22,6 +22,6 @@ COPY --from=build /app/run/gcc/release /app/run
 
 VOLUME /app/data
 
-WORKDIR /app/run/bin
+WORKDIR /app
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/app/run/bin/map_matching_2"]
