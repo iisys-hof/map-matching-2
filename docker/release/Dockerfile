@@ -24,4 +24,4 @@ VOLUME /app/data
 
 WORKDIR /app/run/bin
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
