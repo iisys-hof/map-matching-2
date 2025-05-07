@@ -31,18 +31,20 @@ namespace map_matching_2::geometry {
             using out_point_type = typename point_reprojector_type::out_point_type;
 
             if (reprojector.transform()) {
-                if constexpr (std::same_as<out_point_type, OutPoint> and std::same_as<in_point_type, InPoint>) {
+                if constexpr (std::assignable_from<OutPoint &, out_point_type> and
+                    std::assignable_from<in_point_type &, InPoint>) {
                     out_point = reprojector(in_point);
                 } else {
-                    static_assert(not(std::same_as<out_point_type, OutPoint> and std::same_as<in_point_type, InPoint>),
+                    static_assert(not(std::assignable_from<OutPoint &, out_point_type> and
+                                std::assignable_from<in_point_type &, InPoint>),
                             "reprojector not called because types mismatch");
                     throw std::invalid_argument{"reprojector not called because types mismatch"};
                 }
             } else {
-                if constexpr (std::same_as<InPoint, OutPoint>) {
+                if constexpr (std::assignable_from<OutPoint &, InPoint>) {
                     out_point = in_point;
                 } else {
-                    static_assert(not std::same_as<InPoint, OutPoint>,
+                    static_assert(not std::assignable_from<OutPoint &, InPoint>,
                             "no transform reprojector and types mismatch");
                     throw std::invalid_argument{"no transform reprojector and types mismatch"};
                 }

@@ -25,7 +25,7 @@
 #include "geometry/track/multi_track.hpp"
 
 #define MM2_MULTI_TRACK(CS) map_matching_2::geometry::track::multi_track< \
-    MM2_EAGER_MULTI_RICH_LINE(CS, MM2_MEMORY_TYPES)>
+    MM2_EAGER_MULTI_RICH_TIME_LINE(CS, MM2_MEMORY_TYPES)>
 
 #define MM2_MULTI_TRACK_VARIANT std::variant< \
     MM2_MULTI_TRACK(MM2_GEOGRAPHIC), \
@@ -45,8 +45,8 @@ MM2_MULTI_TRACK_TEMPLATE(MM2_CARTESIAN)
 
 namespace map_matching_2::geometry::track {
 
-    template<geometry::is_point Point>
-    using multi_track_type = multi_track<eager_multi_rich_line_type<Point>>;
+    template<geometry::is_time_point TimePoint>
+    using multi_track_type = multi_track<eager_multi_rich_line_type<TimePoint>>;
 
     using multi_track_variant_type = MM2_MULTI_TRACK_VARIANT;
 

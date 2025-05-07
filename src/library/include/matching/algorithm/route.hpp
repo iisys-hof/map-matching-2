@@ -170,12 +170,12 @@ namespace map_matching_2::matching {
             const auto &end = candidate_to.from;
 
             if (geometry::equals_points(candidate_from.projection_point, candidate_to.projection_point)) {
-                // when both measurements point to same candidate, no route is needed as we are already there
+                // when both points point to the same candidate, no route is needed as we are already there
                 return route_type{false};
             }
 
             if (candidate_from.edge_desc == candidate_to.edge_desc) {
-                // when both measurements point to the same edge
+                // when both points point to the same edge
                 if (start->has_length() and end->has_length()) {
                     // when both partial routes exist on the same edge
                     const auto &edge = _network.edge(candidate_from.edge_desc);

@@ -27,6 +27,9 @@
 #define MM2_MULTI_RICH_LINE(CS, TYPES) map_matching_2::geometry::multi_rich_line< \
     MM2_RICH_LINE(CS, TYPES), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
 
+#define MM2_MULTI_RICH_TIME_LINE(CS, TYPES) map_matching_2::geometry::multi_rich_line< \
+    MM2_RICH_TIME_LINE(CS, TYPES), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
+
 #define MM2_IMPORT_MULTI_RICH_LINE(CS, TYPES) map_matching_2::geometry::multi_rich_line< \
     MM2_IMPORT_RICH_LINE(CS, TYPES), MM2_VECTOR(TYPES), MM2_FAST_COUNTING_ALLOCATOR(TYPES)>
 
@@ -34,6 +37,7 @@
 
 #define MM2_MULTI_RICH_LINE_TEMPLATE(CS, TYPES) \
     MM2_EXTERN template class MM2_MULTI_RICH_LINE(CS, TYPES); \
+    MM2_EXTERN template class MM2_MULTI_RICH_TIME_LINE(CS, TYPES); \
     MM2_EXTERN template class MM2_IMPORT_MULTI_RICH_LINE(CS, TYPES);
 
 #define MM2_MULTI_RICH_LINE_TEMPLATE_CS(CS) \

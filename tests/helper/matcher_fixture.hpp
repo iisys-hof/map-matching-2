@@ -33,11 +33,11 @@ struct matcher_fixture {
 
     typename matcher_type::track_type
     create_track(std::string id,
-            std::initializer_list<typename matcher_type::track_type::measurement_type> measurements) {
+            std::initializer_list<typename matcher_type::track_type::point_type> points) {
         typename matcher_type::track_type::line_type line;
-        line.reserve(measurements.size());
-        for (const auto &measurement : measurements) {
-            line.emplace_back(measurement.point);
+        line.reserve(points.size());
+        for (const auto &point : points) {
+            line.emplace_back(point);
         }
 
         return typename matcher_type::track_type{std::move(id), std::move(line)};

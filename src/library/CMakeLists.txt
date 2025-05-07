@@ -67,7 +67,6 @@ if (EXPLICIT_TEMPLATES)
             src/types/geometry/rich_type/rich_line_variant.cpp
             src/types/geometry/rich_type/rich_segment.cpp
             src/types/geometry/rich_type/rich_segment_data.cpp
-            src/types/geometry/track/measurement.cpp
             src/types/geometry/track/multi_track.cpp
             src/types/geometry/track/track.cpp
             src/types/geometry/models.cpp

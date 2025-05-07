@@ -97,7 +97,7 @@ namespace map_matching_2::io::track {
 
         void _parse_dispatch(gpx::GPX *root) {
             geometry::srs_dispatch(_srs_transform, [this, root]<typename InputCS, typename OutputCS>() {
-                using point_type_out = geometry::point_type<OutputCS>;
+                using point_type_out = geometry::time_point_type<OutputCS>;
 
                 using multi_track_type = geometry::track::multi_track_type<point_type_out>;
                 using multi_line_type_out = typename multi_track_type::multi_line_type;
@@ -140,26 +140,25 @@ namespace map_matching_2::io::track {
         }
 
         template<typename InputCS, typename OutputCS>
-        [[nodiscard]] typename geometry::track::multi_track_type<geometry::point_type<OutputCS>>::line_type
+        [[nodiscard]] typename geometry::track::multi_track_type<geometry::time_point_type<OutputCS>>::line_type
         _parse_track_segment(gpx::TRKSeg *seg) {
             using point_type_in = geometry::point_type<InputCS>;
-            using point_type_out = geometry::point_type<OutputCS>;
+            using point_type_out = geometry::time_point_type<OutputCS>;
 
             using coordinate_type_in = typename geometry::data<point_type_in>::coordinate_type;
 
             using multi_track_type = geometry::track::multi_track_type<point_type_out>;
-            using measurement_type_out = typename multi_track_type::measurement_type;
             using line_type_out = typename multi_track_type::line_type;
 
             auto &trkpts = seg->trkpts().list();
 
-            std::vector<measurement_type_out> measurements;
-            measurements.reserve(trkpts.size());
+            line_type_out out_line;
+            out_line.reserve(trkpts.size());
 
             for (auto trkpt : trkpts) {
                 if (trkpt != nullptr) {
                     const auto time = trkpt->time().getValue();
-                    std::uint64_t timestamp = measurements.size();
+                    std::uint64_t timestamp = trkpts.size();
 
                     if (not time.empty()) {
                         if (_no_parse_time) {
@@ -173,15 +172,16 @@ namespace map_matching_2::io::track {
 
                     const coordinate_type_in x = std::stod(trkpt->lon().getValue());
                     const coordinate_type_in y = std::stod(trkpt->lat().getValue());
-                    measurements.emplace_back(measurement_type_out{
-                            timestamp, point_type_in{x, y}, _reprojector_variant
-                    });
+                    point_type_out out_point;
+                    geometry::reproject_point(point_type_in{x, y}, out_point, _reprojector_variant);
+
+                    out_line.emplace_back(std::move(out_point), timestamp);
                 }
             }
 
-            std::sort(std::begin(measurements), std::end(measurements));
+            std::sort(std::begin(out_line), std::end(out_line));
 
-            return geometry::measurements2line<measurement_type_out, line_type_out>(measurements);
+            return out_line;
         };
 
     };

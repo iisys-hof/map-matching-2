@@ -34,10 +34,14 @@ namespace map_matching_2::geometry {
 #define MM2_MEDIAN_MERGE_RTREE(CS) \
     MM2_RTREE((map_matching_2::geometry::median_merge_rtree_value_type<MM2_POINT(CS)>), MM2_MEMORY_TYPES)
 
+#define MM2_TIME_MEDIAN_MERGE_RTREE(CS) \
+    MM2_RTREE((map_matching_2::geometry::median_merge_rtree_value_type<MM2_TIME_POINT(CS)>), MM2_MEMORY_TYPES)
+
 #ifdef EXPLICIT_TEMPLATES
 
 #define MM2_MEDIAN_MERGE_RTREE_TEMPLATE(CS) \
-    MM2_EXTERN template class MM2_MEDIAN_MERGE_RTREE(CS);
+    MM2_EXTERN template class MM2_MEDIAN_MERGE_RTREE(CS); \
+    MM2_EXTERN template class MM2_TIME_MEDIAN_MERGE_RTREE(CS);
 
 MM2_MEDIAN_MERGE_RTREE_TEMPLATE(MM2_GEOGRAPHIC)
 MM2_MEDIAN_MERGE_RTREE_TEMPLATE(MM2_SPHERICAL_EQUATORIAL)

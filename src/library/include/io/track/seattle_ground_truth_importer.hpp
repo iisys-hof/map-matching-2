@@ -55,7 +55,7 @@ namespace map_matching_2::io::track {
         void _parse_dispatch() {
             geometry::srs_dispatch(_srs_transform, [this]<typename InputCS, typename OutputCS>() {
                 using point_type_in = geometry::point_type<InputCS>;
-                using point_type_out = geometry::point_type<OutputCS>;
+                using point_type_out = geometry::time_point_type<OutputCS>;
 
                 using line_type = typename geometry::models<point_type_in>::template line_type<>;
 

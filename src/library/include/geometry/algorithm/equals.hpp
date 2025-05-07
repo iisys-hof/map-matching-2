@@ -57,26 +57,6 @@ namespace map_matching_2::geometry {
         }
     }
 
-    // template<typename Point>
-    // [[nodiscard]] constexpr bool point_set_comparator(const Point &a, const Point &b) {
-    //     BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Point<Point>));
-    //
-    //     if constexpr (boost::geometry::dimension<Point>::value == 1) {
-    //         return boost::geometry::get<0>(a) < boost::geometry::get<0>(b);
-    //     } else if constexpr (boost::geometry::dimension<Point>::value == 2) {
-    //         return boost::geometry::get<0>(a) < boost::geometry::get<0>(b) or
-    //         (boost::geometry::get<0>(a) == boost::geometry::get<0>(b) and
-    //             boost::geometry::get<1>(a) < boost::geometry::get<1>(b));
-    //     } else {
-    //         return boost::geometry::get<0>(a) < boost::geometry::get<0>(b) or
-    //         ((boost::geometry::get<0>(a) == boost::geometry::get<0>(b) and
-    //                 boost::geometry::get<1>(a) < boost::geometry::get<1>(b)) or
-    //             (boost::geometry::get<0>(a) == boost::geometry::get<0>(b) and
-    //                 boost::geometry::get<1>(a) == boost::geometry::get<1>(b) and
-    //                 boost::geometry::get<2>(a) < boost::geometry::get<2>(b)));
-    //     }
-    // }
-
 }
 
 #endif //MAP_MATCHING_2_GEOMETRY_ALGORITHM_EQUALS_HPP

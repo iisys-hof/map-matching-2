@@ -49,6 +49,7 @@ namespace map_matching_2::matching {
         using coordinate_system_type = typename network_traits<network_type>::coordinate_system_type;
         using track_type = typename network_traits<network_type>::track_type;
         using point_type = typename network_traits<network_type>::point_type;
+        using time_point_type = typename network_traits<network_type>::time_point_type;
         using candidate_type = typename network_traits<network_type>::candidate_type;
         using candidate_node_type = typename network_traits<network_type>::candidate_node_type;
         using candidate_edge_type = typename network_traits<network_type>::candidate_edge_type;
@@ -84,7 +85,7 @@ namespace map_matching_2::matching {
                 const std::size_t index, const matching::settings &match_settings) const {
             assert(index < track.rich_line.size());
 
-            const point_type &point = track.rich_line.at(index);
+            const time_point_type &point = track.rich_line.at(index);
 
             boost::container::set<edge_descriptor> edge_result;
 
@@ -152,7 +153,7 @@ namespace map_matching_2::matching {
             _process_candidate_query(candidate_edge_set, track, index, edge_result);
         }
 
-        void _additions_next(boost::container::set<edge_descriptor> &edge_result, const point_type &point) const {
+        void _additions_next(boost::container::set<edge_descriptor> &edge_result, const time_point_type &point) const {
             // adjacent candidates
             std::list<edge_descriptor> additions;
 
@@ -205,7 +206,7 @@ namespace map_matching_2::matching {
                 boost::container::multiset<candidate_edge_type> &candidate_edge_set, const track_type &track,
                 const std::size_t index, boost::container::set<edge_descriptor> &edge_result) const {
             assert(index < track.rich_line.size());
-            const point_type &point = track.rich_line.at(index);
+            const time_point_type &point = track.rich_line.at(index);
 
             // remove edges from result that were already processed in candidate_edge_set
             for (const auto &candidate_edge : candidate_edge_set) {
@@ -419,7 +420,7 @@ namespace map_matching_2::matching {
                 std::vector<index_value_type> candidates_index_values;
                 candidates_index_values.reserve(candidates_number);
                 for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                    const point_type &point = track.rich_line.at(index);
+                    const time_point_type &point = track.rich_line.at(index);
                     auto &edge_set = candidate_edge_sets[index];
                     for (const auto &candidate : edge_set) {
                         if (not candidate.adopted) {
@@ -444,7 +445,7 @@ namespace map_matching_2::matching {
 
                 // search in index for adopting nearby candidates not directly attached
                 for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                    const point_type &point = track.rich_line.at(index);
+                    const time_point_type &point = track.rich_line.at(index);
                     auto &edge_set = candidate_edge_sets[index];
                     auto edge_set_it = edge_set.crbegin();
                     if (edge_set_it != edge_set.crend()) {
@@ -469,7 +470,8 @@ namespace map_matching_2::matching {
                                             auto &reverse_candidate_edge_set = candidate_edge_sets[result_index];
                                             for (const auto &edge : edge_set) {
                                                 if (not edge.adopted) {
-                                                    const point_type &reverse_point = track.rich_line.at(result_index);
+                                                    const time_point_type &reverse_point = track.rich_line.at(
+                                                            result_index);
                                                     add_candidate(reverse_point, edge, reverse_candidate_edge_set);
                                                 }
                                             }
@@ -489,7 +491,7 @@ namespace map_matching_2::matching {
             if (match_settings.candidate_adoption_siblings) {
                 // adopt from previous and next candidate set the directly attached candidates
                 for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                    const point_type &point = track.rich_line.at(index);
+                    const time_point_type &point = track.rich_line.at(index);
                     auto &edge_set = candidate_edge_sets[index];
 
                     // we have a previous candidate set
@@ -521,7 +523,7 @@ namespace map_matching_2::matching {
             candidates.reserve(candidate_edge_sets.size());
 
             for (std::size_t index = 0; index < candidate_edge_sets.size(); ++index) {
-                const point_type &point = track.rich_line.at(index);
+                const time_point_type &point = track.rich_line.at(index);
                 auto &edge_set = candidate_edge_sets[index];
 
                 // node set

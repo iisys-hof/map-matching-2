@@ -28,6 +28,9 @@
 #define MM2_EAGER_RICH_LINE(CS, TYPES) map_matching_2::geometry::eager_rich_line< \
     MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
 
+#define MM2_EAGER_RICH_TIME_LINE(CS, TYPES) map_matching_2::geometry::eager_rich_line< \
+    MM2_TIME_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
+
 #define MM2_IMPORT_EAGER_RICH_LINE(CS, TYPES) map_matching_2::geometry::eager_rich_line< \
     MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_FAST_COUNTING_ALLOCATOR(TYPES)>
 
@@ -35,6 +38,7 @@
 
 #define MM2_EAGER_RICH_LINE_TEMPLATE(CS, TYPES) \
     MM2_EXTERN template class MM2_EAGER_RICH_LINE(CS, TYPES); \
+    MM2_EXTERN template class MM2_EAGER_RICH_TIME_LINE(CS, TYPES); \
     MM2_EXTERN template class MM2_IMPORT_EAGER_RICH_LINE(CS, TYPES);
 
 #define MM2_EAGER_RICH_LINE_TEMPLATE_CS(CS) \

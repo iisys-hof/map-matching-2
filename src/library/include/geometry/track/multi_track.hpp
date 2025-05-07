@@ -36,7 +36,6 @@ namespace map_matching_2::geometry::track {
         using angle_type = typename multi_rich_line_traits<multi_rich_line_type>::angle_type;
         using coordinate_type = typename multi_rich_line_traits<multi_rich_line_type>::coordinate_type;
         using track_type = track<rich_line_type>;
-        using measurement_type = measurement<point_type>;
 
         std::string id;
         multi_rich_line_type multi_rich_line;
@@ -58,18 +57,6 @@ namespace map_matching_2::geometry::track {
             reproject_line(input_line, line, reprojector_variant);
             multi_rich_line = multi_rich_line_type{rich_line_type{std::move(line)}};
         }
-
-        // constexpr multi_track(std::string id, rich_line_type rich_line)
-        //         : multi_track{id, track_type{std::move(id), std::move(rich_line)}} {}
-        //
-        // multi_track(std::string id, const std::vector<line_type> &lines)
-        //         : multi_rich_line_type{lines}, id{std::move(id)} {}
-        //
-        // multi_track(std::string id, const multi_rich_line_type &multi_rich_line)
-        //         : multi_rich_line_type{multi_rich_line}, id{std::move(id)} {}
-        //
-        // multi_track(std::string id, const std::vector<track_type> &tracks)
-        //         : multi_rich_line_type{tracks2rich_lines<multi_track, std::vector>(tracks)}, id{std::move(id)} {}
 
         constexpr multi_track(std::string id, multi_line_type multi_line)
             : id{std::move(id)}, multi_rich_line{std::move(multi_line)} {}

@@ -41,8 +41,9 @@ namespace map_matching_2::matching {
 
         using coordinate_system_type = typename geometry::network::network_traits<network_type>::coordinate_system_type;
         using point_type = typename geometry::network::network_traits<network_type>::point_type;
+        using time_point_type = geometry::time_point_type<coordinate_system_type>;
 
-        using multi_track_type = geometry::track::multi_track_type<point_type>;
+        using multi_track_type = geometry::track::multi_track_type<time_point_type>;
         using multi_track_multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
         using track_type = typename multi_track_type::track_type;
         using track_rich_line_type = typename track_type::rich_line_type;

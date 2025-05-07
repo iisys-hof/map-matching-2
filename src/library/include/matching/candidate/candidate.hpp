@@ -26,7 +26,8 @@ namespace map_matching_2::matching {
         using vertex_descriptor = VertexDescriptor;
         using edge_descriptor = EdgeDescriptor;
         using track_type = Track;
-        using point_type = typename track_type::point_type;
+        using point_type = geometry::point_type<
+            typename geometry::data<typename track_type::point_type>::coordinate_system_type>;
         using distance_type = typename geometry::data<point_type>::distance_type;
 
         using candidate_node_type = candidate_node<vertex_descriptor, distance_type>;

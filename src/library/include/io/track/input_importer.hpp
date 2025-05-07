@@ -76,43 +76,39 @@ namespace map_matching_2::io::track {
         void _parse_dispatch(const std::string &wkt_string) {
             geometry::srs_dispatch(_srs_transform, [this, &wkt_string]<typename InputCS, typename OutputCS>() {
                 using point_type_in = geometry::point_type<InputCS>;
-                using point_type_out = geometry::point_type<OutputCS>;
+                using point_type_out = geometry::time_point_type<OutputCS>;
 
                 using line_type_in = typename geometry::models<point_type_in>::template line_type<>;
                 using multi_line_type_in = typename geometry::models<point_type_in>::
                         template multi_line_type<line_type_in>;
 
                 using multi_track_type = geometry::track::multi_track_type<point_type_out>;
-                using measurement_type_out = typename multi_track_type::measurement_type;
                 using line_type_out = typename multi_track_type::line_type;
 
                 std::string id_str = std::to_string(_counter++);
 
                 if (wkt_string.starts_with("POINT")) {
-                    std::vector<measurement_type_out> measurements;
+                    line_type_out out_line;
                     std::uint64_t timestamp = 0;
                     boost::tokenizer tokenizer{wkt_string, _separator};
                     for (auto wkt_point : tokenizer) {
                         boost::trim(wkt_point);
-                        point_type_in point;
-                        boost::geometry::read_wkt(wkt_point, point);
-                        measurements.emplace_back(measurement_type_out{
-                                timestamp++, std::move(point), _reprojector_variant
-                        });
+                        point_type_in in_point;
+                        boost::geometry::read_wkt(wkt_point, in_point);
+                        point_type_out out_point;
+                        geometry::reproject_point(in_point, out_point, _reprojector_variant);
+                        out_line.emplace_back(std::move(out_point), timestamp++);
                     }
 
-                    _forwarder.pass(multi_track_type{
-                            id_str, geometry::measurements2line<measurement_type_out, line_type_out>(
-                                    std::move(measurements))
-                    });
+                    _forwarder.pass(multi_track_type{id_str, std::move(out_line)});
                 } else if (wkt_string.starts_with("LINESTRING")) {
-                    line_type_in line;
-                    boost::geometry::read_wkt(wkt_string, line);
-                    _forwarder.pass(multi_track_type{id_str, std::move(line), _reprojector_variant});
+                    line_type_in in_line;
+                    boost::geometry::read_wkt(wkt_string, in_line);
+                    _forwarder.pass(multi_track_type{id_str, std::move(in_line), _reprojector_variant});
                 } else if (wkt_string.starts_with("MULTILINESTRING")) {
-                    multi_line_type_in multi_line;
-                    boost::geometry::read_wkt(wkt_string, multi_line);
-                    _forwarder.pass(multi_track_type{id_str, std::move(multi_line), _reprojector_variant});
+                    multi_line_type_in multi_in_line;
+                    boost::geometry::read_wkt(wkt_string, multi_in_line);
+                    _forwarder.pass(multi_track_type{id_str, std::move(multi_in_line), _reprojector_variant});
                 } else {
                     throw std::exception{};
                 }

@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 "candidate_search_test_edges.csv");
 
         auto track = create_track("two", {
-                {0, {0.1, 0.1}},
-                {1, {4.2, -0.2}},
-                {2, {9.8, 0.3}}
+                {0.1, 0.1, 0},
+                {4.2, -0.2, 1},
+                {9.8, 0.3, 2}
         });
 
         std::cout << track.str() << std::endl;
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 "candidate_search_grid_test_edges.csv");
 
         auto track = create_track("one", {
-                {0, {2.2, 2.2}},
-                {1, {4.5, 2.5}},
-                {2, {4.9, 5.8}}
+                {2.2, 2.2, 0},
+                {4.5, 2.5, 1},
+                {4.9, 5.8, 2}
         });
 
         std::cout << track.str() << std::endl;
@@ -259,10 +259,10 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_CLOSE_FRACTION(route_2_6.length(), 0.7, 1e-3);
 
         auto track_2 = create_track("two", {
-                {0, {2.2, 2.2}},
-                {1, {4.2, 2.1}},
-                {2, {2.8, 1.9}},
-                {4, {5.3, 1.8}}
+                {2.2, 2.2, 0},
+                {4.2, 2.1, 1},
+                {2.8, 1.9, 2},
+                {5.3, 1.8, 3}
         });
 
         std::cout << track_2.str() << std::endl;
@@ -285,9 +285,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
     BOOST_FIXTURE_TEST_CASE(matching_test, matcher_fixture<matcher_metric>) {
         auto matching_func = [&](const map_matching_2::matching::settings::MODEL model,
                 const std::string &file_prefix) {
-            using point_type = typename map_matching_2::matching::network_traits<typename
-                matcher_metric::network_type>::point_type;
-            using multi_track = typename map_matching_2::geometry::track::multi_track_type<point_type>;
+            using time_point_type = typename map_matching_2::matching::network_traits<typename
+                matcher_metric::network_type>::time_point_type;
+            using multi_track = typename map_matching_2::geometry::track::multi_track_type<time_point_type>;
             using line_type = typename multi_track::line_type;
 
             const std::string matches_filename{file_prefix + "_test_matches.csv"};
@@ -320,9 +320,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 map_matching_2::matching::matcher_forwarder matcher_forwarder{matcher, match_settings};
 
                 auto track = create_track("one", {
-                        {0, {2.3, 2.2}},
-                        {1, {5.1, 2.3}},
-                        {2, {4.9, 5.8}}
+                        {2.3, 2.2, 0},
+                        {5.1, 2.3, 1},
+                        {4.9, 5.8, 2}
                 });
 
                 matcher_forwarder.pass(track);

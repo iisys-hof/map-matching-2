@@ -25,6 +25,7 @@
 #define MM2_CARTESIAN boost::geometry::cs::cartesian
 
 #define MM2_POINT(CS) boost::geometry::model::point<double, 2, CS>
+#define MM2_TIME_POINT(CS) map_matching_2::geometry::time_point<double, 2, CS>
 
 #ifdef EXPLICIT_TEMPLATES
 
@@ -34,6 +35,13 @@
 MM2_POINT_TEMPLATE(MM2_GEOGRAPHIC)
 MM2_POINT_TEMPLATE(MM2_SPHERICAL_EQUATORIAL)
 MM2_POINT_TEMPLATE(MM2_CARTESIAN)
+
+#define MM2_TIME_POINT_TEMPLATE(CS) \
+    MM2_EXTERN template class MM2_TIME_POINT(CS);
+
+MM2_TIME_POINT_TEMPLATE(MM2_GEOGRAPHIC)
+MM2_TIME_POINT_TEMPLATE(MM2_SPHERICAL_EQUATORIAL)
+MM2_TIME_POINT_TEMPLATE(MM2_CARTESIAN)
 
 #endif
 
@@ -45,6 +53,9 @@ namespace map_matching_2::geometry {
 
     template<typename CoordinateSystem>
     using point_type = MM2_POINT(CoordinateSystem);
+
+    template<typename CoordinateSystem>
+    using time_point_type = MM2_TIME_POINT(CoordinateSystem);
 
 }
 

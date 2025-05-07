@@ -69,7 +69,7 @@ namespace map_matching_2::io::track {
             geometry::srs_dispatch(_srs_transform,
                     [this, file_num, row_num, &row]<typename InputCS, typename OutputCS>() {
                         using point_type_in = geometry::point_type<InputCS>;
-                        using point_type_out = geometry::point_type<OutputCS>;
+                        using point_type_out = geometry::time_point_type<OutputCS>;
 
                         using coordinate_type_in = typename geometry::data<point_type_in>::coordinate_type;
                         using line_type_in = typename geometry::models<point_type_in>::template line_type<>;
@@ -77,7 +77,8 @@ namespace map_matching_2::io::track {
                                 template multi_line_type<line_type_in>;
 
                         using multi_track_type = geometry::track::multi_track_type<point_type_out>;
-                        using measurement_type_out = typename multi_track_type::measurement_type;
+                        using multi_line_type_out = typename multi_track_type::multi_line_type;
+                        using line_type_out = typename multi_track_type::line_type;
 
                         std::string id;
                         if (_csv_settings.no_id) {
@@ -123,18 +124,16 @@ namespace map_matching_2::io::track {
                             if (_csv_settings.no_parse_time) {
                                 if (is_number(time)) {
                                     timestamp = std::stoul(time);
-                                } else if (_measurements.contains(id)) {
-                                    const auto &measurements =
-                                            std::any_cast<std::vector<measurement_type_out>>(_measurements[id]);
-                                    timestamp = measurements.size();
+                                } else if (_points.contains(id)) {
+                                    const auto &out_line = std::any_cast<line_type_out>(_points[id]);
+                                    timestamp = out_line.size();
                                 }
                             } else {
                                 timestamp = this->parse_time(time, _csv_settings.time_format);
                             }
-                        } else if (_measurements.contains(id)) {
-                            const auto &measurements =
-                                    std::any_cast<std::vector<measurement_type_out>>(_measurements[id]);
-                            timestamp = measurements.size();
+                        } else if (_points.contains(id)) {
+                            const auto &out_line = std::any_cast<line_type_out>(_points[id]);
+                            timestamp = out_line.size();
                         }
 
                         if (_csv_settings.wkt) {
@@ -146,34 +145,34 @@ namespace map_matching_2::io::track {
                             }
                             boost::to_upper(wkt_string);
                             if (wkt_string.starts_with("POINT")) {
-                                point_type_in point;
-                                boost::geometry::read_wkt(wkt_string, point);
+                                point_type_in in_point;
+                                boost::geometry::read_wkt(wkt_string, in_point);
 
-                                if (not _measurements.contains(id)) {
-                                    _measurements.emplace(id, std::vector<measurement_type_out>{});
+                                if (not _points.contains(id)) {
+                                    _points.emplace(id, line_type_out{});
                                 }
-                                auto &measurements = std::any_cast<std::vector<measurement_type_out> &>(
-                                        _measurements[id]);
-                                measurements.emplace_back(measurement_type_out{
-                                        timestamp, std::move(point), _reprojector_variant
-                                });
+                                auto &out_line = std::any_cast<line_type_out &>(_points[id]);
+                                point_type_out out_point;
+                                geometry::reproject_point(in_point, out_point, _reprojector_variant);
+                                out_line.emplace_back(std::move(out_point), timestamp);
                             } else if (wkt_string.starts_with("LINESTRING")) {
                                 if (_csv_settings.no_id) {
                                     id = std::to_string(row_num);
                                 }
                                 if (_selectors.empty() or _selectors.contains(id)) {
-                                    line_type_in line;
-                                    boost::geometry::read_wkt(wkt_string, line);
-                                    _forwarder.pass(multi_track_type{id, std::move(line), _reprojector_variant});
+                                    line_type_in in_line;
+                                    boost::geometry::read_wkt(wkt_string, in_line);
+                                    _forwarder.pass(multi_track_type{id, std::move(in_line), _reprojector_variant});
                                 }
                             } else if (wkt_string.starts_with("MULTILINESTRING")) {
                                 if (_csv_settings.no_id) {
                                     id = std::to_string(row_num);
                                 }
                                 if (_selectors.empty() or _selectors.contains(id)) {
-                                    multi_line_type_in multi_line;
-                                    boost::geometry::read_wkt(wkt_string, multi_line);
-                                    _forwarder.pass(multi_track_type{id, std::move(multi_line), _reprojector_variant});
+                                    multi_line_type_in multi_in_line;
+                                    boost::geometry::read_wkt(wkt_string, multi_in_line);
+                                    _forwarder.pass(
+                                            multi_track_type{id, std::move(multi_in_line), _reprojector_variant});
                                 }
                             } else if (wkt_string.starts_with("GEOMETRYCOLLECTION EMPTY")) {
                                 if (_csv_settings.no_id) {
@@ -199,13 +198,13 @@ namespace map_matching_2::io::track {
                                 y = row[_csv_settings.field_y].get<coordinate_type_in>();
                             }
 
-                            if (not _measurements.contains(id)) {
-                                _measurements.emplace(id, std::vector<measurement_type_out>{});
+                            if (not _points.contains(id)) {
+                                _points.emplace(id, line_type_out{});
                             }
-                            auto &measurements = std::any_cast<std::vector<measurement_type_out> &>(_measurements[id]);
-                            measurements.emplace_back(measurement_type_out{
-                                    timestamp, point_type_in{x, y}, _reprojector_variant
-                            });
+                            auto &out_line = std::any_cast<line_type_out &>(_points[id]);
+                            point_type_out out_point;
+                            geometry::reproject_point(point_type_in{x, y}, out_point, _reprojector_variant);
+                            out_line.emplace_back(std::move(out_point), timestamp);
                         }
 
                         _current_id = id;
@@ -215,32 +214,27 @@ namespace map_matching_2::io::track {
 
         void finish_import() override {
             geometry::srs_dispatch(_srs_transform, [this]<typename InputCS, typename OutputCS>() {
-                using point_type_out = geometry::point_type<OutputCS>;
+                using point_type_out = geometry::time_point_type<OutputCS>;
 
                 using multi_track_type = geometry::track::multi_track_type<point_type_out>;
-                using measurement_type_out = typename multi_track_type::measurement_type;
                 using line_type_out = typename multi_track_type::line_type;
 
-                for (auto &measurement_pair : _measurements) {
-                    const auto &id = measurement_pair.first;
+                for (auto &pair : _points) {
+                    const auto &id = pair.first;
                     if (_selectors.empty() or _selectors.contains(id)) {
-                        auto &measurements = std::any_cast<std::vector<measurement_type_out> &>(
-                                measurement_pair.second);
-                        std::sort(std::begin(measurements), std::end(measurements));
-                        _forwarder.pass(multi_track_type{
-                                id, geometry::measurements2line<measurement_type_out, line_type_out>(
-                                        std::move(measurements))
-                        });
+                        auto &out_line = std::any_cast<line_type_out &>(pair.second);
+                        std::sort(std::begin(out_line), std::end(out_line));
+                        _forwarder.pass(multi_track_type{id, std::move(out_line)});
                     }
                 }
-                _measurements.clear();
+                _points.clear();
             });
         }
 
     private:
         std::string _current_id{};
         bool _id_set{false};
-        boost::unordered::unordered_flat_map<std::string, std::any> _measurements{};
+        boost::unordered::unordered_flat_map<std::string, std::any> _points{};
 
     };
 

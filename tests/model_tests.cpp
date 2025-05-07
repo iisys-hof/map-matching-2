@@ -34,7 +34,8 @@
 
 #include "helper/cache_fixture.hpp"
 
-using point_type = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
+// using point_type = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
+using point_type = map_matching_2::geometry::time_point<double, 2, boost::geometry::cs::cartesian>;
 
 template<typename Point>
 using rich_segment_type = map_matching_2::geometry::rich_segment<

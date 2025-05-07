@@ -26,10 +26,14 @@
 #define MM2_LAZY_RICH_SEGMENT(CS, SEGMENT_TYPE) map_matching_2::geometry::lazy_rich_segment< \
     typename map_matching_2::geometry::models<MM2_POINT(CS)>::SEGMENT_TYPE>
 
+#define MM2_LAZY_RICH_TIME_SEGMENT(CS, SEGMENT_TYPE) map_matching_2::geometry::lazy_rich_segment< \
+    typename map_matching_2::geometry::models<MM2_TIME_POINT(CS)>::SEGMENT_TYPE>
+
 #ifdef EXPLICIT_TEMPLATES
 
 #define MM2_LAZY_RICH_SEGMENT_TEMPLATE(CS, SEGMENT_TYPE) \
-    MM2_EXTERN template class MM2_LAZY_RICH_SEGMENT(CS, SEGMENT_TYPE);
+    MM2_EXTERN template class MM2_LAZY_RICH_SEGMENT(CS, SEGMENT_TYPE); \
+    MM2_EXTERN template class MM2_LAZY_RICH_TIME_SEGMENT(CS, SEGMENT_TYPE);
 
 #define MM2_LAZY_RICH_SEGMENT_TEMPLATE_CS(CS) \
     MM2_LAZY_RICH_SEGMENT_TEMPLATE(CS, MM2_SEGMENT) \

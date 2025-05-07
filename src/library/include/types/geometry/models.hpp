@@ -28,11 +28,18 @@
 #define MM2_LINESTRING(CS, TYPES) map_matching_2::geometry::linestring< \
     MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
 
+#define MM2_TIME_LINESTRING(CS, TYPES) map_matching_2::geometry::linestring< \
+    MM2_TIME_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
+
 #define MM2_IMPORT_LINESTRING(CS, TYPES) map_matching_2::geometry::linestring< \
     MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_FAST_COUNTING_ALLOCATOR(TYPES)>
 
 #define MM2_MULTI_LINESTRING(CS, TYPES) map_matching_2::geometry::multi_linestring< \
     map_matching_2::geometry::linestring<MM2_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>, \
+    MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
+
+#define MM2_TIME_MULTI_LINESTRING(CS, TYPES) map_matching_2::geometry::multi_linestring< \
+    map_matching_2::geometry::linestring<MM2_TIME_POINT(CS), MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>, \
     MM2_VECTOR(TYPES), MM2_ALLOCATOR(TYPES)>
 
 #define MM2_IMPORT_MULTI_LINESTRING(CS, TYPES) map_matching_2::geometry::multi_linestring< \
@@ -43,6 +50,7 @@
 
 #define MM2_LINESTRING_TEMPLATE(CS, TYPES) \
     MM2_EXTERN template class MM2_LINESTRING(CS, TYPES); \
+    MM2_EXTERN template class MM2_TIME_LINESTRING(CS, TYPES); \
     MM2_EXTERN template class MM2_IMPORT_LINESTRING(CS, TYPES);
 
 #define MM2_LINESTRING_TEMPLATE_CS(CS) \
@@ -55,6 +63,7 @@ MM2_LINESTRING_TEMPLATE_CS(MM2_CARTESIAN)
 
 #define MM2_MULTI_LINESTRING_TEMPLATE(CS, TYPES) \
     MM2_EXTERN template class MM2_MULTI_LINESTRING(CS, TYPES); \
+    MM2_EXTERN template class MM2_TIME_MULTI_LINESTRING(CS, TYPES); \
     MM2_EXTERN template class MM2_IMPORT_MULTI_LINESTRING(CS, TYPES);
 
 #define MM2_MULTI_LINESTRING_TEMPLATE_CS(CS) \

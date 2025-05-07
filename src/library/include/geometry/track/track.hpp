@@ -16,11 +16,13 @@
 #ifndef MAP_MATCHING_2_GEOMETRY_TRACK_TRACK_HPP
 #define MAP_MATCHING_2_GEOMETRY_TRACK_TRACK_HPP
 
+#include <string>
+
 #include <boost/unordered/unordered_flat_set.hpp>
 
-#include "geometry/rich_type/traits/rich_line.hpp"
+#include "types/geometry/reprojector.hpp"
 
-#include "measurement.hpp"
+#include "geometry/rich_type/traits/rich_line.hpp"
 
 namespace map_matching_2::geometry::track {
 
@@ -36,7 +38,6 @@ namespace map_matching_2::geometry::track {
         using length_type = typename rich_line_traits<rich_line_type>::length_type;
         using angle_type = typename rich_line_traits<rich_line_type>::angle_type;
         using coordinate_type = typename rich_line_traits<rich_line_type>::coordinate_type;
-        using measurement_type = measurement<point_type>;
 
         std::string id;
         rich_line_type rich_line;
