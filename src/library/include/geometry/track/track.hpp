@@ -74,7 +74,7 @@ namespace map_matching_2::geometry::track {
         }
 
         [[nodiscard]] static std::vector<std::string> header() {
-            return {"id", "geometry", "measurements"};
+            return {"id", "geometry"};
         }
 
         [[nodiscard]] std::vector<std::string> row() const {
