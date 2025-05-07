@@ -44,12 +44,12 @@ namespace map_matching_2::io::track {
 
         using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
 
-        constexpr csv_track_importer(std::vector<std::string> filenames, const std::vector<std::string> &selectors,
-                io::csv_settings csv_settings, forwarder_type &forwarder, const geometry::srs_transform &srs_transform,
+        constexpr csv_track_importer(std::vector<std::string> filenames, const io::csv_settings &csv_settings,
+                forwarder_type &forwarder, const geometry::srs_transform &srs_transform,
                 const geometry::point_reprojector_variant &reprojector_variant)
-            : csv_importer{std::move(filenames), csv_settings.skip_lines},
-            _forwarder{forwarder}, _srs_transform{srs_transform}, _reprojector_variant{reprojector_variant},
-            _csv_settings{std::move(csv_settings)}, _selectors{std::cbegin(selectors), std::cend(selectors)} {}
+            : csv_importer{std::move(filenames), csv_settings.skip_lines}, _forwarder{forwarder},
+            _srs_transform{srs_transform}, _reprojector_variant{reprojector_variant}, _csv_settings{csv_settings},
+            _selectors{std::cbegin(csv_settings.selectors), std::cend(csv_settings.selectors)} {}
 
     protected:
         forwarder_type &_forwarder;

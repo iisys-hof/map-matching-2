@@ -60,23 +60,13 @@ namespace map_matching_2::io::track {
                     continue;
                 }
 
-                std::ifstream gpx;
-                gpx.open(filenames[i]);
+                const auto &filename = filenames[i];
 
+                std::ifstream gpx{filename, std::ios::in};
                 if (gpx.is_open() and gpx.good()) {
-                    gpx::Parser parser(nullptr);
-                    gpx::GPX *root = parser.parse(gpx);
-
-                    if (root == nullptr) {
-                        std::clog << std::format(
-                                "Parsing of gpx file '{}' failed due to {} on line {} and column {}, skipping ...\n",
-                                filenames[i], parser.errorText(), parser.errorLineNumber(),
-                                parser.errorColumnNumber()) << std::endl;
-                    } else {
-                        _parse_dispatch(root);
-                    }
+                    _read_gpx(gpx, filename);
                 } else {
-                    std::clog << std::format("Could not open gpx file '{}', skipping ...\n", filenames[i]) << std::endl;
+                    std::clog << std::format("Could not open gpx file '{}', skipping ...\n", filename) << std::endl;
                 }
             }
         }
@@ -90,6 +80,20 @@ namespace map_matching_2::io::track {
         bool _no_id, _no_parse_time;
         std::string _time_format;
         std::size_t _counter{0};
+
+        void _read_gpx(std::istream &gpx, const std::string &filename) {
+            gpx::Parser parser(nullptr);
+            gpx::GPX *root = parser.parse(gpx);
+
+            if (root == nullptr) {
+                std::clog << std::format(
+                        "Parsing of gpx file '{}' failed due to {} on line {} and column {}, skipping ...\n",
+                        filename, parser.errorText(), parser.errorLineNumber(),
+                        parser.errorColumnNumber()) << std::endl;
+            } else {
+                _parse_dispatch(root);
+            }
+        }
 
         void _parse_dispatch(gpx::GPX *root) {
             geometry::srs_dispatch(_srs_transform, [this, root]<typename InputCS, typename OutputCS>() {

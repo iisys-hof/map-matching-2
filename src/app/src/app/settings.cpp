@@ -123,6 +123,60 @@ namespace map_matching_2::app {
         return settings;
     }
 
+    io::track::importer_settings _importer_settings(const match_data &data) {
+        io::track::importer_settings settings{};
+
+        if (data.tracks.file_extension == FILE_TYPE_CSV) {
+            settings.file_extension = io::track::importer_settings::FILE_TYPE::CSV;
+        } else if (data.tracks.file_extension == FILE_TYPE_GPX) {
+            settings.file_extension = io::track::importer_settings::FILE_TYPE::GPX;
+        }
+
+        settings.files = data.tracks.files;
+
+        settings.tracks_srs_transform = data.srs_tracks.srs_transform;
+
+        settings.csv_settings = _csv_tracks_settings(data.csv);
+
+        return settings;
+    }
+
+    io::track::importer_settings _matches_importer_settings(const compare_data &data) {
+        io::track::importer_settings settings{};
+
+        if (data.match.file_extension == FILE_TYPE_CSV) {
+            settings.file_extension = io::track::importer_settings::FILE_TYPE::CSV;
+        } else if (data.match.file_extension == FILE_TYPE_GPX) {
+            settings.file_extension = io::track::importer_settings::FILE_TYPE::GPX;
+        }
+
+        settings.files = data.match.files;
+
+        settings.tracks_srs_transform = data.srs_match.srs_transform;
+
+        settings.csv_settings = _csv_tracks_settings(data.csv_match);
+
+        return settings;
+    }
+
+    io::track::importer_settings _compares_importer_settings(const compare_data &data) {
+        io::track::importer_settings settings{};
+
+        if (data.comparison.file_extension == FILE_TYPE_CSV) {
+            settings.file_extension = io::track::importer_settings::FILE_TYPE::CSV;
+        } else if (data.comparison.file_extension == FILE_TYPE_GPX) {
+            settings.file_extension = io::track::importer_settings::FILE_TYPE::GPX;
+        }
+
+        settings.files = data.comparison.files;
+
+        settings.tracks_srs_transform = data.srs_compare.srs_transform;
+
+        settings.csv_settings = _csv_tracks_settings(data.csv_compare);
+
+        return settings;
+    }
+
     io::csv_settings _csv_settings(const csv_data &csv) {
         io::csv_settings csv_settings{};
 
@@ -138,6 +192,7 @@ namespace map_matching_2::app {
         csv_settings.field_y = csv.y;
         csv_settings.field_geometry = csv.geometry;
         csv_settings.id_aggregator = csv.id_aggregator;
+        csv_settings.selectors = csv.selectors;
 
         csv_settings.no_parse_time = true;
 

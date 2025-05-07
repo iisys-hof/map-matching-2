@@ -18,12 +18,11 @@
 #include "app/compare.hpp"
 #include "app/settings.hpp"
 
-#include "types/io/track/csv_track_importer.hpp"
-#include "types/io/track/gpx_track_importer.hpp"
-
 #include "compare/comparator/comparator_forwarder_data.hpp"
 #include "compare/comparator/comparator_forwarder_matches.hpp"
 #include "compare/comparator/comparator_forwarder_compares.hpp"
+
+#include "io/track/importer_dispatcher.hpp"
 
 #include "util/benchmark.hpp"
 
@@ -51,43 +50,23 @@ namespace map_matching_2::app {
     void _read_ground_truth(compare::comparator_forwarder_data &forwarder_data, const compare_data &data) {
         compare::comparator_forwarder_compares forwarder_compares{forwarder_data};
         const auto compares_reprojector_variant = geometry::create_point_reprojector(data.srs_compare.srs_transform);
-        if (data.comparison.file_extension == FILE_TYPE_CSV) {
-            io::track::csv_track_importer csv_ground_truth_importer{
-                    data.comparison.files, data.csv_compare.selectors, _csv_settings(data.csv_compare),
-                    forwarder_compares, data.srs_compare.srs_transform, compares_reprojector_variant
-            };
-            verbose_frame("Reading Ground Truth", [&]() {
-                csv_ground_truth_importer.read();
-            });
-        } else if (data.comparison.file_extension == FILE_TYPE_GPX) {
-            io::track::gpx_track_importer gpx_ground_truth_importer{
-                    data.comparison.files, data.csv_compare.selectors, data.csv_compare.no_id,
-                    data.csv_compare.time_format, data.csv_compare.no_parse_time,
-                    forwarder_compares, data.srs_compare.srs_transform, compares_reprojector_variant
-            };
-            verbose_frame("Reading Ground Truth", [&]() {
-                gpx_ground_truth_importer.read();
-            });
-        }
+
+        io::track::importer_dispatcher compares_importer_dispatcher{
+                forwarder_compares, _compares_importer_settings(data), compares_reprojector_variant
+        };
+        verbose_frame("Reading Ground Truth", [&]() {
+            compares_importer_dispatcher.read_tracks();
+        });
     }
 
     void _read_matches(compare::comparator_forwarder_data &forwarder_data, const compare_data &data) {
         compare::comparator_forwarder_matches forwarder_matches{forwarder_data};
         const auto matches_reprojector_variant = geometry::create_point_reprojector(data.srs_match.srs_transform);
-        if (data.match.file_extension == FILE_TYPE_CSV) {
-            io::track::csv_track_importer csv_matches_importer{
-                    data.match.files, data.csv_match.selectors, _csv_settings(data.csv_match),
-                    forwarder_matches, data.srs_match.srs_transform, matches_reprojector_variant
-            };
-            csv_matches_importer.read();
-        } else if (data.match.file_extension == FILE_TYPE_GPX) {
-            io::track::gpx_track_importer gpx_matches_importer{
-                    data.match.files, data.csv_match.selectors, data.csv_match.no_id,
-                    data.csv_match.time_format, data.csv_match.no_parse_time,
-                    forwarder_matches, data.srs_match.srs_transform, matches_reprojector_variant
-            };
-            gpx_matches_importer.read();
-        }
+
+        io::track::importer_dispatcher matches_importer_dispatcher{
+                forwarder_matches, _matches_importer_settings(data), matches_reprojector_variant
+        };
+        matches_importer_dispatcher.read_tracks();
     }
 
     void _read_compares(std::unique_ptr<compare::comparator> &comparator, const compare_data &data) {

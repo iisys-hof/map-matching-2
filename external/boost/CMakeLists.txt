@@ -38,7 +38,8 @@ if (NOT boost_EXISTS)
         set(USER_CONFIG_FILE "${boost_SOURCE_DIR}/tools/build/src/user-config.jam")
 
         file(WRITE "${USER_CONFIG_FILE}"
-                "using ${_compiler} : ${_compiler_version} : \"${CMAKE_CXX_COMPILER}\" ;")
+                "using ${_compiler} : ${_compiler_version} : \"${CMAKE_CXX_COMPILER}\" ;\n")
+
         set(_toolset "toolset=${_compiler}")
 
         message(STATUS "Set boost toolset to ${_toolset}")

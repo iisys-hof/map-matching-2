@@ -50,6 +50,8 @@ namespace map_matching_2::io {
         std::size_t _skip_lines;
         std::vector<std::string> _columns;
 
+        void _read_csv(csv::CSVReader &csv, std::size_t file_num);
+
     };
 
 }

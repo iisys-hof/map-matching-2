@@ -30,7 +30,7 @@ namespace map_matching_2::io {
 
         const auto &filenames = this->filenames();
         for (std::size_t i = 0; i < filenames.size(); ++i) {
-            const auto filename = filenames[i];
+            const auto &filename = filenames[i];
 
             if (not std::filesystem::exists(filename)) {
                 std::cerr << std::format("file '{}' does not exist, skipping ...", filename) << std::endl;
@@ -38,19 +38,22 @@ namespace map_matching_2::io {
             }
 
             csv::CSVReader csv{filename, format};
-
-            _columns = csv.get_col_names();
-
-            std::size_t l = 0, r = 0;
-            for (const auto &row : csv) {
-                if (l >= _skip_lines) {
-                    process_row(i, r++, row);
-                }
-                l++;
-            }
+            _read_csv(csv, i);
         }
 
         finish_import();
+    }
+
+    void csv_importer::_read_csv(csv::CSVReader &csv, const std::size_t file_num) {
+        _columns = csv.get_col_names();
+
+        std::size_t l = 0, r = 0;
+        for (const auto &row : csv) {
+            if (l >= _skip_lines) {
+                process_row(file_num, r++, row);
+            }
+            l++;
+        }
     }
 
 }

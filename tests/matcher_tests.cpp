@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 auto reprojector = map_matching_2::geometry::create_point_reprojector(srs_transform);
 
                 map_matching_2::io::track::csv_track_importer matches_importer{
-                        std::vector{matches_filename}, std::vector<std::string>{}, csv_settings,
+                        std::vector{matches_filename}, csv_settings,
                         comparator_matches_forwarder, srs_transform, reprojector
                 };
                 matches_importer.read();

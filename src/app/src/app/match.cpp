@@ -19,12 +19,11 @@
 
 namespace map_matching_2::app {
 
-    void _read_seattle(const match_data &data) {
+    void _read_seattle(const match_data &data, const geometry::point_reprojector_variant &reprojector_variant) {
         const auto output_file = std::filesystem::path{data.match_output.output} / data.match_output.filename;
         const auto output_filename = output_file.string();
 
         io::track::track_exporter track_exporter{output_filename, data.console.console, global.verbose};
-        const auto reprojector_variant = geometry::create_point_reprojector(data.srs_tracks.srs_transform);
         io::track::seattle_ground_truth_importer seattle_ground_truth_importer{
                 data.tracks.files, track_exporter, data.srs_tracks.srs_transform, reprojector_variant
         };

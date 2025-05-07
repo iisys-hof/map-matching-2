@@ -20,6 +20,7 @@
 
 #include "matching/settings.hpp"
 #include "compare/settings.hpp"
+#include "io/track/importer_settings.hpp"
 #include "io/csv_settings.hpp"
 
 namespace map_matching_2::app {
@@ -27,6 +28,12 @@ namespace map_matching_2::app {
     matching::settings _match_settings(const match_data &data);
 
     compare::settings _compare_settings(const compare_data &data);
+
+    io::track::importer_settings _importer_settings(const match_data &data);
+
+    io::track::importer_settings _matches_importer_settings(const compare_data &data);
+
+    io::track::importer_settings _compares_importer_settings(const compare_data &data);
 
     io::csv_settings _csv_settings(const csv_data &csv);
 
