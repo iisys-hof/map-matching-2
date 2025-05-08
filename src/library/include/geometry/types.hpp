@@ -24,6 +24,14 @@ namespace map_matching_2::geometry {
     template<is_point Point>
     struct models {
         using point_type = Point;
+        using explicit_point_type = boost::geometry::model::point<
+            boost::geometry::coordinate_type_t<Point>,
+            boost::geometry::dimension_v<Point>,
+            boost::geometry::coordinate_system_t<Point>>;
+        using explicit_time_point_type = geometry::time_point<
+            boost::geometry::coordinate_type_t<Point>,
+            boost::geometry::dimension_v<Point>,
+            boost::geometry::coordinate_system_t<Point>>;
         template<template<typename, typename> typename Container = std::vector,
             template<typename> typename Allocator = std::allocator>
         using multi_point_type = boost::geometry::model::multi_point<point_type, Container, Allocator>;

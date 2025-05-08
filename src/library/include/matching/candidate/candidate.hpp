@@ -26,8 +26,7 @@ namespace map_matching_2::matching {
         using vertex_descriptor = VertexDescriptor;
         using edge_descriptor = EdgeDescriptor;
         using track_type = Track;
-        using point_type = geometry::point_type<
-            typename geometry::data<typename track_type::point_type>::coordinate_system_type>;
+        using point_type = typename geometry::models<typename track_type::point_type>::explicit_point_type;
         using distance_type = typename geometry::data<point_type>::distance_type;
 
         using candidate_node_type = candidate_node<vertex_descriptor, distance_type>;
@@ -39,7 +38,7 @@ namespace map_matching_2::matching {
         std::vector<candidate_node_type> nodes;
         std::vector<candidate_edge_type> edges;
 
-        constexpr candidate(const track_type &track, std::size_t index, const bool next_equal,
+        constexpr candidate(const track_type &track, const std::size_t index, const bool next_equal,
                 std::vector<candidate_node_type> nodes, std::vector<candidate_edge_type> edges)
             : track{&track}, index{index}, next_equal{next_equal}, nodes{std::move(nodes)}, edges{std::move(edges)} {
             assert(index < track.rich_line.size());
