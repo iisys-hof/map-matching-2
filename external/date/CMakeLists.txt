@@ -10,9 +10,11 @@ FetchContent_Declare(date
         GIT_TAG v3.0.3
         EXCLUDE_FROM_ALL)
 
-FetchContent_MakeAvailable(date)
-
 set(ENABLE_DATE_INSTALL OFF CACHE BOOL "disable date install" FORCE)
+set(USE_SYSTEM_TZ_DB ON CACHE BOOL "use system timezone database" FORCE)
+set(BUILD_TZ_LIB ON CACHE BOOL "enable date timezone library" FORCE)
+
+FetchContent_MakeAvailable(date)
 
 if (NOT BUILD_ONLY_LIBRARY)
     install(FILES

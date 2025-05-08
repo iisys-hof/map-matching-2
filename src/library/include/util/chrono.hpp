@@ -23,6 +23,8 @@ namespace map_matching_2::util {
 
     [[nodiscard]] std::uint64_t parse_time(const std::string &time_str, const std::string &format);
 
+    [[nodiscard]] std::string format_time(std::uint64_t time, const std::string &locale);
+
 }
 
 #endif //MAP_MATCHING_2_UTIL_CHRONO_HPP

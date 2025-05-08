@@ -16,6 +16,7 @@
 #include "util/chrono.hpp"
 
 #include <cassert>
+#include <format>
 
 // __clang_major__ >= 19 # chrono parse not yet supported
 #if (__cplusplus >= 202002L and (defined(__GNUC__) and __GNUC__ >= 14)) or \
@@ -25,6 +26,7 @@
 #else
 #define HAS_CHRONO_PARSE 0
 #include <date/date.h>
+#include <date/tz.h>
 #endif
 
 namespace map_matching_2::util {
@@ -41,6 +43,19 @@ namespace map_matching_2::util {
         const auto count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
         assert(count >= 0);
         return static_cast<std::uint64_t>(count);
+    }
+
+    std::string format_time(const std::uint64_t time, const std::string &locale) {
+        std::ostringstream oss;
+        const auto seconds = std::chrono::seconds{time};
+        const auto sys_time = std::chrono::sys_seconds{seconds};
+#if HAS_CHRONO_PARSE
+        const auto zoned_time = std::chrono::zoned_seconds{locale, sys_time};
+#else
+        const auto zoned_time = date::zoned_seconds{locale, sys_time};
+#endif
+        oss << zoned_time;
+        return oss.str();
     }
 
 }

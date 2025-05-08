@@ -159,6 +159,7 @@ target_link_libraries(library
         Boost::thread
         Boost::serialization
         date::date
+        date::date-tz
         gpx
         ${OSMIUM_IO_LIBRARIES})
 

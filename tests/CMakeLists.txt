@@ -34,6 +34,7 @@ target_sources(map_matching_2_tests
         network_tests.cpp
         route_tests.cpp
         serialization_tests.cpp
+        util_tests.cpp
 )
 
 target_compile_definitions(map_matching_2_tests
