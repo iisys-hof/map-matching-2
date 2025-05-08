@@ -110,7 +110,7 @@ namespace map_matching_2::matching {
             util::time_helper _time_helper{settings.max_time};
             matching::algorithms<network_type> _algorithms{_network, _time_helper};
 
-            match_result_type _match_result;
+            match_result_type _match_result{settings};
             _match_result.environments.reserve(multi_track.size());
             _match_result.learner.reserve(multi_track.size());
 

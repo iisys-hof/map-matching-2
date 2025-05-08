@@ -31,7 +31,7 @@
 namespace map_matching_2::io::results {
 
     struct candidate_result {
-        std::string id, projection, from, to;
+        std::string id, time, projection, from, to;
         std::size_t part_index, set_index, candidate_index;
         double distance;
         std::uint64_t edge_id;
@@ -91,10 +91,20 @@ namespace map_matching_2::io::results {
                             const auto &edge = network.edge(candidate_edge.edge_desc);
 
                             bool is_result{false};
-                            std::string projection_wkt{}, from_wkt{}, to_wkt{};
+                            std::string time{}, projection_wkt{}, from_wkt{}, to_wkt{};
 
                             for (const auto &_column : _columns) {
                                 switch (_column) {
+                                    case column::TIME: {
+                                        const auto _time = candidate.point().timestamp();
+                                        if (match_result.match_settings.export_timestamps) {
+                                            time = std::to_string(_time);
+                                        } else {
+                                            time = util::format_time(_time,
+                                                    match_result.match_settings.export_time_zone);
+                                        }
+                                    }
+                                    break;
                                     case column::PROJECTION:
                                         projection_wkt = geometry::to_wkt(segment_type{
                                                 candidate.point(), candidate_edge.projection_point
@@ -107,8 +117,8 @@ namespace map_matching_2::io::results {
                                         to_wkt = geometry::to_wkt(candidate_edge.to->line());
                                         break;
                                     case column::IS_RESULT:
-                                        if (auto policy_search = policy_map.find(j); policy_search != policy_map.
-                                            end()) {
+                                        if (auto policy_search = policy_map.find(j);
+                                            policy_search != policy_map.end()) {
                                             const auto &policy_edges_set = policy_search->second;
                                             is_result = policy_edges_set.find(k) != policy_edges_set.end();
                                         }
@@ -119,7 +129,7 @@ namespace map_matching_2::io::results {
                             }
 
                             _results.emplace_back(candidate_result{
-                                    match_result.track.id,
+                                    match_result.track.id, time,
                                     std::move(projection_wkt), std::move(from_wkt), std::move(to_wkt),
                                     i, j, k,
                                     candidate_edge.distance,
@@ -146,6 +156,7 @@ namespace map_matching_2::io::results {
             PART_INDEX,
             SET_INDEX,
             CANDIDATE_INDEX,
+            TIME,
             PROJECTION,
             DISTANCE,
             FROM,
@@ -168,6 +179,8 @@ namespace map_matching_2::io::results {
                     _columns.emplace_back(column::SET_INDEX);
                 } else if (_column_string == "candidate_index") {
                     _columns.emplace_back(column::CANDIDATE_INDEX);
+                } else if (_column_string == "time") {
+                    _columns.emplace_back(column::TIME);
                 } else if (_column_string == "projection") {
                     _columns.emplace_back(column::PROJECTION);
                 } else if (_column_string == "distance") {
@@ -209,6 +222,9 @@ namespace map_matching_2::io::results {
                                 break;
                             case column::CANDIDATE_INDEX:
                                 row.emplace_back(std::to_string(_result.candidate_index));
+                                break;
+                            case column::TIME:
+                                row.emplace_back(_result.time);
                                 break;
                             case column::PROJECTION:
                                 row.emplace_back(_result.projection);

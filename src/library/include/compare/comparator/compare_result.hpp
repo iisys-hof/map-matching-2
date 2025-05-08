@@ -18,6 +18,8 @@
 
 #include "geometry/algorithm/compare/comparison.hpp"
 
+#include "../settings.hpp"
+
 namespace map_matching_2::compare {
 
     template<typename MultiTrack>
@@ -26,6 +28,7 @@ namespace map_matching_2::compare {
         using multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
         using rich_segment_type = typename multi_track_type::rich_segment_type;
 
+        const compare::settings &compare_settings;
         multi_track_type match;
         multi_track_type ground_truth;
         geometry::comparison<rich_segment_type> comparison;

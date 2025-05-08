@@ -27,11 +27,13 @@ namespace map_matching_2::app {
 
         settings.tracks_srs_transform = data.srs_tracks.srs_transform;
 
+        settings.export_timestamps = data.match_output.export_timestamps;
         settings.export_edges = data.match_output.export_edges;
         settings.export_edge_ids = data.match_output.export_edge_ids;
         settings.join_merges = data.match_output.join_merges;
         settings.output = data.match_output.output;
         settings.filename = data.match_output.filename;
+        settings.export_time_zone = data.match_output.export_time_zone;
         settings.export_candidates = data.expo.candidates;
         settings.console = data.console.console;
 

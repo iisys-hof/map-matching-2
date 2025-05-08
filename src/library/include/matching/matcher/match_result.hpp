@@ -20,6 +20,8 @@
 
 #include "matching/traits/network.hpp"
 
+#include "../settings.hpp"
+
 namespace map_matching_2::matching {
 
     template<typename Learner>
@@ -32,6 +34,7 @@ namespace map_matching_2::matching {
         using route_type = typename network_traits<network_type>::route_type;
         using policy_type = typename network_traits<network_type>::policy_type;
 
+        const matching::settings &match_settings;
         std::vector<environment_type> environments;
         std::vector<learner_type> learner;
         multi_track_type track;

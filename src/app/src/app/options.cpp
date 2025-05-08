@@ -28,6 +28,7 @@
 #include "io/network/osm_pattern.hpp"
 #include "compare/comparator/compare_output_settings.hpp"
 #include "matching/matcher/matcher_output_settings.hpp"
+#include "util/chrono.hpp"
 #include "util/version.hpp"
 
 namespace map_matching_2::app {
@@ -78,6 +79,11 @@ namespace map_matching_2::app {
         boost::split(_column_strings, columns, boost::is_any_of(","));
         export_edge_ids = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "edge_ids") !=
                 std::cend(_column_strings);
+
+        boost::trim(export_time_zone);
+        if (export_time_zone.empty()) {
+            export_time_zone = "UTC";
+        }
 
         if (not vm["quiet"].empty() and not vm["quiet"].as<bool>() and
             not vm["console"].empty() and not vm["console"].as<bool>()) {
@@ -473,10 +479,20 @@ namespace map_matching_2::app {
                         "  \ttrack: original track as it was imported as WKT\n"
                         "  \tprepared: prepared track as WKT after track sanitation, i.e., remove duplicates, median-merge\n"
                         "  \tmatch: map matching result as WKT\n"
+                        "  \tstart_time: start time of track, i.e., first point time\n"
+                        "  \tend_time: end time of track, i.e., last point time\n"
                         "  \ttrack_length: track length in meter\n"
                         "  \tprepared_length: prepared track length in meter\n"
                         "  \tmatch_length: match length in meter\n"
+                        "  \ttrack_times: list of track point times (off by default)\n"
+                        "  \tprepared_times: list of prepared track point times (off by default)\n"
                         "  \tedge_ids: list of original edge IDs (off by default; if used, combine with simplify osm-aware")
+                ("export-timestamps", po::value<bool>(&data.export_timestamps)->default_value(false, "off"),
+                        "export unix timestamps for start_time, end_time, track_times, and prepared_times; "
+                        "by default is off and uses a human readable time format with the UTC time zone, see below")
+                ("export-time-zone",
+                        po::value<std::string>(&data.export_time_zone)->default_value(util::current_time_zone()),
+                        "time-zone to use for time export; if empty, uses UTC; by default uses system time zone")
                 ("export-edges", po::value<bool>(&data.export_edges)->default_value(false, "off"),
                         "export matched routes based on the complete network edges instead of the actual parts, "
                         "this is only useful if the routes are later compared to matches that come from a list of edge IDs, "
@@ -754,6 +770,7 @@ namespace map_matching_2::app {
                         "  \tpart_index: index of the track part (i.e., for multi-line tracks)\n"
                         "  \tset_index: index of the candidate set\n"
                         "  \tcandidate_index: index of the candidate within a candidate set\n"
+                        "  \ttime: track point time\n"
                         "  \tprojection: candidate projection from track point to road network point\n"
                         "  \tdistance: distance in meter\n"
                         "  \tfrom: route from start of the road network edge to the candidate point as WKT\n"

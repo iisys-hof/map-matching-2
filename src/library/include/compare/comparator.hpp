@@ -71,7 +71,7 @@ namespace map_matching_2::compare {
                     settings.debug
             };
 
-            comparator_result_type _compare_result;
+            comparator_result_type _compare_result{settings};
 
             result_type result;
             double duration = util::benchmark([&]() {

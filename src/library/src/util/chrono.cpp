@@ -21,10 +21,10 @@
 // __clang_major__ >= 19 # chrono parse not yet supported
 #if (__cplusplus >= 202002L and (defined(__GNUC__) and __GNUC__ >= 14)) or \
     (defined(_MSC_VER) and _MSC_VER >= 1939)
-#define HAS_CHRONO_PARSE 1
+#define HAS_CHRONO 1
 #include <chrono>
 #else
-#define HAS_CHRONO_PARSE 0
+#define HAS_CHRONO 0
 #include <date/date.h>
 #include <date/tz.h>
 #endif
@@ -33,7 +33,7 @@ namespace map_matching_2::util {
 
     std::uint64_t parse_time(const std::string &time_str, const std::string &format) {
         std::istringstream time_str_stream{time_str};
-#if HAS_CHRONO_PARSE
+#if HAS_CHRONO
         std::chrono::sys_time<std::chrono::milliseconds> time;
         time_str_stream >> std::chrono::parse(format, time);
 #else
@@ -49,13 +49,21 @@ namespace map_matching_2::util {
         std::ostringstream oss;
         const auto seconds = std::chrono::seconds{time};
         const auto sys_time = std::chrono::sys_seconds{seconds};
-#if HAS_CHRONO_PARSE
+#if HAS_CHRONO
         const auto zoned_time = std::chrono::zoned_seconds{locale, sys_time};
 #else
         const auto zoned_time = date::zoned_seconds{locale, sys_time};
 #endif
         oss << zoned_time;
         return oss.str();
+    }
+
+    std::string current_time_zone() {
+#if HAS_CHRONO
+        return std::string{std::chrono::current_zone()->name()};
+#else
+        return date::current_zone()->name();
+#endif
     }
 
 }

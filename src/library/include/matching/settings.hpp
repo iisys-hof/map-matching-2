@@ -43,8 +43,8 @@ namespace map_matching_2::matching {
 
         geometry::srs_transform tracks_srs_transform{};
 
-        bool export_edges{false}, export_edge_ids{false}, join_merges{true};
-        std::string output{}, filename{}, export_candidates{};
+        bool export_timestamps{false}, export_edges{false}, export_edge_ids{false}, join_merges{true};
+        std::string output{}, filename{}, export_time_zone{}, export_candidates{};
 
         bool console{false};
 

@@ -25,6 +25,8 @@ namespace map_matching_2::util {
 
     [[nodiscard]] std::string format_time(std::uint64_t time, const std::string &locale);
 
+    [[nodiscard]] std::string current_time_zone();
+
 }
 
 #endif //MAP_MATCHING_2_UTIL_CHRONO_HPP

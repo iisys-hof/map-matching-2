@@ -92,8 +92,8 @@ namespace map_matching_2::app {
     };
 
     struct match_output_data : output_data {
-        bool export_edges, export_edge_ids, join_merges;
-        std::string columns;
+        bool export_timestamps, export_edges, export_edge_ids, join_merges;
+        std::string columns, export_time_zone;
 
         void correct(const po::variables_map &vm) override;
     };

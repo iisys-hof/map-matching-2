@@ -21,11 +21,11 @@
 namespace map_matching_2::matching {
 
     static const std::string DEFAULT_COLUMNS{
-            "id,aborted,duration,track,prepared,match,track_length,prepared_length,match_length"
+            "id,aborted,duration,track,prepared,match,start_time,end_time,track_length,prepared_length,match_length"
     };
 
     static const std::string DEFAULT_CANDIDATE_COLUMNS{
-            "id,part_index,set_index,candidate_index,projection,distance,from,to,edge_id,is_result"
+            "id,part_index,set_index,candidate_index,time,projection,distance,from,to,edge_id,is_result"
     };
 
     struct matcher_output_settings {

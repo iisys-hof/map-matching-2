@@ -22,10 +22,12 @@
 
 #include "geometry/common.hpp"
 
+#include "util/chrono.hpp"
+
 namespace map_matching_2::io::results {
 
     struct match_csv_task {
-        std::string id, track, prepared, match, edge_ids;
+        std::string id, track, prepared, match, start_time, end_time, track_times, prepared_times, edge_ids;
         bool aborted;
         double duration, track_length, prepared_length, match_length;
     };
@@ -49,7 +51,8 @@ namespace map_matching_2::io::results {
             using length_type = typename MatchResult::multi_track_type::length_type;
             static constexpr auto length_zero = geometry::default_float_type<length_type>::v0;
 
-            std::string track_wkt{}, prepared_wkt{}, match_wkt{}, edge_ids{};
+            std::string track_wkt{}, prepared_wkt{}, match_wkt{}, start_time{}, end_time{}, track_times{},
+                    prepared_times{}, edge_ids{};
             length_type track_length{length_zero}, prepared_length{length_zero}, match_length{length_zero};
 
             if (this->is_active()) {
@@ -64,6 +67,36 @@ namespace map_matching_2::io::results {
                         case column::MATCH:
                             match_wkt = match_result.match.wkt();
                             break;
+                        case column::START_TIME:
+                            if (not match_result.track.multi_rich_line.empty()) {
+                                const auto &multi_rich_line = match_result.track.multi_rich_line;
+                                if (not multi_rich_line.front().empty()) {
+                                    const auto &rich_line = multi_rich_line.front();
+                                    const auto time = rich_line.front().timestamp();
+                                    if (match_result.match_settings.export_timestamps) {
+                                        start_time = std::to_string(time);
+                                    } else {
+                                        start_time = util::format_time(time,
+                                                match_result.match_settings.export_time_zone);
+                                    }
+                                }
+                            }
+                            break;
+                        case column::END_TIME:
+                            if (not match_result.track.multi_rich_line.empty()) {
+                                const auto &multi_rich_line = match_result.track.multi_rich_line;
+                                if (not multi_rich_line.back().empty()) {
+                                    const auto &rich_line = multi_rich_line.back();
+                                    const auto time = rich_line.back().timestamp();
+                                    if (match_result.match_settings.export_timestamps) {
+                                        end_time = std::to_string(time);
+                                    } else {
+                                        end_time = util::format_time(time,
+                                                match_result.match_settings.export_time_zone);
+                                    }
+                                }
+                            }
+                            break;
                         case column::TRACK_LENGTH:
                             if (match_result.track.multi_rich_line.has_length()) {
                                 track_length = match_result.track.multi_rich_line.length();
@@ -77,6 +110,50 @@ namespace map_matching_2::io::results {
                         case column::MATCH_LENGTH:
                             if (match_result.match.has_length()) {
                                 match_length = match_result.match.length();
+                            }
+                            break;
+                        case column::TRACK_TIMES:
+                            if (not match_result.track.multi_rich_line.empty()) {
+                                std::ostringstream oss;
+                                bool first = true;
+                                for (const auto &rich_line : match_result.track.multi_rich_line.rich_lines()) {
+                                    for (const auto &point : rich_line.line()) {
+                                        if (not first) {
+                                            oss << ',';
+                                        }
+                                        first = false;
+                                        const auto time = point.timestamp();
+                                        if (match_result.match_settings.export_timestamps) {
+                                            oss << time;
+                                        } else {
+                                            oss << util::format_time(time,
+                                                    match_result.match_settings.export_time_zone);
+                                        }
+                                    }
+                                }
+                                track_times = oss.str();
+                            }
+                            break;
+                        case column::PREPARED_TIMES:
+                            if (not match_result.prepared.multi_rich_line.empty()) {
+                                std::ostringstream oss;
+                                bool first = true;
+                                for (const auto &rich_line : match_result.prepared.multi_rich_line.rich_lines()) {
+                                    for (const auto &point : rich_line.line()) {
+                                        if (not first) {
+                                            oss << ',';
+                                        }
+                                        first = false;
+                                        const auto time = point.timestamp();
+                                        if (match_result.match_settings.export_timestamps) {
+                                            oss << time;
+                                        } else {
+                                            oss << util::format_time(time,
+                                                    match_result.match_settings.export_time_zone);
+                                        }
+                                    }
+                                }
+                                prepared_times = oss.str();
                             }
                             break;
                         case column::EDGE_IDS:
@@ -102,6 +179,7 @@ namespace map_matching_2::io::results {
             return {
                     match_result.track.id,
                     std::move(track_wkt), std::move(prepared_wkt), std::move(match_wkt),
+                    std::move(start_time), std::move(end_time), std::move(track_times), std::move(prepared_times),
                     std::move(edge_ids),
                     match_result.aborted, match_result.duration,
                     track_length, prepared_length, match_length,
@@ -120,9 +198,13 @@ namespace map_matching_2::io::results {
             TRACK,
             PREPARED,
             MATCH,
+            START_TIME,
+            END_TIME,
             TRACK_LENGTH,
             PREPARED_LENGTH,
             MATCH_LENGTH,
+            TRACK_TIMES,
+            PREPARED_TIMES,
             EDGE_IDS,
             UNKNOWN
         };
@@ -144,12 +226,20 @@ namespace map_matching_2::io::results {
                     _columns.emplace_back(column::PREPARED);
                 } else if (_column_string == "match") {
                     _columns.emplace_back(column::MATCH);
+                } else if (_column_string == "start_time") {
+                    _columns.emplace_back(column::START_TIME);
+                } else if (_column_string == "end_time") {
+                    _columns.emplace_back(column::END_TIME);
                 } else if (_column_string == "track_length") {
                     _columns.emplace_back(column::TRACK_LENGTH);
                 } else if (_column_string == "prepared_length") {
                     _columns.emplace_back(column::PREPARED_LENGTH);
                 } else if (_column_string == "match_length") {
                     _columns.emplace_back(column::MATCH_LENGTH);
+                } else if (_column_string == "track_times") {
+                    _columns.emplace_back(column::TRACK_TIMES);
+                } else if (_column_string == "prepared_times") {
+                    _columns.emplace_back(column::PREPARED_TIMES);
                 } else if (_column_string == "edge_ids") {
                     _columns.emplace_back(column::EDGE_IDS);
                 } else {
@@ -181,6 +271,12 @@ namespace map_matching_2::io::results {
                     case column::MATCH:
                         result.emplace_back(task.match);
                         break;
+                    case column::START_TIME:
+                        result.emplace_back(task.start_time);
+                        break;
+                    case column::END_TIME:
+                        result.emplace_back(task.end_time);
+                        break;
                     case column::TRACK_LENGTH:
                         result.emplace_back(std::to_string(task.track_length));
                         break;
@@ -189,6 +285,12 @@ namespace map_matching_2::io::results {
                         break;
                     case column::MATCH_LENGTH:
                         result.emplace_back(std::to_string(task.match_length));
+                        break;
+                    case column::TRACK_TIMES:
+                        result.emplace_back(task.track_times);
+                        break;
+                    case column::PREPARED_TIMES:
+                        result.emplace_back(task.prepared_times);
                         break;
                     case column::EDGE_IDS:
                         result.emplace_back(task.edge_ids);
