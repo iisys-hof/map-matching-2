@@ -109,7 +109,12 @@ namespace map_matching_2::geometry {
                         result_points.emplace_back(result.first);
                     }
 
-                    point_type median_point = geometry::median_point(result_points);
+                    point_type median_point;
+                    if (result_points.size() == 1) {
+                        median_point = result_points.front();
+                    } else {
+                        median_point = geometry::median_point_dispatcher(result_points);
+                    }
 
                     for (const auto &result : connected_results) {
                         points_index.remove(result);

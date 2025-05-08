@@ -31,12 +31,12 @@ namespace map_matching_2::geometry {
         assert(not container.empty());
 
         std::size_t middle = container.size() / 2;
-        std::nth_element(container.begin(), container.begin() + middle, container.end());
+        std::nth_element(std::begin(container), std::begin(container) + middle, std::end(container));
         if (container.size() % 2 == 1) {
-            return container[middle];
+            return container.at(middle);
         } else {
-            std::nth_element(container.begin(), container.begin() + middle - 1, container.end());
-            return (container[middle - 1] + container[middle]) / static_cast<Element>(2);
+            std::nth_element(std::begin(container), std::begin(container) + middle - 1, std::end(container));
+            return (container.at(middle - 1) + container.at(middle)) / static_cast<Element>(2);
         }
     }
 
@@ -60,7 +60,7 @@ namespace map_matching_2::geometry {
     }
 
     template<template<typename, typename> typename Container,
-        typename Point,
+        is_point Point,
         template<typename> typename Allocator>
     [[nodiscard]] Point median_point(const Container<Point, Allocator<Point>> &points) {
         BOOST_CONCEPT_ASSERT((boost::geometry::concepts::Point<Point>));
@@ -114,6 +114,34 @@ namespace map_matching_2::geometry {
             return Point{median_x, median_y};
         } else {
             return Point{median_x, median_y, median_z};
+        }
+    }
+
+    template<template<typename, typename> typename Container,
+        is_time_point TimePoint,
+        template<typename> typename Allocator>
+    [[nodiscard]] TimePoint median_time_point(const Container<TimePoint, Allocator<TimePoint>> &time_points) {
+        auto point = median_point(time_points);
+
+        std::vector<typename TimePoint::timestamp_type> times;
+        times.reserve(time_points.size());
+        for (const auto &time_point : time_points) {
+            times.emplace_back(time_point.timestamp());
+        }
+
+        point.timestamp(median(times));
+
+        return point;
+    }
+
+    template<template<typename, typename> typename Container,
+        is_point Point,
+        template<typename> typename Allocator>
+    [[nodiscard]] Point median_point_dispatcher(const Container<Point, Allocator<Point>> &points) {
+        if constexpr (is_time_point<Point>) {
+            return median_time_point(points);
+        } else {
+            return median_point(points);
         }
     }
 
