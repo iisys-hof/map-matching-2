@@ -311,6 +311,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 matcher.start();
 
                 map_matching_2::matching::settings match_settings;
+                match_settings.export_timestamps = true;
                 match_settings.radius = 1.5;
                 match_settings.simplify_track = false;
                 match_settings.median_merge = false;
