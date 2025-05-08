@@ -31,6 +31,9 @@
 #include "geometry/algorithm/convert.hpp"
 #include "geometry/algorithm/srs_dispatch.hpp"
 
+#include "util/checks.hpp"
+#include "util/chrono.hpp"
+
 #include "../csv_importer.hpp"
 #include "../csv_settings.hpp"
 
@@ -92,7 +95,7 @@ namespace map_matching_2::io::track {
                                 if (not id.empty()) {
                                     id.append(_csv_settings.id_aggregator);
                                 }
-                                if (_csv_settings.no_header and is_number(_field_id)) {
+                                if (_csv_settings.no_header and util::is_number(_field_id)) {
                                     id.append(row[std::stoul(_field_id)].get<std::string>());
                                 } else {
                                     id.append(row[_field_id].get<std::string>());
@@ -110,7 +113,7 @@ namespace map_matching_2::io::track {
                             if (not time.empty()) {
                                 time.append(_csv_settings.time_aggregator);
                             }
-                            if (_csv_settings.no_header and is_number(_field_time)) {
+                            if (_csv_settings.no_header and util::is_number(_field_time)) {
                                 time.append(row[std::stoul(_field_time)].get<std::string>());
                             } else {
                                 const auto &columns = row.get_col_names();
@@ -122,14 +125,14 @@ namespace map_matching_2::io::track {
 
                         if (not time.empty()) {
                             if (_csv_settings.no_parse_time) {
-                                if (is_number(time)) {
+                                if (util::is_number(time)) {
                                     timestamp = std::stoul(time);
                                 } else if (_points.contains(id)) {
                                     const auto &out_line = std::any_cast<line_type_out>(_points[id]);
                                     timestamp = out_line.size();
                                 }
                             } else {
-                                timestamp = this->parse_time(time, _csv_settings.time_format);
+                                timestamp = util::parse_time(time, _csv_settings.time_format);
                             }
                         } else if (_points.contains(id)) {
                             const auto &out_line = std::any_cast<line_type_out>(_points[id]);
@@ -138,7 +141,7 @@ namespace map_matching_2::io::track {
 
                         if (_csv_settings.wkt) {
                             std::string wkt_string;
-                            if (_csv_settings.no_header and is_number(_csv_settings.field_geometry)) {
+                            if (_csv_settings.no_header and util::is_number(_csv_settings.field_geometry)) {
                                 wkt_string = row[std::stoul(_csv_settings.field_geometry)].get<std::string>();
                             } else {
                                 wkt_string = row[_csv_settings.field_geometry].get<std::string>();
@@ -187,12 +190,12 @@ namespace map_matching_2::io::track {
                             }
                         } else {
                             coordinate_type_in x, y;
-                            if (_csv_settings.no_header and is_number(_csv_settings.field_x)) {
+                            if (_csv_settings.no_header and util::is_number(_csv_settings.field_x)) {
                                 x = row[std::stoul(_csv_settings.field_x)].get<coordinate_type_in>();
                             } else {
                                 x = row[_csv_settings.field_x].get<coordinate_type_in>();
                             }
-                            if (_csv_settings.no_header and is_number(_csv_settings.field_y)) {
+                            if (_csv_settings.no_header and util::is_number(_csv_settings.field_y)) {
                                 y = row[std::stoul(_csv_settings.field_y)].get<coordinate_type_in>();
                             } else {
                                 y = row[_csv_settings.field_y].get<coordinate_type_in>();

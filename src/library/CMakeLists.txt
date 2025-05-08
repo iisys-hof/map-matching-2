@@ -28,6 +28,8 @@ target_sources(library
         src/io/importer.cpp
         src/matching/matcher/match_task.cpp
         src/matching/defect.cpp
+        src/util/checks.cpp
+        src/util/chrono.cpp
         src/util/compiler.cpp
         src/util/time_helper.cpp
         src/util/version.cpp)

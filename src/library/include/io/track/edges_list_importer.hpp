@@ -32,6 +32,8 @@
 
 #include "graph/traits/graph.hpp"
 
+#include "util/checks.hpp"
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::track {
@@ -136,7 +138,7 @@ namespace map_matching_2::io::track {
                         } else {
                             for (const auto &column : _columns) {
                                 std::size_t col = 0;
-                                if (is_number(column)) {
+                                if (util::is_number(column)) {
                                     col = std::stoul(column);
                                 }
                                 edge_ids.emplace_back(std::stol(parts.at(col)));

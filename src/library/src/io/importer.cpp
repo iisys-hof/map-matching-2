@@ -15,33 +15,7 @@
 
 #include "io/importer.hpp"
 
-#include <cassert>
-
-// __clang_major__ >= 19 # chrono parse not yet supported
-#if (__cplusplus >= 202002L and (defined(__GNUC__) and __GNUC__ >= 14)) or \
-    (defined(_MSC_VER) and _MSC_VER >= 1939)
-#define HAS_CHRONO_PARSE 1
-#include <chrono>
-#else
-#define HAS_CHRONO_PARSE 0
-#include <date/date.h>
-#endif
-
 namespace map_matching_2::io {
-
-    [[nodiscard]] bool importer::is_number(const std::string &str) {
-        if (not str.empty()) {
-            for (auto it = std::cbegin(str); it != std::cend(str); ++it) {
-                const char c = *it;
-
-                if (not std::isdigit(c)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
 
     [[nodiscard]] std::vector<char> importer::parse_delimiter(const std::string &delimiter) {
         std::vector<char> delimiters;
@@ -68,49 +42,6 @@ namespace map_matching_2::io {
             }
         }
         return delimiters;
-    }
-
-    [[nodiscard]] static std::vector<char> parse_delimiter(const std::string &delimiter) {
-        std::vector<char> delimiters;
-        delimiters.reserve(delimiter.length());
-
-        bool escaped = false;
-        for (auto it = std::cbegin(delimiter); it != std::cend(delimiter); ++it) {
-            const char c = *it;
-
-            if (c == '\\') {
-                escaped = true;
-                continue;
-            }
-
-            if (escaped) {
-                if (c == 't') {
-                    delimiters.emplace_back('\t');
-                } else if (c == 's') {
-                    delimiters.emplace_back(' ');
-                } else {
-                    delimiters.emplace_back(c);
-                }
-                escaped = false;
-            } else {
-                delimiters.emplace_back(c);
-            }
-        }
-        return delimiters;
-    }
-
-    std::uint64_t importer::parse_time(const std::string &time_str, const std::string &format) {
-        std::istringstream time_str_stream{time_str};
-#if HAS_CHRONO_PARSE
-        std::chrono::sys_time<std::chrono::milliseconds> time;
-        time_str_stream >> std::chrono::parse(format, time);
-#else
-        date::sys_time<std::chrono::milliseconds> time;
-        time_str_stream >> date::parse(format, time);
-#endif
-        const auto count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
-        assert(count >= 0);
-        return static_cast<std::uint64_t>(count);
     }
 
 }

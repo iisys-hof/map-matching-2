@@ -31,6 +31,9 @@
 #include "geometry/algorithm/convert.hpp"
 #include "geometry/algorithm/srs_dispatch.hpp"
 
+#include "util/checks.hpp"
+#include "util/chrono.hpp"
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::track {
@@ -162,11 +165,11 @@ namespace map_matching_2::io::track {
 
                     if (not time.empty()) {
                         if (_no_parse_time) {
-                            if (is_number(time)) {
+                            if (util::is_number(time)) {
                                 timestamp = std::stoul(time);
                             }
                         } else {
-                            timestamp = this->parse_time(time, _time_format);
+                            timestamp = util::parse_time(time, _time_format);
                         }
                     }
 

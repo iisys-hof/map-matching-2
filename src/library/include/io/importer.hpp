@@ -40,11 +40,7 @@ namespace map_matching_2::io {
         }
 
     protected:
-        [[nodiscard]] static bool is_number(const std::string &str);
-
         [[nodiscard]] static std::vector<char> parse_delimiter(const std::string &delimiter);
-
-        virtual std::uint64_t parse_time(const std::string &time_str, const std::string &format);
 
     private:
         const std::vector<std::string> _filenames;
