@@ -634,7 +634,7 @@ Output Options:
                                         for the application results
 
 Match Output Options:
-  --columns arg (=id,aborted,duration,track,prepared,match,track_length,prepared_length,match_length)
+  --columns arg (=id,aborted,duration,track,prepared,match,start_time,end_time,track_length,prepared_length,match_length)
                                         output columns in order for the 
                                         application results, separated by 
                                         comma;
@@ -651,13 +651,30 @@ Match Output Options:
                                           track sanitation, i.e., remove 
                                           duplicates, median-merge
                                           match: map matching result as WKT
+                                          start_time: start time of track, 
+                                          i.e., first point time
+                                          end_time: end time of track, i.e., 
+                                          last point time
                                           track_length: track length in meter
                                           prepared_length: prepared track 
                                           length in meter
                                           match_length: match length in meter
+                                          track_times: list of track point 
+                                          times (off by default)
+                                          prepared_times: list of prepared 
+                                          track point times (off by default)
                                           edge_ids: list of original edge IDs 
                                           (off by default; if used, combine 
                                           with simplify osm-aware
+  --export-timestamps arg (=off)        export unix timestamps for start_time, 
+                                        end_time, track_times, and 
+                                        prepared_times; by default is off and 
+                                        uses a human readable time format with 
+                                        the UTC time zone, see below
+  --export-time-zone arg (=Europe/Berlin)
+                                        time-zone to use for time export; if 
+                                        empty, uses UTC; by default uses system
+                                        time zone
   --export-edges arg (=off)             export matched routes based on the 
                                         complete network edges instead of the 
                                         actual parts, this is only useful if 
@@ -853,7 +870,7 @@ Export Options:
                                         filename, if no filename is given, no 
                                         candidates are exported;
                                         filename is appended to output folder
-  --candidates-columns arg (=id,part_index,set_index,candidate_index,projection,distance,from,to,edge_id,is_result)
+  --candidates-columns arg (=id,part_index,set_index,candidate_index,time,projection,distance,from,to,edge_id,is_result)
                                         output columns in order for the 
                                         candidate exports, separated by comma;
                                           id: id of the track, aggregated in 
@@ -863,6 +880,7 @@ Export Options:
                                           set_index: index of the candidate set
                                           candidate_index: index of the 
                                           candidate within a candidate set
+                                          time: track point time
                                           projection: candidate projection from
                                           track point to road network point
                                           distance: distance in meter
@@ -895,6 +913,46 @@ Matching Options:
                                         outputted, else nothing is outputted; 
                                         for example Q-Learning might be able to
                                         output something suboptimal
+  --split-time arg (=0)                 time in seconds as time delta for 
+                                        splitting a track into multiple 
+                                        individual tracks; when two succeeding 
+                                        points with a timestamp have a 
+                                        difference at least as large as this 
+                                        value, the track is split into two 
+                                        parts, and so on, until all individual 
+                                        track parts have no time deltabetween 
+                                        any two points that exceeds this value;
+                                        setting to 0 disables this 
+                                        functionality
+  --filter-polygon arg                  filter definition of polygon or 
+                                        bounding box as WKT; tracks that do not
+                                        lie within or intersect with this 
+                                        filter are not matched, see below for 
+                                        changing the method; a polygon is 
+                                        defined counterclockwise with x and y 
+                                        coordinates, the first and last 
+                                        coordinates have to be equal so that 
+                                        the polygon is closed: POLYGON ((30 10,
+                                        40 40, 20 40, 10 20, 30 10));
+                                        a bounding box can also be defined as 
+                                        the minimum and maximum x and y 
+                                        coordinates: BOX (10 20, 40 50);
+                                        for a bounding box from x coordinates 
+                                        10 to 40 and y coordinates 20 to 50; 
+                                        the filter should be defined in the 
+                                        same spatial reference system as the 
+                                        tracks
+  --filter-method arg (=within)         filter method used with the filter 
+                                        polygon, possible options:"within"
+                                          only keeps tracks that lie completely
+                                          within the polygon with all points,
+                                          internally uses covered-by and keeps 
+                                          points on the border
+                                        "intersects"
+                                          only keeps tracks that lie within the
+                                          polygon or intersect the polygon 
+                                          somewhere
+                                        
   --filter-duplicates arg (=on)         filter duplicate (adjacent spatially 
                                         equal) points in tracks before 
                                         matching, is recommended
