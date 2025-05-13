@@ -175,6 +175,13 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
       currently processed are held in memory.
     - **Multiple files:** Multiple input files with the same format can be specified in one go and are then parsed in
       succession.
+    - **Filtering:** Tracks can be filtered by a given bounding box or complex polygon either by within or intersects
+      method.
+      Only the tracks that pass the filter are then matched from the input tracks.
+    - **Time splitting:** Tracks can be splitted at a given timestamp difference between points, if timestamps are
+      available.
+      This allows to automatically split tracks with the same id into multiple indiviual sub-tracks, for example, after
+      a 10-minute break.
     - **Coordinates:** Support for point coordinates in x, y, or latitude, longitude format. Order can be specified.
     - **Well-Known-Text:** Support for Well-Known-Text (WKT) Point, LineString, and MultiLineString formats.
     - **Timestamp::** Support for custom date- and timestamp formats for parsing.
@@ -187,6 +194,8 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
       matching, eliminates network disk IO during matching but needs a lot of RAM and startup time.
     - **Network:** Optional export of nodes and edges into CSV files.
     - **Matches:** Export of matches with configurable extra columns into CSV files.
+    - **Times:** Timestamps of the start and end time of a track (if available) are automatically outputted.
+      Optionally, all timestamps of the original input track and the simplified track can be outputted as lists.
     - **Comparisons:** Export of comparison results with configurable extra columns into CSV files.
     - **Candidates:** Candidates can be optionally exported into CSV files for expert understanding of how the program
       chose and created the match.
