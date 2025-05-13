@@ -86,7 +86,7 @@ cp -p data/map_matching_2.svg "$appdir" || exit 1
 # download appimagetool
 appimagetool="appimagetool-x86_64.AppImage"
 if [ ! -e "$appimagetool" ]; then
-  wget -O "$appimagetool" "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" || exit 1
+  wget -O "$appimagetool" "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" || exit 1
   chmod +x "$appimagetool"
 fi
 
