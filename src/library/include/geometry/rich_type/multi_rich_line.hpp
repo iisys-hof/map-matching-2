@@ -68,9 +68,6 @@ namespace map_matching_2::geometry {
                     allocator
             } {}
 
-        // explicit multi_rich_line(const std::vector<line_type> &lines)
-        //         : multi_rich_line{lines2multi_line<multi_rich_line>(lines)} {}
-
         constexpr explicit multi_rich_line(rich_line_type rich_line) requires
             (std::default_initializable<allocator_type>)
             : multi_rich_line{rich_lines_container_type{std::move(rich_line)}} {}
@@ -89,14 +86,6 @@ namespace map_matching_2::geometry {
 
         constexpr multi_rich_line(rich_lines_container_type rich_lines, const allocator_type &allocator)
             : _rich_lines{std::move(rich_lines), allocator} {}
-
-        // template<typename RichLineT>
-        // explicit multi_rich_line(RichLineT rich_line)
-        //         : _rich_lines{convert_rich_types<rich_line_type, RichLineT>(std::move(rich_line))} {}
-        //
-        // template<typename RichLineT>
-        // explicit multi_rich_line(std::vector<RichLineT> rich_lines)
-        //         : _rich_lines{convert_rich_types<rich_line_type, RichLineT>(std::move(rich_lines))} {}
 
         constexpr multi_rich_line(const multi_rich_line &other)
             : _rich_lines{other._rich_lines} {}
@@ -376,19 +365,83 @@ namespace map_matching_2::geometry {
             return size;
         }
 
-        // void simplify(bool retain_reversals = true, double tolerance = 1e-3, double reverse_tolerance = 1e-3) {
-        //     for (auto &rich_line: _rich_lines) {
-        //         rich_line.simplify(retain_reversals, tolerance, reverse_tolerance);
-        //     }
-        // }
-        //
-        // template<typename Network>
-        // void median_merge(double tolerance = 1e-3, bool adaptive = true, const Network *network = nullptr) requires
-        // std::default_initializable<rich_line_type> {
-        //     for (auto &rich_line: _rich_lines) {
-        //         rich_line.median_merge(tolerance, adaptive, network);
-        //     }
-        // }
+        [[nodiscard]] rich_lines_container_type sub_rich_line_container(std::size_t from, std::size_t to) const requires
+            (std::default_initializable<allocator_type>) {
+            if (from <= to and from < size() and to <= size()) {
+                return rich_lines_container_type{
+                        std::cbegin(_rich_lines) + from,
+                        std::cbegin(_rich_lines) + to
+                };
+            }
+
+            throw std::out_of_range(std::format(
+                    "multi_rich_line::sub_rich_line_container(from: {}, to: {}): out of range, size: {}",
+                    from, to, size()));
+        }
+
+        [[nodiscard]] rich_lines_container_type sub_rich_line_container(std::size_t from, std::size_t to,
+                const allocator_type &allocator) const {
+            if (from <= to and from < size() and to <= size()) {
+                return rich_lines_container_type{
+                        std::cbegin(_rich_lines) + from,
+                        std::cbegin(_rich_lines) + to,
+                        allocator
+                };
+            }
+
+            throw std::out_of_range(std::format(
+                    "multi_rich_line::sub_rich_line_container(from: {}, to: {}): out of range, size: {}",
+                    from, to, size()));
+        }
+
+        [[nodiscard]] multi_rich_line sub_multi_rich_line(std::size_t from, std::size_t to) const requires
+            (std::default_initializable<allocator_type>) {
+            return multi_rich_line{sub_rich_line_container(from, to)};
+        }
+
+        [[nodiscard]] multi_rich_line sub_multi_rich_line(std::size_t from, std::size_t to,
+                const allocator_type &allocator) const {
+            return multi_rich_line{sub_rich_line_container(from, to, allocator), allocator};
+        }
+
+        template<is_multi_rich_line MultiRichLineT>
+        [[nodiscard]] MultiRichLineT extract(std::size_t outer_from, std::size_t inner_from,
+                std::size_t inner_to, std::size_t outer_to) const requires
+            (std::default_initializable<allocator_type>) {
+            if (outer_from + 1 > outer_to) {
+                return MultiRichLineT{};
+            } else if (outer_from + 1 == outer_to) {
+                return MultiRichLineT{at(outer_from).sub_rich_line(inner_from, inner_to)};
+            } else {
+                typename MultiRichLineT::rich_lines_container_type rich_lines;
+                rich_lines.reserve(outer_to - outer_from);
+                rich_lines.emplace_back(at(outer_from).sub_rich_line(inner_from, at(outer_from).size()));
+                for (auto &rich_line : sub_rich_line_container(outer_from + 1, outer_to - 1)) {
+                    rich_lines.emplace_back(std::move(rich_line));
+                }
+                rich_lines.emplace_back(at(outer_to - 1).sub_rich_line(0, inner_to));
+                return MultiRichLineT{std::move(rich_lines)};
+            }
+        }
+
+        template<is_multi_rich_line MultiRichLineT>
+        [[nodiscard]] MultiRichLineT extract(std::size_t outer_from, std::size_t inner_from,
+                std::size_t inner_to, std::size_t outer_to, const allocator_type &allocator) const {
+            if (outer_from + 1 > outer_to) {
+                return MultiRichLineT{allocator};
+            } else if (outer_from + 1 == outer_to) {
+                return MultiRichLineT{at(outer_from).sub_rich_line(inner_from, inner_to, allocator), allocator};
+            } else {
+                typename MultiRichLineT::rich_lines_container_type rich_lines(allocator);
+                rich_lines.reserve(outer_to - outer_from);
+                rich_lines.emplace_back(at(outer_from).sub_rich_line(inner_from, at(outer_from).size(), allocator));
+                for (auto &rich_line : sub_rich_line_container(outer_from + 1, outer_to - 1, allocator)) {
+                    rich_lines.emplace_back(std::move(rich_line));
+                }
+                rich_lines.emplace_back(at(outer_to - 1).sub_rich_line(0, inner_to, allocator));
+                return MultiRichLineT{std::move(rich_lines), allocator};
+            }
+        }
 
         template<is_rich_line RichLineT>
         multi_rich_line &merge(std::vector<RichLineT> &&rich_lines) requires

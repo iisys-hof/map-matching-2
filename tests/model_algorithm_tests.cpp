@@ -32,6 +32,7 @@
 
 using point_type = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
 using line_type = typename map_matching_2::geometry::models<point_type>::line_type<>;
+using multi_line_type = typename map_matching_2::geometry::models<point_type>::multi_line_type<line_type>;
 
 using rich_segment = map_matching_2::geometry::rich_segment<
     typename map_matching_2::geometry::models<point_type>::segment_type>;
@@ -70,6 +71,31 @@ void test_sub_rich_line(line_type line, std::size_t from, std::size_t to, const 
     test_rich_line.template operator()<rich_line_type>();
     test_rich_line.template operator()<eager_rich_line_type>();
     test_rich_line.template operator()<lazy_rich_line_type>();
+}
+
+void test_sub_multi_rich_line(multi_line_type multi_line, std::size_t from, std::size_t to, const auto &check) {
+    auto test_multi_rich_line = [&]<typename MultiRichLine>() {
+        auto input = MultiRichLine{multi_line};
+        auto output = input.sub_multi_rich_line(from, to);
+        check(output);
+    };
+
+    test_multi_rich_line.template operator()<multi_rich_line_type>();
+    test_multi_rich_line.template operator()<eager_multi_rich_line_type>();
+    test_multi_rich_line.template operator()<lazy_multi_rich_line_type>();
+}
+
+void test_extract_multi_rich_line(multi_line_type multi_line, std::size_t outer_from, std::size_t inner_from,
+        std::size_t inner_to, std::size_t outer_to, const auto &check) {
+    auto test_multi_rich_line = [&]<typename MultiRichLine>() {
+        auto input = MultiRichLine{multi_line};
+        auto output = input.template extract<MultiRichLine>(outer_from, inner_from, inner_to, outer_to);
+        check(output);
+    };
+
+    test_multi_rich_line.template operator()<multi_rich_line_type>();
+    test_multi_rich_line.template operator()<eager_multi_rich_line_type>();
+    test_multi_rich_line.template operator()<lazy_multi_rich_line_type>();
 }
 
 void test_simplify_rich_lines(line_type input, line_type output, bool retain_reversals = true) {
@@ -278,6 +304,230 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
                     BOOST_CHECK_CLOSE_FRACTION(rich_line.azimuth(), 90.0, 1e-6);
                     BOOST_CHECK_LE(rich_line.directions(), 1e-6);
                     BOOST_CHECK_LE(rich_line.absolute_directions(), 1e-6);
+                });
+    }
+
+    BOOST_AUTO_TEST_CASE(multi_rich_line_sub_multi_rich_line_test) {
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 4,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 15.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                0, 3,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 15.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                2, 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 15.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                0, 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 5);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 25.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                0, 0,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_length(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_azimuth(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_directions(), false);
+                });
+
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                4, 4,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_length(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_azimuth(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_directions(), false);
+                });
+    }
+
+    BOOST_AUTO_TEST_CASE(multi_rich_line_extract_test) {
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 2, 3, 4,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 10.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 0, 6, 4,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 15.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 2, 5, 2,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 1);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 2.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 2, 5, 1,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_length(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_azimuth(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_directions(), false);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 2, 2, 2,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 1);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_length(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_azimuth(), false);
+                    BOOST_CHECK_EQUAL(multi_rich_line.has_directions(), false);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                0, 0, 6, 2,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 2);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 10.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                3, 3, 6, 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 2);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 7.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                0, 0, 6, 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 5);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 25.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
                 });
     }
 

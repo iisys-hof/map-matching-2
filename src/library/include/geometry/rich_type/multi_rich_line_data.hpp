@@ -48,6 +48,9 @@ namespace map_matching_2::geometry {
         constexpr multi_rich_line_data(const multi_rich_line_data &other)
             : base_type{other} {}
 
+        constexpr multi_rich_line_data(const base_type &other)
+            : base_type{other} {}
+
         template<template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
         constexpr multi_rich_line_data(
@@ -55,6 +58,9 @@ namespace map_matching_2::geometry {
             : base_type{other} {}
 
         constexpr multi_rich_line_data(const multi_rich_line_data &other, const allocator_type &allocator)
+            : base_type{other, allocator} {}
+
+        constexpr multi_rich_line_data(const base_type &other, const allocator_type &allocator)
             : base_type{other, allocator} {}
 
         template<template<typename, typename> typename ContainerT,
@@ -77,6 +83,13 @@ namespace map_matching_2::geometry {
             return *this;
         }
 
+        constexpr multi_rich_line_data &operator=(const base_type &other) {
+            if (this != &other) {
+                base_type::operator=(other);
+            }
+            return *this;
+        }
+
         template<template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
         constexpr multi_rich_line_data &operator=(
@@ -86,6 +99,13 @@ namespace map_matching_2::geometry {
         }
 
         constexpr multi_rich_line_data &operator=(multi_rich_line_data &&other) noexcept {
+            if (this != &other) {
+                base_type::operator=(std::move(other));
+            }
+            return *this;
+        }
+
+        constexpr multi_rich_line_data &operator=(base_type &&other) noexcept {
             if (this != &other) {
                 base_type::operator=(std::move(other));
             }
@@ -254,6 +274,59 @@ namespace map_matching_2::geometry {
             _compute_length(multi_rich_line);
             _compute_azimuth(multi_rich_line);
             _compute_directions(multi_rich_line);
+        }
+
+        [[nodiscard]] multi_rich_line_data sub_data(std::size_t from, std::size_t to) const requires
+            (std::default_initializable<allocator_type> and std::default_initializable<allocator_type>) {
+            if (from >= to) {
+                return multi_rich_line_data{};
+            }
+            return multi_rich_line_data{
+                    (from == 0 and to >= this->_lengths.size()) ? this->_length : not_initialized<length_type>,
+                    (from == 0 and to >= this->_lengths.size()) ? this->_azimuth : not_initialized<angle_type>,
+                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
+                    ? this->_directions
+                    : not_initialized<angle_type>,
+                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
+                    ? this->_absolute_directions
+                    : not_initialized<angle_type>,
+                    (not this->_lengths.empty() and from <= to and
+                        from < this->_lengths.size() and to <= this->_lengths.size())
+                    ? length_container_type{this->_lengths.cbegin() + from, this->_lengths.cbegin() + to}
+                    : length_container_type{},
+                    (not this->_azimuths.empty() and from <= to and
+                        from < this->_azimuths.size() and to > 0 and to - 1 <= this->_azimuths.size())
+                    ? angle_container_type{this->_azimuths.cbegin() + from, this->_azimuths.cbegin() + to - 1}
+                    : angle_container_type{}
+            };
+        }
+
+        [[nodiscard]] multi_rich_line_data sub_data(std::size_t from, std::size_t to,
+                const allocator_type &allocator) const {
+            if (from >= to) {
+                return multi_rich_line_data{allocator};
+            }
+            return multi_rich_line_data{
+                    (from == 0 and to >= this->_lengths.size()) ? this->_length : not_initialized<length_type>,
+                    (from == 0 and to >= this->_lengths.size()) ? this->_azimuth : not_initialized<angle_type>,
+                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
+                    ? this->_directions
+                    : not_initialized<angle_type>,
+                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
+                    ? this->_absolute_directions
+                    : not_initialized<angle_type>,
+                    (not this->_lengths.empty() and from <= to and
+                        from < this->_lengths.size() and to <= this->_lengths.size())
+                    ? length_container_type{this->_lengths.cbegin() + from, this->_lengths.cbegin() + to, allocator}
+                    : length_container_type{allocator},
+                    (not this->_azimuths.empty() and from <= to and
+                        from < this->_azimuths.size() and to > 0 and to - 1 <= this->_azimuths.size())
+                    ? angle_container_type{
+                            this->_azimuths.cbegin() + from, this->_azimuths.cbegin() + to - 1, allocator
+                    }
+                    : angle_container_type{allocator},
+                    allocator
+            };
         }
 
     };

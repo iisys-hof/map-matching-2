@@ -476,10 +476,10 @@ namespace map_matching_2::geometry {
                 return rich_line_data{};
             }
             return rich_line_data{
-                    (from == 0 and to + 1 == _lengths.size()) ? _length : not_initialized<length_type>,
-                    (from == 0 and to + 1 == _lengths.size()) ? _azimuth : not_initialized<angle_type>,
-                    (from == 0 and to + 1 == _azimuths.size()) ? _directions : not_initialized<angle_type>,
-                    (from == 0 and to + 1 == _azimuths.size()) ? _absolute_directions : not_initialized<angle_type>,
+                    (from == 0 and to + 1 >= _lengths.size()) ? _length : not_initialized<length_type>,
+                    (from == 0 and to + 1 >= _lengths.size()) ? _azimuth : not_initialized<angle_type>,
+                    (from == 0 and to + 1 >= _azimuths.size()) ? _directions : not_initialized<angle_type>,
+                    (from == 0 and to + 1 >= _azimuths.size()) ? _absolute_directions : not_initialized<angle_type>,
                     (not _lengths.empty() and from <= to and from < _lengths.size() and to <= _lengths.size())
                     ? length_container_type{_lengths.cbegin() + from, _lengths.cbegin() + to}
                     : length_container_type{},
@@ -498,10 +498,10 @@ namespace map_matching_2::geometry {
                 return rich_line_data{allocator};
             }
             return rich_line_data{
-                    (from == 0 and to + 1 == _lengths.size()) ? _length : not_initialized<length_type>,
-                    (from == 0 and to + 1 == _lengths.size()) ? _azimuth : not_initialized<angle_type>,
-                    (from == 0 and to + 1 == _azimuths.size()) ? _directions : not_initialized<angle_type>,
-                    (from == 0 and to + 1 == _azimuths.size()) ? _absolute_directions : not_initialized<angle_type>,
+                    (from == 0 and to + 1 >= _lengths.size()) ? _length : not_initialized<length_type>,
+                    (from == 0 and to + 1 >= _lengths.size()) ? _azimuth : not_initialized<angle_type>,
+                    (from == 0 and to + 1 >= _azimuths.size()) ? _directions : not_initialized<angle_type>,
+                    (from == 0 and to + 1 >= _azimuths.size()) ? _absolute_directions : not_initialized<angle_type>,
                     (not _lengths.empty() and from <= to and from < _lengths.size() and to <= _lengths.size())
                     ? length_container_type{_lengths.cbegin() + from, _lengths.cbegin() + to, allocator}
                     : length_container_type{allocator},

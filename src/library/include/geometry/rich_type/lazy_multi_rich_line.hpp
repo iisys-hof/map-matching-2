@@ -82,8 +82,18 @@ namespace map_matching_2::geometry {
             (std::default_initializable<allocator_type>)
             : multi_rich_line_data_base_type{}, multi_rich_line_base_type{std::move(rich_lines)} {}
 
+        constexpr lazy_multi_rich_line(rich_lines_container_type rich_lines,
+                multi_rich_line_data_base_type data) requires
+            (std::default_initializable<allocator_type>)
+            : multi_rich_line_data_base_type{std::move(data)}, multi_rich_line_base_type{std::move(rich_lines)} {}
+
         constexpr lazy_multi_rich_line(rich_lines_container_type rich_lines, const allocator_type &allocator)
             : multi_rich_line_data_base_type{allocator},
+            multi_rich_line_base_type{std::move(rich_lines), allocator} {}
+
+        constexpr lazy_multi_rich_line(rich_lines_container_type rich_lines, multi_rich_line_data_base_type data,
+                const allocator_type &allocator)
+            : multi_rich_line_data_base_type{std::move(data), allocator},
             multi_rich_line_base_type{std::move(rich_lines), allocator} {}
 
         constexpr lazy_multi_rich_line(const lazy_multi_rich_line &other)
@@ -169,6 +179,23 @@ namespace map_matching_2::geometry {
         [[nodiscard]] angle_type absolute_directions() const {
             multi_rich_line_data_base_type::_compute_directions(*this);
             return multi_rich_line_data_base_type::absolute_directions();
+        }
+
+        [[nodiscard]] lazy_multi_rich_line sub_multi_rich_line(std::size_t from, std::size_t to) const requires
+            (std::default_initializable<allocator_type>) {
+            return lazy_multi_rich_line{
+                    multi_rich_line_base_type::sub_rich_line_container(from, to),
+                    multi_rich_line_data_base_type::sub_data(from, to)
+            };
+        }
+
+        [[nodiscard]] lazy_multi_rich_line sub_multi_rich_line(std::size_t from, std::size_t to,
+                const allocator_type &allocator) const {
+            return lazy_multi_rich_line{
+                    multi_rich_line_base_type::sub_rich_line_container(from, to, allocator),
+                    multi_rich_line_data_base_type::sub_data(from, to, allocator),
+                    allocator
+            };
         }
 
     };
