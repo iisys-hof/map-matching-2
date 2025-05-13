@@ -95,6 +95,8 @@ if (EXPLICIT_TEMPLATES)
             src/types/io/network/osm_handler.cpp
             src/types/io/network/osm_importer.cpp
             src/types/io/network/seattle_importer.cpp
+            src/types/io/track/filter/track_regional_filter.cpp
+            src/types/io/track/filter/track_time_splitter.cpp
             src/types/io/track/csv_track_importer.cpp
             src/types/io/track/edges_list_importer.cpp
             src/types/io/track/gpx_track_importer.cpp

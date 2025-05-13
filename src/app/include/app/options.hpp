@@ -51,6 +51,9 @@ namespace map_matching_2::app {
     const std::string FILE_TYPE_LIST{"list"};
     const std::string FILE_TYPE_SEATTLE{"seattle"};
 
+    const std::string FILTER_METHOD_WITHIN{"within"};
+    const std::string FILTER_METHOD_INTERSECTS{"intersects"};
+
     const std::string CANDIDATE_SEARCH_CIRCLE{"circle"};
     const std::string CANDIDATE_SEARCH_NEAREST{"nearest"};
     const std::string CANDIDATE_SEARCH_COMBINED{"combined"};
@@ -204,10 +207,10 @@ namespace map_matching_2::app {
         bool filter_duplicates, simplify_track, median_merge, adaptive_median_merge, within_edge_turns, a_star,
                 candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
                 adaptive_radius;
-        double max_time, routing_max_distance_factor, simplify_track_distance_tolerance,
+        double max_time, split_time, routing_max_distance_factor, simplify_track_distance_tolerance,
                 median_merge_distance_tolerance, radius, radius_upper_limit, radius_lower_limit;
         std::size_t k_nearest;
-        std::string candidate_search;
+        std::string filter_polygon, filter_method, candidate_search;
 
         void correct(const po::variables_map &vm) override;
     };

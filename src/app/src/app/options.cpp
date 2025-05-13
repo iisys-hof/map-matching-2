@@ -275,6 +275,15 @@ namespace map_matching_2::app {
             throw std::invalid_argument{std::format("candidate search type {} is unknown.", candidate_search)};
         }
 
+        boost::trim(filter_polygon);
+        boost::to_upper(filter_polygon);
+
+        boost::trim(filter_method);
+
+        if (filter_method != FILTER_METHOD_WITHIN and filter_method != FILTER_METHOD_INTERSECTS) {
+            throw std::invalid_argument{std::format("filter method {} is invalid.", filter_method)};
+        }
+
         const bool is_within_edge_turns_manually = not vm["within-edge-turns"].defaulted();
 
         if (not candidate_adoption_nearby and not candidate_adoption_siblings and not candidate_adoption_reverse and
@@ -294,6 +303,12 @@ namespace map_matching_2::app {
 
         if (not vm["quiet"].empty() and not vm["quiet"].as<bool>() and
             not vm["console"].empty() and not vm["console"].as<bool>()) {
+            if (split_time > 0) {
+                std::cout << std::format("Split tracks at {:.3f} seconds.", split_time) << std::endl;
+            }
+            if (not filter_polygon.empty()) {
+                std::cout << "Filter tracks with method: " << filter_method << std::endl;
+            }
             if (not filter_duplicates) {
                 std::cout << "Disabled duplicates filtering." << std::endl;
             }
@@ -1036,6 +1051,29 @@ namespace map_matching_2::app {
                         "in case a matching was stopped because the max-time was reached, the 'aborted' column is set to 'yes' in the output file, "
                         "in case the current algorithm was able to produce any result up to this point, it is outputted, "
                         "else nothing is outputted; for example Q-Learning might be able to output something suboptimal")
+                ("split-time", po::value<double>(&data.split_time)->default_value(0.0, "0"),
+                        "time in seconds as time delta for splitting a track into multiple individual tracks; "
+                        "when two succeeding points with a timestamp have a difference at least as large as this value, "
+                        "the track is split into two parts, and so on, until all individual track parts have no time delta"
+                        "between any two points that exceeds this value; setting to 0 disables this functionality")
+                ("filter-polygon", po::value<std::string>(&data.filter_polygon)->default_value(""),
+                        "filter definition of polygon or bounding box as WKT; "
+                        "tracks that do not lie within or intersect with this filter are not matched, "
+                        "see below for changing the method; "
+                        "a polygon is defined counterclockwise with x and y coordinates, "
+                        "the first and last coordinates have to be equal so that the polygon is closed: "
+                        "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10));\n"
+                        "a bounding box can also be defined as the minimum and maximum x and y coordinates: "
+                        "BOX (10 20, 40 50);\n"
+                        "for a bounding box from x coordinates 10 to 40 and y coordinates 20 to 50; "
+                        "the filter should be defined in the same spatial reference system as the tracks")
+                ("filter-method", po::value<std::string>(&data.filter_method)->default_value(FILTER_METHOD_WITHIN),
+                        "filter method used with the filter polygon, possible options:"
+                        "\"within\"\n"
+                        "  \tonly keeps tracks that lie completely within the polygon with all points,\n"
+                        "  \tinternally uses covered-by and keeps points on the border\n"
+                        "\"intersects\"\n"
+                        "  \tonly keeps tracks that lie within the polygon or intersect the polygon somewhere\n")
                 ("filter-duplicates", po::value<bool>(&data.filter_duplicates)->default_value(true, "on"),
                         "filter duplicate (adjacent spatially equal) points in tracks before matching, is recommended")
                 ("simplify-track", po::value<bool>(&data.simplify_track)->default_value(true, "on"),

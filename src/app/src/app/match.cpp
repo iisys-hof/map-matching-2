@@ -30,4 +30,13 @@ namespace map_matching_2::app {
         seattle_ground_truth_importer.read();
     }
 
+    io::track::filter::FILTER_METHOD get_filter_method(const std::string &method) {
+        if (method == FILTER_METHOD_WITHIN) {
+            return io::track::filter::FILTER_METHOD::WITHIN;
+        } else if (method == FILTER_METHOD_INTERSECTS) {
+            return io::track::filter::FILTER_METHOD::INTERSECTS;
+        }
+        return io::track::filter::FILTER_METHOD::NONE;
+    }
+
 }

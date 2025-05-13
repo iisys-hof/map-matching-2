@@ -27,6 +27,9 @@
 #include "types/io/track/input_importer.hpp"
 #include "types/io/track/edges_list_importer.hpp"
 
+#include "io/track/filter/track_time_splitter.hpp"
+#include "io/track/filter/track_regional_filter.hpp"
+
 #include "io/track/importer_dispatcher.hpp"
 #include "io/track/track_exporter.hpp"
 
@@ -98,11 +101,9 @@ namespace map_matching_2::app {
 
     void _read_seattle(const match_data &data, const geometry::point_reprojector_variant &reprojector_variant);
 
-    template<typename Matcher>
-    void _read_tracks(std::unique_ptr<Matcher> &matcher, const match_data &data) {
-        matching::matcher_forwarder<Matcher> forwarder{*matcher, _match_settings(data)};
-        const auto reprojector_variant = geometry::create_point_reprojector(data.srs_tracks.srs_transform);
-
+    template<typename Forwarder, typename Matcher>
+    void _read_tracks_forward(Forwarder &forwarder, std::unique_ptr<Matcher> &matcher, const match_data &data,
+            const geometry::point_reprojector_variant &reprojector_variant) {
         if (data.console.read_line) {
             _read_line(forwarder, data, reprojector_variant);
         } else {
@@ -118,6 +119,23 @@ namespace map_matching_2::app {
                 importer_dispatcher.read_tracks();
             }
         }
+    }
+
+    io::track::filter::FILTER_METHOD get_filter_method(const std::string &method);
+
+    template<typename Matcher>
+    void _read_tracks(std::unique_ptr<Matcher> &matcher, const match_data &data) {
+        const auto reprojector_variant = geometry::create_point_reprojector(data.srs_tracks.srs_transform);
+
+        matching::matcher_forwarder<Matcher> forwarder{*matcher, _match_settings(data)};
+        io::track::filter::track_regional_filter regional_filter{
+                forwarder, data.matching.filter_polygon, get_filter_method(data.matching.filter_method)
+        };
+        io::track::filter::track_time_splitter time_splitter{
+                regional_filter, data.matching.split_time, data.csv.id_aggregator
+        };
+
+        _read_tracks_forward(time_splitter, matcher, data, reprojector_variant);
 
         // reading finished, close queue
         matcher->stop();
