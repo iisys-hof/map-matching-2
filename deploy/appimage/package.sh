@@ -72,13 +72,10 @@ if [ ! -e "$appdir/usr/bin/map_matching_2" ]; then
   exit 1
 fi
 
-if [ ! -d "$appdir/usr/lib/x86_64-linux-gnu/" ]; then
-  echo "Directory $appdir/usr/lib/x86_64-linux-gnu/ does not exist."
-  exit 1
-fi
-
 # prepare AppDir
-patchelf --set-rpath "\$ORIGIN/../lib/x86_64-linux-gnu/" "$appdir/usr/bin/map_matching_2"
+if [ -d "$appdir/usr/lib/x86_64-linux-gnu/" ]; then
+  patchelf --set-rpath "\$ORIGIN/../lib/x86_64-linux-gnu/" "$appdir/usr/bin/map_matching_2"
+fi
 cd "$appdir" && ln -s "usr/bin/map_matching_2" "AppRun" && cd ".." || exit 1
 cp -p data/map_matching_2.desktop "$appdir" || exit 1
 cp -p data/map_matching_2.svg "$appdir" || exit 1

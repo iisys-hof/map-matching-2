@@ -40,6 +40,7 @@ option(EXTERNAL_DEPENDENCIES "Configure external dependencies" ON)
 option(REPORT_COMPILE_TIME "Report compile time" OFF)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    option(STATIC_LINKING "Use static linking of system libraries" ON)
     option(SET_OG_DEBUG_FLAG "Set Debug flag to -Og" OFF)
     option(COMPRESS_DEBUG_STRINGS "Compress strings in Debug builds" ON)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -67,7 +68,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(OVERRIDE_RPATH_CACHE ON CACHE BOOL "override rpath cache" FORCE)
 endif ()
 cmake_dependent_option(OVERRIDE_RPATH "Override rpath" ON
-        "OVERRIDE_RPATH_CACHE" OFF)
+        "OVERRIDE_RPATH_CACHE AND NOT STATIC_LINKING" OFF)
 
 # status
 message(STATUS "Top level project: ${TOP_LEVEL_PROJECT}")
@@ -80,6 +81,7 @@ message(STATUS "Configure external dependencies: ${EXTERNAL_DEPENDENCIES}")
 message(STATUS "Report compile time: ${REPORT_COMPILE_TIME}")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(STATUS "Use static linking of system libraries: ${STATIC_LINKING}")
     message(STATUS "Set Debug flag to -Og: ${SET_OG_DEBUG_FLAG}")
     message(STATUS "Compress Debug build strings: ${COMPRESS_DEBUG_STRINGS}")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -136,6 +138,9 @@ endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # both GCC and Clang
+    if (STATIC_LINKING)
+        set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+    endif ()
     if (SET_OG_DEBUG_FLAG)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
     endif ()
