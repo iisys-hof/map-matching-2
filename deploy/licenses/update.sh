@@ -32,7 +32,7 @@ docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2
   /bin/bash -c "cmake --build /tmp/map-matching-2/cmake-build-release --target install -j $(nproc)"
 
 # update licenses
-directories=("boost" "bz2" "csv_parser" "date" "expat" "gpx" "libosmium" "protobuf" "protozero" "rpmalloc" "zlib")
+directories=("boost" "bz2" "csv_parser" "date" "expat" "gpx" "libosmium" "protozero" "rpmalloc" "zlib")
 for dir in "${directories[@]}"; do
   cp -p "run/gcc/release/doc/${dir}/"* "external/${dir}/"
 done
