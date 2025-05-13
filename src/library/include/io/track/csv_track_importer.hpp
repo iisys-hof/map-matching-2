@@ -226,7 +226,7 @@ namespace map_matching_2::io::track {
                     const auto &id = pair.first;
                     if (_selectors.empty() or _selectors.contains(id)) {
                         auto &out_line = std::any_cast<line_type_out &>(pair.second);
-                        std::sort(std::begin(out_line), std::end(out_line));
+                        std::stable_sort(std::begin(out_line), std::end(out_line));
                         _forwarder.pass(multi_track_type{id, std::move(out_line)});
                     }
                 }
