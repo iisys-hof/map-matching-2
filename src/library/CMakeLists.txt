@@ -119,7 +119,7 @@ endif ()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND (
         CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 12 OR (
         CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 12 AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)))
+        CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16)))
     # boost/geometry/srs/epsg.hpp dependency severely impacts optimization time
     # see https://github.com/boostorg/geometry/issues/1006
     set_source_files_properties(
