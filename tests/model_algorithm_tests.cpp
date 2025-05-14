@@ -305,6 +305,17 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
                     BOOST_CHECK_LE(rich_line.directions(), 1e-6);
                     BOOST_CHECK_LE(rich_line.absolute_directions(), 1e-6);
                 });
+
+        test_sub_rich_line(create_line<point_type, line_type>(
+                        {0, 0, 1, 0, 2, 0, 2, 1, 2, 2}),
+                1, 4,
+                [](const auto &rich_line) {
+                    BOOST_CHECK_EQUAL(rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(rich_line.length(), 2.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(rich_line.azimuth(), 45.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(rich_line.directions(), 90.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(rich_line.absolute_directions(), 90.0, 1e-6);
+                });
     }
 
     BOOST_AUTO_TEST_CASE(multi_rich_line_sub_multi_rich_line_test) {
@@ -400,6 +411,21 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
                     BOOST_CHECK_EQUAL(multi_rich_line.has_length(), false);
                     BOOST_CHECK_EQUAL(multi_rich_line.has_azimuth(), false);
                     BOOST_CHECK_EQUAL(multi_rich_line.has_directions(), false);
+                });
+
+        test_sub_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 5, 1, 5, 2, 5, 3, 5, 4, 5, 5}),
+                        create_line<point_type, line_type>({5, 5, 4, 5, 3, 5, 2, 5, 1, 5, 0, 5}),
+                        create_line<point_type, line_type>({0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0})
+                },
+                1, 3,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 2);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 10.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), -45.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.directions(), 90.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.absolute_directions(), 90.0, 1e-6);
                 });
     }
 
@@ -528,6 +554,21 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
                     BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
                     BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
                     BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 5, 1, 5, 2, 5, 3, 5, 4, 5, 5}),
+                        create_line<point_type, line_type>({5, 5, 4, 5, 3, 5, 2, 5, 1, 5, 0, 5}),
+                        create_line<point_type, line_type>({0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0})
+                },
+                1, 2, 4, 3,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 2);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 6.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), -45.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.directions(), 90.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.absolute_directions(), 90.0, 1e-6);
                 });
     }
 

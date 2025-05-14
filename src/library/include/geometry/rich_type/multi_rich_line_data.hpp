@@ -281,22 +281,22 @@ namespace map_matching_2::geometry {
             if (from >= to) {
                 return multi_rich_line_data{};
             }
+            // azimuth is one less because it's the angles inbetween
+            const auto toa = to > 0 ? to - 1 : 0;
             return multi_rich_line_data{
                     (from == 0 and to >= this->_lengths.size()) ? this->_length : not_initialized<length_type>,
                     (from == 0 and to >= this->_lengths.size()) ? this->_azimuth : not_initialized<angle_type>,
-                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
-                    ? this->_directions
-                    : not_initialized<angle_type>,
-                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
+                    (from == 0 and toa >= this->_azimuths.size()) ? this->_directions : not_initialized<angle_type>,
+                    (from == 0 and toa >= this->_azimuths.size())
                     ? this->_absolute_directions
                     : not_initialized<angle_type>,
                     (not this->_lengths.empty() and from <= to and
                         from < this->_lengths.size() and to <= this->_lengths.size())
                     ? length_container_type{this->_lengths.cbegin() + from, this->_lengths.cbegin() + to}
                     : length_container_type{},
-                    (not this->_azimuths.empty() and from <= to and
-                        from < this->_azimuths.size() and to > 0 and to - 1 <= this->_azimuths.size())
-                    ? angle_container_type{this->_azimuths.cbegin() + from, this->_azimuths.cbegin() + to - 1}
+                    (not this->_azimuths.empty() and from <= toa and
+                        from < this->_azimuths.size() and toa <= this->_azimuths.size())
+                    ? angle_container_type{this->_azimuths.cbegin() + from, this->_azimuths.cbegin() + toa}
                     : angle_container_type{}
             };
         }
@@ -306,24 +306,22 @@ namespace map_matching_2::geometry {
             if (from >= to) {
                 return multi_rich_line_data{allocator};
             }
+            // azimuth is one less because it's the angles inbetween
+            const auto toa = to > 0 ? to - 1 : 0;
             return multi_rich_line_data{
                     (from == 0 and to >= this->_lengths.size()) ? this->_length : not_initialized<length_type>,
                     (from == 0 and to >= this->_lengths.size()) ? this->_azimuth : not_initialized<angle_type>,
-                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
-                    ? this->_directions
-                    : not_initialized<angle_type>,
-                    (from == 0 and to > 0 and to - 1 >= this->_azimuths.size())
+                    (from == 0 and toa >= this->_azimuths.size()) ? this->_directions : not_initialized<angle_type>,
+                    (from == 0 and toa >= this->_azimuths.size())
                     ? this->_absolute_directions
                     : not_initialized<angle_type>,
                     (not this->_lengths.empty() and from <= to and
                         from < this->_lengths.size() and to <= this->_lengths.size())
                     ? length_container_type{this->_lengths.cbegin() + from, this->_lengths.cbegin() + to, allocator}
                     : length_container_type{allocator},
-                    (not this->_azimuths.empty() and from <= to and
-                        from < this->_azimuths.size() and to > 0 and to - 1 <= this->_azimuths.size())
-                    ? angle_container_type{
-                            this->_azimuths.cbegin() + from, this->_azimuths.cbegin() + to - 1, allocator
-                    }
+                    (not this->_azimuths.empty() and from <= toa and
+                        from < this->_azimuths.size() and toa <= this->_azimuths.size())
+                    ? angle_container_type{this->_azimuths.cbegin() + from, this->_azimuths.cbegin() + toa, allocator}
                     : angle_container_type{allocator},
                     allocator
             };
