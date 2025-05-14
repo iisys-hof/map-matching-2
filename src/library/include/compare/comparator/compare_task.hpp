@@ -23,14 +23,14 @@
 namespace map_matching_2::compare {
 
     struct compare_task {
-        using multi_track_variant_type = geometry::track::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
 
-        multi_track_variant_type match{}, ground_truth{};
+        import_multi_track_variant_type match{}, ground_truth{};
         compare::settings compare_settings{};
 
         compare_task() = default;
 
-        compare_task(multi_track_variant_type match, multi_track_variant_type ground_truth,
+        compare_task(import_multi_track_variant_type match, import_multi_track_variant_type ground_truth,
                 compare::settings compare_settings = {});
     };
 

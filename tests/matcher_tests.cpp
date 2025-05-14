@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 const std::string &file_prefix) {
             using time_point_type = typename map_matching_2::matching::network_traits<typename
                 matcher_metric::network_type>::time_point_type;
-            using multi_track = typename map_matching_2::geometry::track::multi_track_type<time_point_type>;
+            using multi_track = typename map_matching_2::geometry::track::import_multi_track_type<time_point_type>;
             using line_type = typename multi_track::line_type;
 
             const std::string matches_filename{file_prefix + "_test_matches.csv"};

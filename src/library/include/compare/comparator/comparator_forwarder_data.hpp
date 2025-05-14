@@ -25,7 +25,7 @@ namespace map_matching_2::compare {
 
     struct comparator_forwarder_data {
 
-        using multi_track_variant_type = comparator::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
         using task_type = comparator::task_type;
 
         comparator_forwarder_data(comparator &comparator_ref, compare::settings settings);
@@ -33,10 +33,10 @@ namespace map_matching_2::compare {
         comparator &comparator_ref;
         const compare::settings settings;
 
-        boost::unordered_flat_map<std::string, multi_track_variant_type> matches;
-        boost::unordered_flat_map<std::string, multi_track_variant_type> compares;
+        boost::unordered_flat_map<std::string, import_multi_track_variant_type> matches;
+        boost::unordered_flat_map<std::string, import_multi_track_variant_type> compares;
 
-        [[nodiscard]] static std::string id(const multi_track_variant_type &multi_track_variant);
+        [[nodiscard]] static std::string id(const import_multi_track_variant_type &multi_track_variant);
 
         void finish();
 

@@ -39,13 +39,13 @@ namespace map_matching_2::io::track::filter {
 
     public:
         using forwarder_type = Forwarder;
-        using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename forwarder_type::import_multi_track_variant_type;
 
         constexpr explicit track_regional_filter(forwarder_type &forwarder,
                 const std::string &polygon, const FILTER_METHOD method)
             : _forwarder{forwarder}, _polygon{polygon}, _method{method}, _empty{polygon.empty()} {}
 
-        void pass(multi_track_variant_type multi_track) {
+        void pass(import_multi_track_variant_type multi_track) {
             if (_empty or _method == FILTER_METHOD::NONE) {
                 _forwarder.pass(std::move(multi_track));
             } else {
@@ -69,9 +69,9 @@ namespace map_matching_2::io::track::filter {
             geometry::models<geometry::point_type<geometry::cs_spherical_equatorial>>::box_type,
             geometry::models<geometry::point_type<geometry::cs_cartesian>>::box_type> _box_variant;
 
-        void _filter_track(multi_track_variant_type &&multi_track) {
-            std::visit([this]<typename MultiTrack>(MultiTrack &&multi_track) {
-                using multi_track_type = std::remove_reference_t<MultiTrack>;
+        void _filter_track(import_multi_track_variant_type &&multi_track) {
+            std::visit([this]<typename ImportMultiTrack>(ImportMultiTrack &&multi_track) {
+                using multi_track_type = std::remove_reference_t<ImportMultiTrack>;
                 using time_point_type = typename multi_track_type::point_type;
                 using point_type = typename geometry::models<time_point_type>::explicit_point_type;
 
@@ -85,10 +85,10 @@ namespace map_matching_2::io::track::filter {
                     const box_type &box = std::get<box_type>(_box_variant);
                     if (_method == WITHIN and
                         boost::geometry::covered_by(multi_track.multi_rich_line.multi_line(), box)) {
-                        _forwarder.pass(std::forward<MultiTrack>(multi_track));
+                        _forwarder.pass(std::forward<multi_track_type>(multi_track));
                     } else if (_method == INTERSECTS and
                         boost::geometry::intersects(multi_track.multi_rich_line.multi_line(), box)) {
-                        _forwarder.pass(std::forward<MultiTrack>(multi_track));
+                        _forwarder.pass(std::forward<multi_track_type>(multi_track));
                     }
                 } else if (_polygon.starts_with("POLYGON")) {
                     using polygon_type = typename geometry::models<point_type>::template polygon_type<>;
@@ -100,10 +100,10 @@ namespace map_matching_2::io::track::filter {
                     const polygon_type &polygon = std::get<polygon_type>(_polygon_variant);
                     if (_method == WITHIN and
                         boost::geometry::covered_by(multi_track.multi_rich_line.multi_line(), polygon)) {
-                        _forwarder.pass(std::forward<MultiTrack>(multi_track));
+                        _forwarder.pass(std::forward<multi_track_type>(multi_track));
                     } else if (_method == INTERSECTS and
                         boost::geometry::intersects(multi_track.multi_rich_line.multi_line(), polygon)) {
-                        _forwarder.pass(std::forward<MultiTrack>(multi_track));
+                        _forwarder.pass(std::forward<multi_track_type>(multi_track));
                     }
                 } else {
                     throw std::invalid_argument{std::format("invalid filter polygon: {}", _polygon)};

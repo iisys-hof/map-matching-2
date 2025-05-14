@@ -28,13 +28,13 @@ namespace map_matching_2::io::track {
     class track_exporter {
 
     public:
-        using multi_track_variant_type = geometry::track::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
 
         track_exporter(std::string filename, bool console, bool verbose);
 
         ~track_exporter();
 
-        void pass(const multi_track_variant_type &multi_track);
+        void pass(const import_multi_track_variant_type &multi_track);
 
     private:
         io::results::csv_track_exporter<> _exporter;

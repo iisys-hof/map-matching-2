@@ -23,13 +23,12 @@ namespace map_matching_2::compare {
     class comparator_forwarder_matches {
 
     public:
-        using comparator_type = comparator;
-        using multi_track_variant_type = comparator_type::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
 
         constexpr explicit comparator_forwarder_matches(comparator_forwarder_data &data)
             : _data{data} {}
 
-        void pass(multi_track_variant_type multi_track) const;
+        void pass(import_multi_track_variant_type multi_track) const;
 
     private:
         comparator_forwarder_data &_data;

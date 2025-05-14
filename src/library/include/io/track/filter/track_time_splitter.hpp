@@ -23,13 +23,13 @@ namespace map_matching_2::io::track::filter {
 
     public:
         using forwarder_type = Forwarder;
-        using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename forwarder_type::import_multi_track_variant_type;
 
         constexpr explicit track_time_splitter(forwarder_type &forwarder, const double split_time,
                 const std::string &aggregator)
             : _forwarder{forwarder}, _split_time{split_time}, _aggregator{aggregator}, _no_split{split_time <= 0} {}
 
-        void pass(multi_track_variant_type multi_track) {
+        void pass(import_multi_track_variant_type multi_track) {
             if (_no_split) {
                 _forwarder.pass(std::move(multi_track));
             } else {
@@ -43,9 +43,9 @@ namespace map_matching_2::io::track::filter {
         const std::string _aggregator;
         const bool _no_split{false};
 
-        void _split_track(multi_track_variant_type &&multi_track) {
-            std::visit([this]<typename MultiTrack>(MultiTrack &&multi_track) {
-                using multi_track_type = std::remove_reference_t<MultiTrack>;
+        void _split_track(import_multi_track_variant_type &&multi_track) {
+            std::visit([this]<typename ImportMultiTrack>(ImportMultiTrack &&multi_track) {
+                using multi_track_type = std::remove_reference_t<ImportMultiTrack>;
                 using multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
                 using time_point_type = typename multi_track_type::point_type;
 
@@ -64,7 +64,7 @@ namespace map_matching_2::io::track::filter {
                         if (curr and prev) {
                             double time_difference = curr->timestamp() - prev->timestamp();
                             if (time_difference >= _split_time) {
-                                _forwarder.pass(std::forward<MultiTrack>(multi_track_type{
+                                _forwarder.pass(std::forward<multi_track_type>(multi_track_type{
                                         std::format("{}{}{}", multi_track.id, _aggregator, index++),
                                         multi_rich_line.template extract<multi_rich_line_type>(start_outer, start_inner,
                                                 j, i + 1)
@@ -79,13 +79,13 @@ namespace map_matching_2::io::track::filter {
                 }
 
                 if (splitted) {
-                    _forwarder.pass(std::forward<MultiTrack>(multi_track_type{
+                    _forwarder.pass(std::forward<multi_track_type>(multi_track_type{
                             std::format("{}{}{}", multi_track.id, _aggregator, index++),
                             multi_rich_line.template extract<multi_rich_line_type>(start_outer, start_inner,
                                     multi_rich_line.back().size(), multi_rich_line.size())
                     }));
                 } else {
-                    _forwarder.pass(std::forward<MultiTrack>(multi_track));
+                    _forwarder.pass(std::forward<multi_track_type>(multi_track));
                 }
             }, std::move(multi_track));
         }

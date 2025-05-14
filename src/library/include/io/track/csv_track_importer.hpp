@@ -45,7 +45,7 @@ namespace map_matching_2::io::track {
     public:
         using forwarder_type = Forwarder;
 
-        using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename forwarder_type::import_multi_track_variant_type;
 
         constexpr csv_track_importer(std::vector<std::string> filenames, const io::csv_settings &csv_settings,
                 forwarder_type &forwarder, const geometry::srs_transform &srs_transform,
@@ -79,7 +79,7 @@ namespace map_matching_2::io::track {
                         using multi_line_type_in = typename geometry::models<point_type_in>::
                                 template multi_line_type<line_type_in>;
 
-                        using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+                        using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
                         using multi_line_type_out = typename multi_track_type::multi_line_type;
                         using line_type_out = typename multi_track_type::line_type;
 
@@ -219,7 +219,7 @@ namespace map_matching_2::io::track {
             geometry::srs_dispatch(_srs_transform, [this]<typename InputCS, typename OutputCS>() {
                 using point_type_out = geometry::time_point_type<OutputCS>;
 
-                using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+                using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
                 using line_type_out = typename multi_track_type::line_type;
 
                 for (auto &pair : _points) {

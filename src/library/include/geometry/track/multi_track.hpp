@@ -74,6 +74,11 @@ namespace map_matching_2::geometry::track {
         constexpr multi_track(std::string id, multi_rich_line_type multi_rich_line)
             : id{std::move(id)}, multi_rich_line{std::move(multi_rich_line)} {}
 
+        template<typename MultiRichLineT> requires
+            (not std::same_as<MultiRichLineT, multi_rich_line_type>)
+        multi_track(const multi_track<MultiRichLineT> &other)
+            : id{other.id}, multi_rich_line{other.multi_rich_line} {}
+
         constexpr multi_track(const multi_track &other) = default;
 
         constexpr multi_track(multi_track &&other) noexcept = default;

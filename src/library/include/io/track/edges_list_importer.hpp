@@ -45,7 +45,7 @@ namespace map_matching_2::io::track {
         using forwarder_type = Forwarder;
         using graph_type = Graph;
 
-        using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename forwarder_type::import_multi_track_variant_type;
 
         using edge_data_type = typename graph::graph_traits<Graph>::edge_data_type;
         using edge_descriptor = typename graph::graph_traits<Graph>::edge_descriptor;
@@ -106,7 +106,7 @@ namespace map_matching_2::io::track {
                 using edge_compatible_rich_line_type = geometry::rich_line_type<edge_point_type>;
                 using edge_compatible_multi_rich_line_type = geometry::multi_rich_line_type<edge_point_type>;
 
-                using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+                using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
 
                 const auto &filenames = this->filenames();
                 for (std::size_t i = 0; i < filenames.size(); ++i) {

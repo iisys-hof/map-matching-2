@@ -24,8 +24,16 @@
 
 #include "geometry/track/multi_track.hpp"
 
+#define MM2_IMPORT_MULTI_TRACK(CS) map_matching_2::geometry::track::multi_track< \
+    MM2_MULTI_RICH_TIME_LINE(CS, MM2_MEMORY_TYPES)>
+
 #define MM2_MULTI_TRACK(CS) map_matching_2::geometry::track::multi_track< \
     MM2_EAGER_MULTI_RICH_TIME_LINE(CS, MM2_MEMORY_TYPES)>
+
+#define MM2_IMPORT_MULTI_TRACK_VARIANT std::variant< \
+    MM2_IMPORT_MULTI_TRACK(MM2_GEOGRAPHIC), \
+    MM2_IMPORT_MULTI_TRACK(MM2_SPHERICAL_EQUATORIAL), \
+    MM2_IMPORT_MULTI_TRACK(MM2_CARTESIAN)>
 
 #define MM2_MULTI_TRACK_VARIANT std::variant< \
     MM2_MULTI_TRACK(MM2_GEOGRAPHIC), \
@@ -35,6 +43,7 @@
 #ifdef EXPLICIT_TEMPLATES
 
 #define MM2_MULTI_TRACK_TEMPLATE(CS) \
+    MM2_EXTERN template class MM2_IMPORT_MULTI_TRACK(CS); \
     MM2_EXTERN template class MM2_MULTI_TRACK(CS);
 
 MM2_MULTI_TRACK_TEMPLATE(MM2_GEOGRAPHIC)
@@ -46,7 +55,12 @@ MM2_MULTI_TRACK_TEMPLATE(MM2_CARTESIAN)
 namespace map_matching_2::geometry::track {
 
     template<geometry::is_time_point TimePoint>
+    using import_multi_track_type = multi_track<multi_rich_line_type<TimePoint>>;
+
+    template<geometry::is_time_point TimePoint>
     using multi_track_type = multi_track<eager_multi_rich_line_type<TimePoint>>;
+
+    using import_multi_track_variant_type = MM2_IMPORT_MULTI_TRACK_VARIANT;
 
     using multi_track_variant_type = MM2_MULTI_TRACK_VARIANT;
 

@@ -39,7 +39,7 @@ namespace map_matching_2::io::track {
     public:
         using forwarder_type = Forwarder;
 
-        using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename forwarder_type::import_multi_track_variant_type;
 
         constexpr input_importer(forwarder_type &forwarder, const geometry::srs_transform &srs_transform,
                 const geometry::point_reprojector_variant &reprojector_variant)
@@ -82,7 +82,7 @@ namespace map_matching_2::io::track {
                 using multi_line_type_in = typename geometry::models<point_type_in>::
                         template multi_line_type<line_type_in>;
 
-                using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+                using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
                 using line_type_out = typename multi_track_type::line_type;
 
                 std::string id_str = std::to_string(_counter++);

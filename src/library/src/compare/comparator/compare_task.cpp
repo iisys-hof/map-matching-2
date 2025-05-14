@@ -17,7 +17,7 @@
 
 namespace map_matching_2::compare {
 
-    compare_task::compare_task(multi_track_variant_type match, multi_track_variant_type ground_truth,
+    compare_task::compare_task(import_multi_track_variant_type match, import_multi_track_variant_type ground_truth,
             compare::settings compare_settings)
         : match{std::move(match)}, ground_truth{std::move(ground_truth)},
         compare_settings{std::move(compare_settings)} {}

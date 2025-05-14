@@ -60,6 +60,11 @@ namespace map_matching_2::geometry::track {
         constexpr track(std::string id, rich_line_type rich_line)
             : id{std::move(id)}, rich_line{std::move(rich_line)} {}
 
+        template<typename RichLineT> requires
+            (not std::same_as<RichLineT, rich_line_type>)
+        track(const track<RichLineT> &other)
+            : id{other.id}, rich_line{other.rich_line} {}
+
         constexpr track(const track &other) = default;
 
         constexpr track(track &&other) noexcept = default;

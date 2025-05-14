@@ -58,8 +58,7 @@ namespace map_matching_2::io::track {
                 using point_type_out = geometry::time_point_type<OutputCS>;
 
                 using line_type = typename geometry::models<point_type_in>::template line_type<>;
-
-                using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+                using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
 
                 const auto &filenames = this->filenames();
                 if (filenames.size() != 2) {

@@ -17,7 +17,7 @@
 
 namespace map_matching_2::compare {
 
-    void comparator_forwarder_matches::pass(multi_track_variant_type multi_track) const {
+    void comparator_forwarder_matches::pass(import_multi_track_variant_type multi_track) const {
         const std::string id = comparator_forwarder_data::id(multi_track);
         auto it = _data.compares.find(id);
         if (it != _data.compares.end()) {

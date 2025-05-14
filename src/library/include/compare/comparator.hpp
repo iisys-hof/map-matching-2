@@ -37,7 +37,7 @@ namespace map_matching_2::compare {
     class comparator : public util::coordinator<compare_task> {
 
     public:
-        using multi_track_variant_type = geometry::track::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
         using task_type = compare_task;
         using base_type = util::coordinator<task_type>;
 
@@ -46,7 +46,7 @@ namespace map_matching_2::compare {
 
         ~comparator() override;
 
-        void compare(multi_track_variant_type match, multi_track_variant_type ground_truth,
+        void compare(import_multi_track_variant_type match, import_multi_track_variant_type ground_truth,
                 compare::settings settings);
 
     private:

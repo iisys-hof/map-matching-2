@@ -31,13 +31,13 @@ namespace map_matching_2::io::track {
         _exporter.join();
     }
 
-    void track_exporter::pass(const multi_track_variant_type &multi_track) {
-        std::visit([this]<typename MultiTrack>(MultiTrack &&_multi_track) {
-            using multi_track_type = std::remove_reference_t<MultiTrack>;
+    void track_exporter::pass(const import_multi_track_variant_type &multi_track) {
+        std::visit([this]<typename ImportMultiTrack>(ImportMultiTrack &&_multi_track) {
+            using import_multi_track_type = std::remove_reference_t<ImportMultiTrack>;
 
-            _output_printer.pass(_output_printer.parse_result<multi_track_type>(_multi_track));
+            _output_printer.pass(_output_printer.parse_result<import_multi_track_type>(_multi_track));
             if (not _output_printer.is_console()) {
-                _exporter.pass(_exporter.parse_result<multi_track_type>(_multi_track));
+                _exporter.pass(_exporter.parse_result<import_multi_track_type>(_multi_track));
             }
         }, multi_track);
     }

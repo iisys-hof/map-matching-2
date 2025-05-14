@@ -53,15 +53,15 @@ namespace map_matching_2::matching {
 
     public:
         using network_type = Network;
-        using multi_track_variant_type = geometry::track::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
         using task_type = match_task;
         using base_type = util::coordinator<task_type>;
 
         using track_type = typename network_traits<network_type>::track_type;
         using route_type = typename network_traits<network_type>::route_type;
         using policy_type = typename network_traits<network_type>::policy_type;
-        using multi_track_multi_rich_line_type = typename
-        network_traits<network_type>::multi_track_multi_rich_line_type;
+        using multi_track_multi_rich_line_type =
+        typename network_traits<network_type>::multi_track_multi_rich_line_type;
         using track_rich_line_type = typename network_traits<network_type>::track_rich_line_type;
         using lazy_rich_line_type = typename network_traits<network_type>::lazy_rich_line_type;
 
@@ -90,7 +90,7 @@ namespace map_matching_2::matching {
             return _network;
         }
 
-        void match(multi_track_variant_type multi_track, matching::settings settings) {
+        void match(import_multi_track_variant_type multi_track, matching::settings settings) {
             this->queue(task_type{std::move(multi_track), std::move(settings)});
         }
 
@@ -188,18 +188,19 @@ namespace map_matching_2::matching {
 
         template<typename Learner>
         void _match_dispatch(task_type task) {
-            using network_multi_track_type = typename network_traits<network_type>::multi_track_type;
-            using network_point_type = typename network_multi_track_type::point_type;
+            using network_point_type = typename network_traits<network_type>::point_type;
 
-            std::visit([this, &task]<typename MultiTrack>(MultiTrack &&multi_track) {
-                using multi_track_type = std::remove_reference_t<MultiTrack>;
-                using point_type = typename multi_track_type::point_type;
+            std::visit([this, &task]<typename ImportMultiTrack>(const ImportMultiTrack &multi_track) {
+                using import_multi_track_type = std::remove_reference_t<ImportMultiTrack>;
+                using import_point_type = typename import_multi_track_type::point_type;
+                using multi_track_type = geometry::track::multi_track_type<import_point_type>;
 
                 if constexpr (std::same_as<
                     typename geometry::data<network_point_type>::coordinate_system_type,
-                    typename geometry::data<point_type>::coordinate_system_type>) {
+                    typename geometry::data<import_point_type>::coordinate_system_type>) {
 
-                    _match_impl<Learner, multi_track_type>(std::forward<MultiTrack>(multi_track), task.match_settings);
+                    _match_impl<Learner, multi_track_type>(multi_track_type{multi_track},
+                            task.match_settings);
                 } else {
                     throw std::invalid_argument{
                             std::format(
@@ -207,10 +208,10 @@ namespace map_matching_2::matching {
                                     boost::typeindex::type_id<typename geometry::data<
                                         network_point_type>::coordinate_system_type>().pretty_name(),
                                     boost::typeindex::type_id<typename geometry::data<
-                                        point_type>::coordinate_system_type>().pretty_name())
+                                        import_point_type>::coordinate_system_type>().pretty_name())
                     };
                 }
-            }, std::move(task.multi_track));
+            }, task.multi_track);
         }
 
         void execute(task_type &&task) override {

@@ -30,17 +30,19 @@ template<typename Types>
 struct matcher_fixture {
 
     using matcher_type = Types;
+    using network_type = typename matcher_type::network_type;
+    using time_point_type = typename map_matching_2::matching::network_traits<network_type>::time_point_type;
+    using import_track_type = map_matching_2::geometry::track::import_track_type<time_point_type>;
 
-    typename matcher_type::track_type
-    create_track(std::string id,
-            std::initializer_list<typename matcher_type::track_type::point_type> points) {
-        typename matcher_type::track_type::line_type line;
+    import_track_type
+    create_track(std::string id, std::initializer_list<typename import_track_type::point_type> points) {
+        typename import_track_type::line_type line;
         line.reserve(points.size());
         for (const auto &point : points) {
             line.emplace_back(point);
         }
 
-        return typename matcher_type::track_type{std::move(id), std::move(line)};
+        return import_track_type{std::move(id), std::move(line)};
     }
 
     template<typename Network>

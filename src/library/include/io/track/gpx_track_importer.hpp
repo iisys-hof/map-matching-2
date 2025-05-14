@@ -44,7 +44,7 @@ namespace map_matching_2::io::track {
     public:
         using forwarder_type = Forwarder;
 
-        using multi_track_variant_type = typename forwarder_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename forwarder_type::import_multi_track_variant_type;
 
         constexpr gpx_track_importer(std::vector<std::string> filenames, const std::vector<std::string> &selectors,
                 const bool no_id, std::string time_format, const bool no_parse_time, forwarder_type &forwarder,
@@ -102,7 +102,7 @@ namespace map_matching_2::io::track {
             geometry::srs_dispatch(_srs_transform, [this, root]<typename InputCS, typename OutputCS>() {
                 using point_type_out = geometry::time_point_type<OutputCS>;
 
-                using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+                using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
                 using multi_line_type_out = typename multi_track_type::multi_line_type;
 
                 auto &trks = root->trks().list();
@@ -143,14 +143,14 @@ namespace map_matching_2::io::track {
         }
 
         template<typename InputCS, typename OutputCS>
-        [[nodiscard]] typename geometry::track::multi_track_type<geometry::time_point_type<OutputCS>>::line_type
+        [[nodiscard]] typename geometry::track::import_multi_track_type<geometry::time_point_type<OutputCS>>::line_type
         _parse_track_segment(gpx::TRKSeg *seg) {
             using point_type_in = geometry::point_type<InputCS>;
             using point_type_out = geometry::time_point_type<OutputCS>;
 
             using coordinate_type_in = typename geometry::data<point_type_in>::coordinate_type;
 
-            using multi_track_type = geometry::track::multi_track_type<point_type_out>;
+            using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
             using line_type_out = typename multi_track_type::line_type;
 
             auto &trkpts = seg->trkpts().list();

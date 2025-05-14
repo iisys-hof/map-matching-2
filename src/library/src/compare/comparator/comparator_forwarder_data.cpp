@@ -20,7 +20,7 @@ namespace map_matching_2::compare {
     comparator_forwarder_data::comparator_forwarder_data(comparator &comparator_ref, compare::settings settings)
         : comparator_ref{comparator_ref}, settings{std::move(settings)} {}
 
-    std::string comparator_forwarder_data::id(const multi_track_variant_type &multi_track_variant) {
+    std::string comparator_forwarder_data::id(const import_multi_track_variant_type &multi_track_variant) {
         return std::visit([](auto &&multi_track) {
             return multi_track.id;
         }, multi_track_variant);
@@ -38,7 +38,7 @@ namespace map_matching_2::compare {
                     using multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
                     using point_type = typename multi_rich_line_type::point_type;
 
-                    geometry::track::multi_track_type<point_type> empty_match{id, multi_rich_line_type{}};
+                    geometry::track::import_multi_track_type<point_type> empty_match{id, multi_rich_line_type{}};
 
                     comparator_ref.compare(std::move(empty_match), ground_truth, settings);
                 }, multi_track);

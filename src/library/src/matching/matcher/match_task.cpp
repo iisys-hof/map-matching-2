@@ -17,7 +17,7 @@
 
 namespace map_matching_2::matching {
 
-    match_task::match_task(multi_track_variant_type multi_track, matching::settings match_settings)
+    match_task::match_task(import_multi_track_variant_type multi_track, matching::settings match_settings)
         : multi_track{std::move(multi_track)}, match_settings{std::move(match_settings)} {}
 
 }

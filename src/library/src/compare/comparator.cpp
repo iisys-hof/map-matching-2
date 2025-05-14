@@ -37,41 +37,51 @@ namespace map_matching_2::compare {
         _exporter.join();
     }
 
-    void comparator::compare(multi_track_variant_type match, multi_track_variant_type ground_truth,
+    void comparator::compare(import_multi_track_variant_type match, import_multi_track_variant_type ground_truth,
             compare::settings settings) {
         this->queue(task_type{std::move(match), std::move(ground_truth), std::move(settings)});
     }
 
     void comparator::_compare_dispatch(task_type task) {
-        std::visit([this, &task]<typename GroundTruthMultiTrack>(GroundTruthMultiTrack &&ground_truth) {
-            using ground_truth_multi_track_type = std::remove_reference_t<GroundTruthMultiTrack>;
-            using ground_truth_multi_rich_line_type = typename ground_truth_multi_track_type::multi_rich_line_type;
-            using ground_truth_point_type = typename ground_truth_multi_rich_line_type::point_type;
+        std::visit([this, &task]<typename GroundTruthImportMultiTrack>(
+                const GroundTruthImportMultiTrack &ground_truth) {
+                    using ground_truth_import_multi_track_type = std::remove_reference_t<GroundTruthImportMultiTrack>;
+                    using ground_truth_import_multi_rich_line_type =
+                            typename ground_truth_import_multi_track_type::multi_rich_line_type;
+                    using ground_truth_import_point_type =
+                            typename ground_truth_import_multi_rich_line_type::point_type;
+                    using ground_truth_multi_track_type =
+                            geometry::track::multi_track_type<ground_truth_import_point_type>;
 
-            std::visit([this, &task, ground_truth = std::forward<GroundTruthMultiTrack>(ground_truth)]
-                    <typename MatchMultiTrack>(MatchMultiTrack &&match) {
-                        using match_multi_track_type = std::remove_reference_t<MatchMultiTrack>;
-                        using match_multi_rich_line_type = typename match_multi_track_type::multi_rich_line_type;
-                        using match_point_type = typename match_multi_rich_line_type::point_type;
+                    std::visit([this, &task, &ground_truth]<typename MatchImportMultiTrack>(
+                            const MatchImportMultiTrack &match) {
+                                using match_import_multi_track_type = std::remove_reference_t<MatchImportMultiTrack>;
+                                using match_import_multi_rich_line_type =
+                                        typename match_import_multi_track_type::multi_rich_line_type;
+                                using match_import_point_type = typename match_import_multi_rich_line_type::point_type;
+                                using match_multi_track_type =
+                                        geometry::track::multi_track_type<match_import_point_type>;
 
-                        if constexpr (std::same_as<
-                            typename geometry::data<ground_truth_point_type>::coordinate_system_type,
-                            typename geometry::data<match_point_type>::coordinate_system_type>) {
+                                if constexpr (std::same_as<
+                                    typename geometry::data<ground_truth_import_point_type>::coordinate_system_type,
+                                    typename geometry::data<match_import_point_type>::coordinate_system_type>) {
 
-                            _compare_impl(std::move(ground_truth), std::forward<MatchMultiTrack>(match),
-                                    task.compare_settings);
-                        } else {
-                            throw std::invalid_argument{
-                                    std::format(
-                                            "coordinate systems do not match: {} and {}",
-                                            boost::typeindex::type_id<typename geometry::data<
-                                                ground_truth_point_type>::coordinate_system_type>().pretty_name(),
-                                            boost::typeindex::type_id<typename geometry::data<
-                                                match_point_type>::coordinate_system_type>().pretty_name())
-                            };
-                        }
-                    }, std::move(task.match));
-        }, std::move(task.ground_truth));
+                                    _compare_impl(ground_truth_multi_track_type{ground_truth},
+                                            match_multi_track_type{match}, task.compare_settings);
+                                } else {
+                                    throw std::invalid_argument{
+                                            std::format(
+                                                    "coordinate systems do not match: {} and {}",
+                                                    boost::typeindex::type_id<typename geometry::data<
+                                                        ground_truth_import_point_type>::coordinate_system_type>().
+                                                    pretty_name(),
+                                                    boost::typeindex::type_id<typename geometry::data<
+                                                        match_import_point_type>::coordinate_system_type>().
+                                                    pretty_name())
+                                    };
+                                }
+                            }, task.match);
+                }, task.ground_truth);
     }
 
     void comparator::execute(task_type &&task) {

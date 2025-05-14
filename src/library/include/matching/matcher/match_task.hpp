@@ -23,14 +23,14 @@
 namespace map_matching_2::matching {
 
     struct match_task {
-        using multi_track_variant_type = geometry::track::multi_track_variant_type;
+        using import_multi_track_variant_type = geometry::track::import_multi_track_variant_type;
 
-        multi_track_variant_type multi_track{};
+        import_multi_track_variant_type multi_track{};
         matching::settings match_settings{};
 
         constexpr match_task() = default;
 
-        explicit match_task(multi_track_variant_type multi_track, matching::settings match_settings = {});
+        explicit match_task(import_multi_track_variant_type multi_track, matching::settings match_settings = {});
 
     };
 

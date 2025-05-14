@@ -25,12 +25,12 @@ namespace map_matching_2::matching {
 
     public:
         using matcher_type = Matcher;
-        using multi_track_variant_type = typename matcher_type::multi_track_variant_type;
+        using import_multi_track_variant_type = typename matcher_type::import_multi_track_variant_type;
 
         matcher_forwarder(matcher_type &matcher, matching::settings settings)
             : _matcher{matcher}, _settings{std::move(settings)} {}
 
-        void pass(multi_track_variant_type multi_track) {
+        void pass(import_multi_track_variant_type multi_track) {
             _matcher.match(std::move(multi_track), _settings);
         }
 
