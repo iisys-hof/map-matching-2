@@ -34,7 +34,7 @@ cmake_dependent_option(EXPLICIT_TEMPLATES "Enable explicit template instantiatio
 cmake_dependent_option(ENABLE_IPO "Enable interprocedural optimization" ON
         "NOT (CMAKE_BUILD_TYPE STREQUAL \"Debug\")" OFF)
 cmake_dependent_option(DEBUG_BUILD "Enable debug build" ON
-        "CMAKE_BUILD_TYPE STREQUAL \"Debug\"" OFF)
+        "CMAKE_BUILD_TYPE STREQUAL \"Debug\" OR CMAKE_BUILD_TYPE STREQUAL \"RelWithDebInfo\"" OFF)
 option(NATIVE_BUILD "Enable native build" OFF)
 option(EXTERNAL_DEPENDENCIES "Configure external dependencies" ON)
 option(REPORT_COMPILE_TIME "Report compile time" OFF)
