@@ -99,8 +99,10 @@ namespace map_matching_2::geometry {
         constexpr lazy_multi_rich_line(const lazy_multi_rich_line &other)
             : multi_rich_line_data_base_type{other}, multi_rich_line_base_type{other} {}
 
-        template<typename RichLineTypeT>
-        constexpr lazy_multi_rich_line(const multi_rich_line<RichLineTypeT> &other)
+        template<typename RichLineTypeT,
+            template<typename, typename> typename ContainerT = Container,
+            template<typename> typename AllocatorT = Allocator>
+        constexpr lazy_multi_rich_line(const multi_rich_line<RichLineTypeT, ContainerT, AllocatorT> &other)
             : multi_rich_line_data_base_type{}, multi_rich_line_base_type{other} {}
 
         template<typename RichLineTypeT,
@@ -120,8 +122,10 @@ namespace map_matching_2::geometry {
             return *this;
         }
 
-        template<typename RichLineTypeT>
-        constexpr lazy_multi_rich_line &operator=(const multi_rich_line<RichLineTypeT> &other) {
+        template<typename RichLineTypeT,
+            template<typename, typename> typename ContainerT = Container,
+            template<typename> typename AllocatorT = Allocator>
+        constexpr lazy_multi_rich_line &operator=(const multi_rich_line<RichLineTypeT, ContainerT, AllocatorT> &other) {
             multi_rich_line_base_type::operator=(other);
             return *this;
         }

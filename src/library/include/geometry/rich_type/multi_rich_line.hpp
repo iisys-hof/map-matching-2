@@ -90,8 +90,10 @@ namespace map_matching_2::geometry {
         constexpr multi_rich_line(const multi_rich_line &other)
             : _rich_lines{other._rich_lines} {}
 
-        template<typename RichLineT>
-        multi_rich_line(const multi_rich_line<RichLineT> &other) requires
+        template<typename RichLineT,
+            template<typename, typename> typename ContainerT,
+            template<typename> typename AllocatorT>
+        multi_rich_line(const multi_rich_line<RichLineT, ContainerT, AllocatorT> &other) requires
             (not std::same_as<RichLineT, rich_line_type>)
             : _rich_lines{convert_container_types<rich_lines_container_type>(other.rich_lines())} {}
 
@@ -105,8 +107,10 @@ namespace map_matching_2::geometry {
             return *this;
         }
 
-        template<typename RichLineT>
-        multi_rich_line &operator=(const multi_rich_line<RichLineT> &other) requires
+        template<typename RichLineT,
+            template<typename, typename> typename ContainerT,
+            template<typename> typename AllocatorT>
+        multi_rich_line &operator=(const multi_rich_line<RichLineT, ContainerT, AllocatorT> &other) requires
             (not std::same_as<RichLineT, rich_line_type>) {
             _rich_lines = convert_container_types<rich_lines_container_type>(other.rich_lines());
             return *this;
