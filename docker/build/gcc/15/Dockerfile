@@ -1,12 +1,12 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-gcc-ubuntu-2004-build -f docker/build/gcc/14-ubuntu-2004/Dockerfile .
-# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-ubuntu-2004-build
+# docker build -t map_matching_2-gcc-build -f docker/build/gcc/15/Dockerfile .
+# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build
 
-FROM ubuntu:20.04 AS build
+FROM debian:12 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
-ARG GCC_VERSION=14.2.0
+ARG GCC_VERSION=15.1.0
 ARG GDB_VERSION=15.2
 ARG CMAKE_VERSION=3.31.6
 
@@ -56,5 +56,5 @@ RUN apt-get update && apt-get dist-upgrade -y && \
     # debug tools
     apt-get install --no-install-recommends -y \
         clang ninja-build autoconf automake libtool valgrind \
-        locales-all dos2unix rsync tar python3 python3-dev linux-tools-$(uname -r) time git && \
+        locales-all dos2unix rsync tar python3 python3-dev linux-perf time git && \
     rm -rf /var/lib/apt/lists/*

@@ -402,13 +402,13 @@ If you want a prebuilt binary, please see the [Download](#download) section.
 
 Building the software is straightforward. The following tools and versions are tested to work:
 
-- **CMake:** Version 3.30.5
+- **CMake:** Version 3.31.6
 - **Ninja:** Version 1.12.1
 - **On Linux:**
-    - **GCC:** Version 14.2
-    - **Clang:** Version 18
+    - **GCC:** Version 15.1
+    - **Clang:** Version 20
 - **On Windows:**
-    - **Visual Studio C++:** Version 17.13.3 (equivalent to MSVC 1943)
+    - **Visual Studio C++:** Version 17.14.0 (equivalent to MSVC 1943)
 - **Architecture:** Only 64-bit compiler and operating system are officially supported
 
 We provide for Linux various Dockerfiles in the [docker](docker) folder. They contain all necessary information for

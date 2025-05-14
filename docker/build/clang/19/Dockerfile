@@ -7,7 +7,7 @@ FROM debian:12 AS build
 ARG DEBIAN_FRONTEND="noninteractive"
 # only use major LLVM version
 ARG LLVM_VERSION=19
-ARG CMAKE_VERSION=3.30.5
+ARG CMAKE_VERSION=3.31.6
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

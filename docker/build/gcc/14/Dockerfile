@@ -8,7 +8,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
 ARG GCC_VERSION=14.2.0
 ARG GDB_VERSION=15.2
-ARG CMAKE_VERSION=3.30.5
+ARG CMAKE_VERSION=3.31.6
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

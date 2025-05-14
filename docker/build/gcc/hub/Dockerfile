@@ -2,10 +2,10 @@
 # docker build -t map_matching_2-gcc-hub-build -f docker/build/gcc/hub/Dockerfile .
 # docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-docker-build
 
-FROM gcc:14 AS build
+FROM gcc:15 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
-ARG CMAKE_VERSION=3.30.5
+ARG CMAKE_VERSION=3.31.6
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

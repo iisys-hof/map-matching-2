@@ -14,7 +14,7 @@ RUN git clone https://github.com/aras-p/ClangBuildAnalyzer.git
 
 WORKDIR /app/fmt
 
-RUN git checkout 10.2.1 && \
+RUN git checkout 11.2.0 && \
     cmake -DCMAKE_CXX_COMPILER=g++ -B build && \
     cmake --build build --parallel $(nproc) --target install
 
