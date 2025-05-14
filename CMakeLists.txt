@@ -40,7 +40,8 @@ option(EXTERNAL_DEPENDENCIES "Configure external dependencies" ON)
 option(REPORT_COMPILE_TIME "Report compile time" OFF)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    option(STATIC_LINKING "Use static linking of system libraries" ON)
+    cmake_dependent_option(STATIC_LINKING "Use static linking of system libraries" ON
+            "NOT DEBUG_BUILD" OFF)
     option(SET_OG_DEBUG_FLAG "Set Debug flag to -Og" OFF)
     option(COMPRESS_DEBUG_STRINGS "Compress strings in Debug builds" ON)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
