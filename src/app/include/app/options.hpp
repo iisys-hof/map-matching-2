@@ -204,9 +204,9 @@ namespace map_matching_2::app {
     };
 
     struct matching_data : base_data {
-        bool filter_duplicates, simplify_track, median_merge, adaptive_median_merge, within_edge_turns, a_star,
-                candidate_adoption_siblings, candidate_adoption_nearby, candidate_adoption_reverse,
-                adaptive_radius;
+        bool trajectory_simplification, filter_duplicates, simplify_track, median_merge, adaptive_median_merge,
+                within_edge_turns, a_star, candidate_adoption, candidate_adoption_siblings, candidate_adoption_nearby,
+                candidate_adoption_reverse, adaptive_radius;
         double max_time, split_time, routing_max_distance_factor, simplify_track_distance_tolerance,
                 median_merge_distance_tolerance, radius, radius_upper_limit, radius_lower_limit;
         std::size_t k_nearest;

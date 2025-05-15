@@ -284,7 +284,43 @@ namespace map_matching_2::app {
             throw std::invalid_argument{std::format("filter method {} is invalid.", filter_method)};
         }
 
+        const bool is_trajectory_simplification_manually = not vm["trajectory-simplification"].defaulted();
+        const bool is_filter_duplicates_manually = not vm["filter-duplicates"].defaulted();
+        const bool is_simplify_track_manually = not vm["simplify-track"].defaulted();
+        const bool is_median_merge_manually = not vm["median-merge"].defaulted();
+        const bool is_adaptive_median_merge_manually = not vm["adaptive-median-merge"].defaulted();
+        const bool is_candidate_adoption_manually = not vm["candidate-adoption"].defaulted();
+        const bool is_candidate_adoption_siblings_manually = not vm["candidate-adoption-siblings"].defaulted();
+        const bool is_candidate_adoption_nearby_manually = not vm["candidate-adoption-nearby"].defaulted();
+        const bool is_candidate_adoption_reverse_manually = not vm["candidate-adoption-reverse"].defaulted();
         const bool is_within_edge_turns_manually = not vm["within-edge-turns"].defaulted();
+
+        if (is_trajectory_simplification_manually) {
+            if (not is_filter_duplicates_manually) {
+                filter_duplicates = trajectory_simplification;
+            }
+            if (not is_simplify_track_manually) {
+                simplify_track = trajectory_simplification;
+            }
+            if (not is_median_merge_manually) {
+                median_merge = trajectory_simplification;
+            }
+            if (not is_adaptive_median_merge_manually) {
+                adaptive_median_merge = trajectory_simplification;
+            }
+        }
+
+        if (is_candidate_adoption_manually) {
+            if (not is_candidate_adoption_siblings_manually) {
+                candidate_adoption_siblings = candidate_adoption;
+            }
+            if (not is_candidate_adoption_nearby_manually) {
+                candidate_adoption_nearby = candidate_adoption;
+            }
+            if (not is_candidate_adoption_reverse_manually) {
+                candidate_adoption_reverse = candidate_adoption;
+            }
+        }
 
         if (not candidate_adoption_nearby and not candidate_adoption_siblings and not candidate_adoption_reverse and
             not is_within_edge_turns_manually) {
@@ -310,7 +346,16 @@ namespace map_matching_2::app {
                 std::cout << "Filter tracks with method: " << filter_method << std::endl;
             }
             if (not filter_duplicates) {
-                std::cout << "Disabled duplicates filtering." << std::endl;
+                std::cout << "Disabled duplicate points filtering." << std::endl;
+            }
+            if (not simplify_track) {
+                std::cout << "Disabled Douglas-Peucker track simplification." << std::endl;
+            }
+            if (not median_merge) {
+                std::cout << "Disabled median-merge track simplification." << std::endl;
+            }
+            if (not adaptive_median_merge) {
+                std::cout << "Disabled adaptive median-merge." << std::endl;
             }
             if (within_edge_turns) {
                 std::cout << "Enabled within-edge-turn mode." << std::endl;
@@ -320,6 +365,9 @@ namespace map_matching_2::app {
             }
             if (not candidate_adoption_nearby) {
                 std::cout << "Disabled candidate adoption of nearby candidates." << std::endl;
+            }
+            if (candidate_adoption_reverse) {
+                std::cout << "Enabled candidate adoption of reverse candidates." << std::endl;
             }
             if (not adaptive_radius) {
                 std::cout << "Disabled adaptive radius." << std::endl;
@@ -1074,6 +1122,11 @@ namespace map_matching_2::app {
                         "  \tinternally uses covered-by and keeps points on the border\n"
                         "\"intersects\"\n"
                         "  \tonly keeps tracks that lie within the polygon or intersect the polygon somewhere\n")
+                ("trajectory-simplification",
+                        po::value<bool>(&data.trajectory_simplification)->default_value(true, "on"),
+                        "switch for disabling all steps of trajectory simplification, "
+                        "disables 'filter-duplicates', 'simplify-track', 'median-merge', "
+                        "and 'adaptive-median-merge' when set to off; enabled by default")
                 ("filter-duplicates", po::value<bool>(&data.filter_duplicates)->default_value(true, "on"),
                         "filter duplicate (adjacent spatially equal) points in tracks before matching, is recommended")
                 ("simplify-track", po::value<bool>(&data.simplify_track)->default_value(true, "on"),
@@ -1094,7 +1147,7 @@ namespace map_matching_2::app {
                         po::value<bool>(&data.within_edge_turns)->default_value(false, "off"),
                         "enables turns within edges, "
                         "when disabled, turns are only possible at crossroads and junctions (nodes of the graph), "
-                        "when enables, turns within edges (roads of the graph) become possible, "
+                        "when enabled, turns within edges (roads of the graph) become possible, "
                         "this is done by trimming the path from the current position to the next node and back, "
                         "by default this is disabled, because it reduces correctness of results with candidate-adoption enabled "
                         "as large detours are needed for making the optimizer collapsing candidates, "
@@ -1106,7 +1159,7 @@ namespace map_matching_2::app {
                         "may in fact decrease performance in most situations, because the A* algorithm is a "
                         "single-source-single-target algorithm and this software benefits from "
                         "single-source-multiple-target queries as Dijsktra's algorithm provides; "
-                        "moreover the accuracy might be worse, because the A* algorithm might not yield optimal results"
+                        "moreover the accuracy might be worse, because the A* algorithm might not yield optimal results "
                         "in geographic and spherical coordinate systems due to the heuristic method not being admissible")
                 ("routing-max-distance-factor",
                         po::value<double>(&data.routing_max_distance_factor)->default_value(5.0, "5.0"),
@@ -1114,6 +1167,11 @@ namespace map_matching_2::app {
                         "removes all nodes from routing that are too far away from the search area between a start and end node, "
                         "dramatically reduces routing duration in networks significantly larger than the given track, "
                         "any negative value (i.e., -1) disables this setting")
+                ("candidate-adoption", po::value<bool>(&data.candidate_adoption)->default_value(true, "on"),
+                        "switch for disabling all steps of candidate adoption, "
+                        "disables 'candidate-adoption-siblings', 'candidate-adoption-nearby', "
+                        "and 'candidate-adoption-reverse' when set to off; enabled by default, "
+                        "but does not activate 'candidate-adoption-reverse' when not explicitly enabled")
                 ("candidate-adoption-siblings",
                         po::value<bool>(&data.candidate_adoption_siblings)->default_value(true, "on"),
                         "for each measurement, adopt candidates from preceding and succeeding candidate, "
