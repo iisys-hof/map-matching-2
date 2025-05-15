@@ -953,6 +953,12 @@ Matching Options:
                                           polygon or intersect the polygon 
                                           somewhere
                                         
+  --trajectory-simplification arg (=on) switch for disabling all steps of 
+                                        trajectory simplification, disables 
+                                        'filter-duplicates', 'simplify-track', 
+                                        'median-merge', and 'adaptive-median-me
+                                        rge' when set to off; enabled by 
+                                        default
   --filter-duplicates arg (=on)         filter duplicate (adjacent spatially 
                                         equal) points in tracks before 
                                         matching, is recommended
@@ -978,7 +984,7 @@ Matching Options:
   --within-edge-turns arg (=off)        enables turns within edges, when 
                                         disabled, turns are only possible at 
                                         crossroads and junctions (nodes of the 
-                                        graph), when enables, turns within 
+                                        graph), when enabled, turns within 
                                         edges (roads of the graph) become 
                                         possible, this is done by trimming the 
                                         path from the current position to the 
@@ -1005,7 +1011,7 @@ Matching Options:
                                         as Dijsktra's algorithm provides; 
                                         moreover the accuracy might be worse, 
                                         because the A* algorithm might not 
-                                        yield optimal resultsin geographic and 
+                                        yield optimal results in geographic and
                                         spherical coordinate systems due to the
                                         heuristic method not being admissible
   --routing-max-distance-factor arg (=5.0)
@@ -1018,6 +1024,14 @@ Matching Options:
                                         larger than the given track, any 
                                         negative value (i.e., -1) disables this
                                         setting
+  --candidate-adoption arg (=on)        switch for disabling all steps of 
+                                        candidate adoption, disables 
+                                        'candidate-adoption-siblings', 
+                                        'candidate-adoption-nearby', and 
+                                        'candidate-adoption-reverse' when set 
+                                        to off; enabled by default, but does 
+                                        not activate 'candidate-adoption-revers
+                                        e' when not explicitly enabled
   --candidate-adoption-siblings arg (=on)
                                         for each measurement, adopt candidates 
                                         from preceding and succeeding 
