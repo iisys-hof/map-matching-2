@@ -42,7 +42,7 @@ Our software can be downloaded prebuilt for Windows and Linux on the release pag
 **Windows**: Zip-File containing the portable binary `map_matching_2.exe`.\
 **Linux**: portable AppImage containing the binary `map_matching_2` and the necessary shared libraries.\
 Remember to make the AppImage executable (`chmod +x` or right click, settings, make executable).\
-You might also need `libfuse2` installed.
+The AppImage uses a new runtime and should no longer need `libfuse2`.
 
 Both variants also contain the license information of the used third-party libraries in the `doc` folder.\
 For extracting the AppImage, use on the AppImage binary `--appimage-extract`.
@@ -86,6 +86,9 @@ The matches are not per definition "wrong" as they still resemble the original t
 optimal to the human eye.
 This example shows that in unclear situations, stochastic map matching still might decide for another solution than a
 human would.
+However, we also want to note that these particular examples are very rare and somewhat the worst-case.
+It was easier to find good examples than bad ones in our test data due to the high overall accuracy.
+Please try it out for yourself!
 
 Here is an overview of the accuracy on all example data set benchmarks from [data](data).
 See also [Benchmarks](#benchmarks) for the benchmark setup.
@@ -100,7 +103,7 @@ results in the respective subfolders:
 | [Melbourne](data/hengfeng-li)               | Ground truth   |      1 |     0.49 |           72 |        99.80 |
 | [Seattle](data/newson-krumm)                | Ground truth   |      1 |     2.09 |           98 |        99.89 |
 
-As we can see, the accuracy of `map_matching_2` is pretty high in various situations.
+As we can see, the overall accuracy of `map_matching_2` is pretty high in various situations.
 
 The reason for the high accuracy in all these situations is the combination of multiple novel and refined approaches in
 this map matching solution.
@@ -419,11 +422,8 @@ Please also review the system specific hints (click on the text to show the hidd
 <details>
 <summary>Hints for Linux building</summary>
 
-There currently is an issue to build this software with Boost 1.86 and Clang 19:
-https://github.com/boostorg/thread/issues/402
+There are currently no specific hints for Linux. It should work out of the box.
 
-Therefore, we currently only recommend building this software with the compiler versions that we tested during
-development.
 </details>
 
 <details>
