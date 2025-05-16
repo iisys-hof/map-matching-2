@@ -161,7 +161,7 @@ namespace map_matching_2::io::track {
             for (auto trkpt : trkpts) {
                 if (trkpt != nullptr) {
                     const auto time = trkpt->time().getValue();
-                    std::uint64_t timestamp = trkpts.size();
+                    std::uint64_t timestamp = out_line.size();
 
                     if (not time.empty()) {
                         if (_no_parse_time) {
@@ -182,7 +182,7 @@ namespace map_matching_2::io::track {
                 }
             }
 
-            std::sort(std::begin(out_line), std::end(out_line));
+            std::stable_sort(std::begin(out_line), std::end(out_line));
 
             return out_line;
         };
