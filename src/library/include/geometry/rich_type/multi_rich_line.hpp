@@ -412,11 +412,16 @@ namespace map_matching_2::geometry {
         [[nodiscard]] MultiRichLineT extract(std::size_t outer_from, std::size_t inner_from,
                 std::size_t inner_to, std::size_t outer_to) const requires
             (std::default_initializable<allocator_type>) {
+            _adjust_extract_bounds(outer_from, inner_from, inner_to, outer_to);
+
             if (outer_from + 1 > outer_to) {
+                // outer from starts after outer to, leads to an empty result
                 return MultiRichLineT{};
             } else if (outer_from + 1 == outer_to) {
+                // outer from and to point to the same, extract from inner part is sufficient
                 return MultiRichLineT{at(outer_from).sub_rich_line(inner_from, inner_to)};
             } else {
+                // multi-step extraction, sub-prefix plus inner parts plus sub-postfix
                 typename MultiRichLineT::rich_lines_container_type rich_lines;
                 rich_lines.reserve(outer_to - outer_from);
                 rich_lines.emplace_back(at(outer_from).sub_rich_line(inner_from, at(outer_from).size()));
@@ -431,11 +436,16 @@ namespace map_matching_2::geometry {
         template<is_multi_rich_line MultiRichLineT>
         [[nodiscard]] MultiRichLineT extract(std::size_t outer_from, std::size_t inner_from,
                 std::size_t inner_to, std::size_t outer_to, const allocator_type &allocator) const {
+            _adjust_extract_bounds(outer_from, inner_from, inner_to, outer_to);
+
             if (outer_from + 1 > outer_to) {
-                return MultiRichLineT{allocator};
+                // outer from starts after outer to, leads to an empty result
+                return MultiRichLineT(allocator);
             } else if (outer_from + 1 == outer_to) {
+                // outer from and to point to the same, extract from inner part is sufficient
                 return MultiRichLineT{at(outer_from).sub_rich_line(inner_from, inner_to, allocator), allocator};
             } else {
+                // multi-step extraction, sub-prefix plus inner parts plus sub-postfix
                 typename MultiRichLineT::rich_lines_container_type rich_lines(allocator);
                 rich_lines.reserve(outer_to - outer_from);
                 rich_lines.emplace_back(at(outer_from).sub_rich_line(inner_from, at(outer_from).size(), allocator));
@@ -534,6 +544,20 @@ namespace map_matching_2::geometry {
 
     protected:
         rich_lines_container_type _rich_lines;
+
+        void _adjust_extract_bounds(std::size_t &outer_from, std::size_t &inner_from,
+                std::size_t &inner_to, std::size_t &outer_to) const {
+            if (inner_from + 1 >= at(outer_from).size()) {
+                // last point in inner, move outer to next and inner to zero
+                outer_from++;
+                inner_from = 0;
+            }
+            if (inner_to <= 1 and outer_to > 0 and outer_to > outer_from) {
+                // first point or before first point in inner, move outer to previous only if possible
+                outer_to--;
+                inner_to = at(outer_to).size();
+            }
+        }
 
     };
 

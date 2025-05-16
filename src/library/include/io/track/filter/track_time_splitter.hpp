@@ -16,6 +16,8 @@
 #ifndef MAP_MATCHING_2_IO_TRACK_FILTER_TRACK_TIME_SPLITTER_HPP
 #define MAP_MATCHING_2_IO_TRACK_FILTER_TRACK_TIME_SPLITTER_HPP
 
+#include "geometry/algorithm/split.hpp"
+
 namespace map_matching_2::io::track::filter {
 
     template<typename Forwarder>
@@ -47,44 +49,23 @@ namespace map_matching_2::io::track::filter {
             std::visit([this]<typename ImportMultiTrack>(ImportMultiTrack &&multi_track) {
                 using multi_track_type = std::remove_reference_t<ImportMultiTrack>;
                 using multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
-                using time_point_type = typename multi_track_type::point_type;
 
+                bool called = false;
+                std::size_t index{0};
                 const auto &multi_rich_line = multi_track.multi_rich_line;
 
-                bool splitted = false;
-                std::size_t index{0};
-                std::size_t start_outer = 0;
-                std::size_t start_inner = 0;
-                const time_point_type *curr = nullptr;
-                const time_point_type *prev = nullptr;
-                for (std::size_t i = 0; i < multi_rich_line.size(); ++i) {
-                    const auto &rich_line = multi_rich_line.at(i);
-                    for (std::size_t j = 0; j < rich_line.size(); ++j) {
-                        curr = &rich_line.at(j);
-                        if (curr and prev) {
-                            double time_difference = curr->timestamp() - prev->timestamp();
-                            if (time_difference >= _split_time) {
-                                _forwarder.pass(std::forward<multi_track_type>(multi_track_type{
-                                        std::format("{}{}{}", multi_track.id, _aggregator, index++),
-                                        multi_rich_line.template extract<multi_rich_line_type>(start_outer, start_inner,
-                                                j, i + 1)
-                                }));
-                                start_outer = i;
-                                start_inner = j > 0 ? j - 1 : 0;
-                                splitted = true;
-                            }
-                        }
-                        prev = curr;
-                    }
-                }
+                geometry::multi_rich_line_time_split<multi_rich_line_type>(multi_rich_line, _split_time,
+                        [&](const std::size_t from_outer, const std::size_t from_inner,
+                        const std::size_t to_inner, const std::size_t to_outer) {
+                            called = true;
+                            _forwarder.pass(std::forward<multi_track_type>(multi_track_type{
+                                    std::format("{}{}{}", multi_track.id, _aggregator, index++),
+                                    multi_rich_line.template extract<multi_rich_line_type>(
+                                            from_outer, from_inner, to_inner, to_outer)
+                            }));
+                        });
 
-                if (splitted) {
-                    _forwarder.pass(std::forward<multi_track_type>(multi_track_type{
-                            std::format("{}{}{}", multi_track.id, _aggregator, index++),
-                            multi_rich_line.template extract<multi_rich_line_type>(start_outer, start_inner,
-                                    multi_rich_line.back().size(), multi_rich_line.size())
-                    }));
-                } else {
+                if (not called) {
                     _forwarder.pass(std::forward<multi_track_type>(multi_track));
                 }
             }, std::move(multi_track));

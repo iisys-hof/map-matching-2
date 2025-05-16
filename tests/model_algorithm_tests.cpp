@@ -27,12 +27,18 @@
 
 #include "geometry/algorithm/simplify.hpp"
 #include "geometry/algorithm/substring.hpp"
+#include "geometry/algorithm/split.hpp"
 
 #include "helper/geometry_helper.hpp"
 
 using point_type = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
 using line_type = typename map_matching_2::geometry::models<point_type>::line_type<>;
 using multi_line_type = typename map_matching_2::geometry::models<point_type>::multi_line_type<line_type>;
+
+using time_point_type = typename map_matching_2::geometry::models<point_type>::explicit_time_point_type;
+using time_line_type = typename map_matching_2::geometry::models<time_point_type>::line_type<>;
+using time_multi_line_type = typename map_matching_2::geometry::models<time_point_type>::multi_line_type<time_line_type>
+;
 
 using rich_segment = map_matching_2::geometry::rich_segment<
     typename map_matching_2::geometry::models<point_type>::segment_type>;
@@ -48,6 +54,14 @@ using lazy_rich_line_type = map_matching_2::geometry::lazy_rich_line<point_type>
 using multi_rich_line_type = map_matching_2::geometry::multi_rich_line<rich_line_type>;
 using eager_multi_rich_line_type = map_matching_2::geometry::eager_multi_rich_line<eager_rich_line_type>;
 using lazy_multi_rich_line_type = map_matching_2::geometry::lazy_multi_rich_line<lazy_rich_line_type>;
+
+using time_rich_line_type = map_matching_2::geometry::rich_line<time_point_type>;
+using eager_time_rich_line_type = map_matching_2::geometry::eager_rich_line<time_point_type>;
+using lazy_time_rich_line_type = map_matching_2::geometry::lazy_rich_line<time_point_type>;
+
+using time_multi_rich_line_type = map_matching_2::geometry::multi_rich_line<time_rich_line_type>;
+using eager_time_multi_rich_line_type = map_matching_2::geometry::eager_multi_rich_line<eager_time_rich_line_type>;
+using lazy_time_multi_rich_line_type = map_matching_2::geometry::lazy_multi_rich_line<lazy_time_rich_line_type>;
 
 void test_rich_line_erase(line_type line, const std::vector<std::size_t> &indices, const auto &check) {
     auto test_rich_line = [&]<typename RichLine>() {
@@ -96,6 +110,31 @@ void test_extract_multi_rich_line(multi_line_type multi_line, std::size_t outer_
     test_multi_rich_line.template operator()<multi_rich_line_type>();
     test_multi_rich_line.template operator()<eager_multi_rich_line_type>();
     test_multi_rich_line.template operator()<lazy_multi_rich_line_type>();
+}
+
+void test_split_time_rich_line(time_line_type line, const double split_time, const auto &check) {
+    auto test_rich_line = [&]<typename MultiRichLine>() {
+        using rich_line_type = typename map_matching_2::geometry::multi_rich_line_traits<MultiRichLine>::rich_line_type;
+        auto input = rich_line_type{line};
+        auto output = map_matching_2::geometry::rich_line_time_split<MultiRichLine>(input, split_time);
+        check(output);
+    };
+
+    test_rich_line.template operator()<time_multi_rich_line_type>();
+    test_rich_line.template operator()<eager_time_multi_rich_line_type>();
+    test_rich_line.template operator()<lazy_time_multi_rich_line_type>();
+}
+
+void test_split_time_multi_rich_line(time_multi_line_type multi_line, const double split_time, const auto &check) {
+    auto test_multi_rich_line = [&]<typename MultiRichLine>() {
+        auto input = MultiRichLine{multi_line};
+        auto output = map_matching_2::geometry::multi_rich_line_time_split<MultiRichLine>(input, split_time);
+        check(output);
+    };
+
+    test_multi_rich_line.template operator()<time_multi_rich_line_type>();
+    test_multi_rich_line.template operator()<eager_time_multi_rich_line_type>();
+    test_multi_rich_line.template operator()<lazy_time_multi_rich_line_type>();
 }
 
 void test_simplify_rich_lines(line_type input, line_type output, bool retain_reversals = true) {
@@ -569,6 +608,245 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
                     BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), -45.0, 1e-6);
                     BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.directions(), 90.0, 1e-6);
                     BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.absolute_directions(), 90.0, 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 5, 1, 4,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 1);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 5.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+
+        test_extract_multi_rich_line(multi_line_type{
+                        create_line<point_type, line_type>({0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0}),
+                        create_line<point_type, line_type>({5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0}),
+                        create_line<point_type, line_type>({10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0}),
+                        create_line<point_type, line_type>({15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0}),
+                        create_line<point_type, line_type>({20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0})
+                },
+                1, 6, 0, 4,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 1);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 5.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                });
+    }
+
+    BOOST_AUTO_TEST_CASE(rich_line_time_split_test) {
+        test_split_time_rich_line(
+                create_line<time_point_type, time_line_type>({
+                        {0, 0, 0},
+                        {1, 0, 1},
+                        {2, 0, 2},
+                        {3, 0, 3},
+                        {4, 0, 10},
+                        {5, 0, 11}
+                }), 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 2);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 4.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(0).length(), 3.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(1).length(), 1.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).front().timestamp(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).back().timestamp(), 3);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).front().timestamp(), 10);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).back().timestamp(), 11);
+                });
+
+        test_split_time_rich_line(
+                create_line<time_point_type, time_line_type>({
+                        {0, 0, 0},
+                        {1, 0, 1},
+                        {2, 0, 2},
+                        {3, 0, 3},
+                        {4, 0, 10},
+                        {5, 0, 11},
+                        {6, 0, 20},
+                        {7, 0, 21},
+                        {8, 0, 22}
+                }), 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 6.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(0).length(), 3.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(1).length(), 1.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(2).length(), 2.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).front().timestamp(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).back().timestamp(), 3);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).front().timestamp(), 10);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).back().timestamp(), 11);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(2).front().timestamp(), 20);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(2).back().timestamp(), 22);
+                });
+
+        test_split_time_rich_line(
+                create_line<time_point_type, time_line_type>({
+                        {0, 0, 0},
+                        {1, 0, 1},
+                        {2, 0, 2},
+                        {3, 0, 3},
+                        {4, 0, 4},
+                        {5, 0, 5},
+                        {6, 0, 6},
+                        {7, 0, 7},
+                        {8, 0, 8}
+                }), 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 1);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 8.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(0).length(), 8.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).front().timestamp(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).back().timestamp(), 8);
+                });
+    }
+
+    BOOST_AUTO_TEST_CASE(multi_rich_line_time_split_test) {
+        test_split_time_multi_rich_line(time_multi_line_type{
+                        create_line<time_point_type, time_line_type>({
+                                {0, 0, 0},
+                                {1, 0, 1},
+                                {2, 0, 2},
+                                {3, 0, 3},
+                                {4, 0, 10},
+                                {5, 0, 11},
+                                {6, 0, 20},
+                                {7, 0, 21},
+                                {8, 0, 22},
+                                {9, 0, 23},
+                                {10, 0, 24}
+                        }),
+                        create_line<time_point_type, time_line_type>({
+                                {10, 0, 25},
+                                {11, 0, 26},
+                                {12, 0, 27},
+                                {13, 0, 28},
+                                {14, 0, 29},
+                                {15, 0, 40},
+                                {16, 0, 41},
+                                {17, 0, 42},
+                                {18, 0, 43},
+                                {19, 0, 44},
+                                {20, 0, 45}
+                        }),
+                        create_line<time_point_type, time_line_type>({
+                                {30, 0, 60},
+                                {31, 0, 61},
+                                {32, 0, 62},
+                                {33, 0, 63},
+                                {34, 0, 64},
+                                {35, 0, 65},
+                                {36, 0, 66},
+                                {37, 0, 80},
+                                {38, 0, 81},
+                                {39, 0, 82},
+                                {40, 0, 83}
+                        })
+                }, 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 7);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 26.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(0).length(), 3.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(1).length(), 1.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(2).length(), 4.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(3).length(), 4.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(4).length(), 5.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(5).length(), 6.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(6).length(), 3.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).front().timestamp(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).back().timestamp(), 3);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).front().timestamp(), 10);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).back().timestamp(), 11);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(2).front().timestamp(), 20);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(2).back().timestamp(), 24);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(3).front().timestamp(), 25);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(3).back().timestamp(), 29);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(4).front().timestamp(), 40);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(4).back().timestamp(), 45);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(5).front().timestamp(), 60);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(5).back().timestamp(), 66);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(6).front().timestamp(), 80);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(6).back().timestamp(), 83);
+                });
+
+        test_split_time_multi_rich_line(time_multi_line_type{
+                        create_line<time_point_type, time_line_type>({
+                                {0, 0, 0},
+                                {1, 0, 1},
+                                {2, 0, 2},
+                                {3, 0, 3},
+                                {4, 0, 4},
+                                {5, 0, 5},
+                                {6, 0, 6},
+                                {7, 0, 7},
+                                {8, 0, 8},
+                                {9, 0, 9},
+                                {10, 0, 10}
+                        }),
+                        create_line<time_point_type, time_line_type>({
+                                {10, 0, 11},
+                                {11, 0, 12},
+                                {12, 0, 13},
+                                {13, 0, 14},
+                                {14, 0, 15},
+                                {15, 0, 16},
+                                {16, 0, 17},
+                                {17, 0, 18},
+                                {18, 0, 19},
+                                {19, 0, 20},
+                                {20, 0, 21}
+                        }),
+                        create_line<time_point_type, time_line_type>({
+                                {30, 0, 30},
+                                {31, 0, 31},
+                                {32, 0, 32},
+                                {33, 0, 33},
+                                {34, 0, 34},
+                                {35, 0, 35},
+                                {36, 0, 36},
+                                {37, 0, 37},
+                                {38, 0, 38},
+                                {39, 0, 39},
+                                {40, 0, 40}
+                        })
+                }, 5,
+                [](const auto &multi_rich_line) {
+                    BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.length(), 30.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(0).length(), 10.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(1).length(), 10.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.at(2).length(), 10.0, 1e-6);
+                    BOOST_CHECK_CLOSE_FRACTION(multi_rich_line.azimuth(), 90.0, 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.directions(), 1e-6);
+                    BOOST_CHECK_LE(multi_rich_line.absolute_directions(), 1e-6);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).front().timestamp(), 0);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(0).back().timestamp(), 10);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).front().timestamp(), 11);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(1).back().timestamp(), 21);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(2).front().timestamp(), 30);
+                    BOOST_CHECK_EQUAL(multi_rich_line.at(2).back().timestamp(), 40);
                 });
     }
 
