@@ -270,6 +270,8 @@ namespace map_matching_2::io::helper {
                 return tags_container;
             };
 
+            assert(not tag_list.empty());
+
             if constexpr (is_mmap_tag_helper<tag_helper>) {
                 return memory_mapped::retry_alloc([&]()-> tag_vector_type {
                             return _tags();
@@ -289,6 +291,8 @@ namespace map_matching_2::io::helper {
                 std::copy(std::cbegin(tags), std::cend(tags), std::back_inserter(tags_container));
                 return tags_container;
             };
+
+            assert(not tags.empty());
 
             if constexpr (is_mmap_tag_helper<tag_helper>) {
                 return memory_mapped::retry_alloc([&]()-> tag_vector_type {
@@ -313,6 +317,8 @@ namespace map_matching_2::io::helper {
                 }
                 return tags_container;
             };
+
+            assert(not tags.empty());
 
             if constexpr (is_mmap_tag_helper<tag_helper>) {
                 return memory_mapped::retry_alloc([&]()-> tag_vector_type {
@@ -346,47 +352,55 @@ namespace map_matching_2::io::helper {
 
         void set_map_tags(const std::uint64_t id, const osmium::TagList &tag_list, MAP_TAGS map_tag) {
             if (not tag_list.empty()) {
-                set_map_tags(id, tags(tag_list), map_tag);
+                if constexpr (is_mmap_tag_helper<tag_helper>) {
+                    memory_mapped::retry_alloc([&]() {
+                                set_map_tags(id, tags(tag_list), map_tag);
+                            }, [&](auto &ex) {
+                                handle_bad_alloc(ex);
+                            }, _critical);
+                } else {
+                    set_map_tags(id, tags(tag_list), map_tag);
+                }
             }
         }
 
         template<typename TagsT>
         void copy_map_tags(const std::uint64_t id, const TagsT &tags, MAP_TAGS map_tag) {
             const auto &_copy_map_tags = [&]() {
-                if (not tags.empty()) {
-                    auto &map = get_map(map_tag);
-                    map.emplace(id, copy_tags(tags));
-                }
+                auto &map = get_map(map_tag);
+                map.emplace(id, copy_tags(tags));
             };
 
-            if constexpr (is_mmap_tag_helper<tag_helper>) {
-                memory_mapped::retry_alloc([&]() {
-                            _copy_map_tags();
-                        }, [&](auto &ex) {
-                            handle_bad_alloc(ex);
-                        }, _critical);
-            } else {
-                _copy_map_tags();
+            if (not tags.empty()) {
+                if constexpr (is_mmap_tag_helper<tag_helper>) {
+                    memory_mapped::retry_alloc([&]() {
+                                _copy_map_tags();
+                            }, [&](auto &ex) {
+                                handle_bad_alloc(ex);
+                            }, _critical);
+                } else {
+                    _copy_map_tags();
+                }
             }
         }
 
         template<typename TagT, typename TagHelperT>
         void clone_map_tags(const std::uint64_t id, const TagT &tags, const TagHelperT &other, MAP_TAGS map_tag) {
             const auto &_clone_map_tags = [&]() {
-                if (not tags.empty()) {
-                    auto &map = get_map(map_tag);
-                    map.emplace(id, clone_tags(tags, other));
-                }
+                auto &map = get_map(map_tag);
+                map.emplace(id, clone_tags(tags, other));
             };
 
-            if constexpr (is_mmap_tag_helper<tag_helper>) {
-                memory_mapped::retry_alloc([&]() {
-                            _clone_map_tags();
-                        }, [&](auto &ex) {
-                            handle_bad_alloc(ex);
-                        }, _critical);
-            } else {
-                _clone_map_tags();
+            if (not tags.empty()) {
+                if constexpr (is_mmap_tag_helper<tag_helper>) {
+                    memory_mapped::retry_alloc([&]() {
+                                _clone_map_tags();
+                            }, [&](auto &ex) {
+                                handle_bad_alloc(ex);
+                            }, _critical);
+                } else {
+                    _clone_map_tags();
+                }
             }
         }
 
