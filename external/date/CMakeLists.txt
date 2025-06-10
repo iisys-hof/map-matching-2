@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(date
         GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-        GIT_TAG v3.0.3
+        GIT_TAG v3.0.4
         EXCLUDE_FROM_ALL)
 
 set(ENABLE_DATE_INSTALL OFF CACHE BOOL "disable date install" FORCE)
