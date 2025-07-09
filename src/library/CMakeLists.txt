@@ -125,7 +125,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND (
     set_source_files_properties(
             src/geometry/srs.cpp
             PROPERTIES
-            COMPILE_FLAGS -O0)
+            COMPILE_FLAGS "-O0 $<$<BOOL:${ADDRESS_SANITIZER}>:-fno-sanitize=address>")
 endif ()
 
 target_compile_definitions(library

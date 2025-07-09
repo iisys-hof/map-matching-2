@@ -44,6 +44,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
             "NOT DEBUG_BUILD" OFF)
     option(SET_OG_DEBUG_FLAG "Set Debug flag to -Og" OFF)
     option(COMPRESS_DEBUG_STRINGS "Compress strings in Debug builds" ON)
+    option(ADDRESS_SANITIZER "Enable Address Sanitizer" OFF)
+    cmake_dependent_option(STATIC_ADDRESS_SANITIZER "Use static Address Sanitizer library" ON "ADDRESS_SANITIZER" OFF)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         option(SPLIT_DEBUG_INFO "Split Debug information into DWARF files" OFF)
         option(USE_GOLD_LINKER "Use gold linker instead of ld" ON)
@@ -59,10 +61,10 @@ elseif (MSVC)
     option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use static MSVC runtime library" ON)
 endif ()
 
-# rpmalloc crashes in MSVC DEBUG with static runtime
+# rpmalloc crashes with address sanitizer and in MSVC DEBUG with static runtime
 # see: https://github.com/mjansson/rpmalloc/issues/175
 cmake_dependent_option(ENABLE_RPMALLOC "Enable rpmalloc" OFF
-        "USE_STATIC_MSVC_RUNTIME_LIBRARY AND DEBUG_BUILD AND MSVC" ON)
+        "ADDRESS_SANITIZER OR (USE_STATIC_MSVC_RUNTIME_LIBRARY AND DEBUG_BUILD AND MSVC)" ON)
 
 # rpath override on for default install prefix
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -85,6 +87,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
     message(STATUS "Use static linking of system libraries: ${STATIC_LINKING}")
     message(STATUS "Set Debug flag to -Og: ${SET_OG_DEBUG_FLAG}")
     message(STATUS "Compress Debug build strings: ${COMPRESS_DEBUG_STRINGS}")
+    message(STATUS "Address Sanitizer: ${ADDRESS_SANITIZER}")
+    message(STATUS "Use static Address Sanitizer library: ${STATIC_ADDRESS_SANITIZER}")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         message(STATUS "Split Debug information into DWARF files: ${SPLIT_DEBUG_INFO}")
         message(STATUS "Use gold linker instead of ld: ${USE_GOLD_LINKER}")
@@ -148,6 +152,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
     if (COMPRESS_DEBUG_STRINGS)
         add_compile_options($<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:-gz>)
         add_link_options($<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:-gz>)
+    endif ()
+    if (ADDRESS_SANITIZER)
+        add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address)
+
+        if (STATIC_ADDRESS_SANITIZER)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libasan")
+        endif ()
     endif ()
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
