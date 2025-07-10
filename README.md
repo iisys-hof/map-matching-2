@@ -279,7 +279,25 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
 
 ### Usage
 
-Note: For any advanced usage, consider the [help.txt](help.txt) or add `--help` to the executable.
+This program is a Command Line Interface (CLI) program without a Graphical User Interface (GUI).
+Starting this program via double click is not supported.
+It needs to be started from within a Terminal.
+When the software is executed via double click, a Terminal window may be shown for a brief amount of time and close
+immediately again.
+This is normal behavior because the software prints out an information an closes immediately again.
+
+On Linux, you can open a Terminal by right-clicking next to the application binary in a free space in the File explorer
+and click "Open a Terminal here" (or similar).
+Then you can run the software by entering `./map_matching_2` and pressing Return.
+
+On Windows, you need to press Shift while simultaneously right-clicking next to the application executable in a free
+space in the Explorer and click "Open PowerShell here" (or similar).
+Then you can run the software by entering `.\map_matching_2.exe` and pressing Return.
+
+By default, when run like this, the program prints an information that there were no options given and immediately
+closes again.
+Enter `./map_matching_2 --help` on Linux or `.\map_matching_2.exe --help` on Windows for further information.
+The complete help is also available here in the Repository: [help.txt](help.txt).
 
 The basic usage is a two- or three-step approach:
 
