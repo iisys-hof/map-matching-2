@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git
-        GIT_TAG v1.8.0
+        GIT_TAG v1.8.1
         EXCLUDE_FROM_ALL)
 
 set(BUILD_TESTING OFF CACHE BOOL "do not build protozero tests" FORCE)
