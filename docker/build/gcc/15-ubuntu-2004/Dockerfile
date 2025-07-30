@@ -56,5 +56,6 @@ RUN apt-get update && apt-get dist-upgrade -y && \
     # debug tools
     apt-get install --no-install-recommends -y \
         clang ninja-build autoconf automake libtool valgrind \
-        locales-all dos2unix rsync tar python3 python3-dev linux-tools-$(uname -r) time git && \
+        locales-all dos2unix rsync tar python3 python3-dev linux-tools-generic time git && \
+    find /usr/lib/linux-tools/*/ -type l -executable -exec /bin/bash -c 'for file; do ln -sfn "$file" "/usr/bin/$(basename $file)"; done' /bin/bash {} + && \
     rm -rf /var/lib/apt/lists/*
