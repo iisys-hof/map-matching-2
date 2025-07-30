@@ -42,7 +42,9 @@ Our software can be downloaded prebuilt for Windows and Linux on the release pag
 **Windows**: Zip-File containing the portable binary `map_matching_2.exe`.\
 **Linux**: portable AppImage containing the binary `map_matching_2` and the necessary shared libraries.\
 Remember to make the AppImage executable (`chmod +x` or right click, settings, make executable).\
-The AppImage uses a new runtime and should no longer need `libfuse2`.
+
+The AppImage uses a new runtime and should no longer need `libfuse2` or `fuse3` but in case you get any warnings or
+errors on executing the AppImage, try to install these packages or use the `--appimage-extract-and-run` argument.
 
 Both variants also contain the license information of the used third-party libraries in the `doc` folder.\
 For extracting the AppImage, use on the AppImage binary `--appimage-extract`.
