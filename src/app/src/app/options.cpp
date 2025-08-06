@@ -857,7 +857,7 @@ namespace map_matching_2::app {
                 ("export-network-osm-file", po::value<std::string>(&data.export_network_osm_file),
                         "export final network to .osm.pbf file format;\n"
                         "might contain the data in different order than the import file;\n"
-                        "in case of third-party input networks without tags, the ways are given the highway tag");
+                        "in case of third-party input networks without tags, the ways are given the highway=road tag");
 
         return options;
     }

@@ -88,8 +88,8 @@ namespace map_matching_2::io::network {
             boost::unordered::unordered_flat_set<std::size_t> edges_reversed;
             for (auto it = edges_v.begin(); it != edges_v.end(); it = edges_v.next(it)) {
                 const edge_data_type &edge = edges_v[it].get();
-                bool is_oneway = true;
                 if (not edges_reversed.contains(_graph.edge_index(it))) {
+                    bool is_oneway = true;
                     const auto target = _graph.target(it);
                     const auto out_edges_v = _graph.out_edges_view(target);
                     for (auto out_it = out_edges_v.begin();
@@ -189,6 +189,7 @@ namespace map_matching_2::io::network {
 
             {
                 osmium::builder::TagListBuilder way_tag_builder{way_builder};
+                bool has_tags = false;
                 bool has_oneway = false;
                 const auto &tags = _tag_helper.edge_tags(edge.id);
                 for (const auto &tag : tags) {
@@ -203,6 +204,11 @@ namespace map_matching_2::io::network {
                         }
                     }
                     way_tag_builder.add_tag(pair.first, pair.second);
+                    has_tags = true;
+                }
+                if (not has_tags) {
+                    // temporary road tag, see: https://wiki.openstreetmap.org/wiki/Tag:highway%3Droad
+                    way_tag_builder.add_tag("highway", "road");
                 }
                 if (not has_oneway and is_oneway) {
                     way_tag_builder.add_tag("oneway", "yes");
