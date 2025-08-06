@@ -40,7 +40,6 @@ namespace map_matching_2::learning {
             : _environment{environment}, _settings{settings} {
             std::uint64_t seed = std::chrono::system_clock::now().time_since_epoch().count();
             _random.seed(seed);
-            _environment.intelligent_action = true;
         }
 
         [[nodiscard]] environment_type &environment() {
@@ -106,13 +105,8 @@ namespace map_matching_2::learning {
                             Q[state] = std::move(Q_actions);
                         }
 
-                        if (not _environment.intelligent_action) {
-                            std::uniform_int_distribution<std::size_t> action_dist{0, actions.size() - 1};
-                            action = actions[action_dist(_random)];
-                        } else {
-                            std::exponential_distribution action_dist{0.5};
-                            action = actions[std::min(actions.size() - 1, (std::size_t) action_dist(_random))];
-                        }
+                        std::uniform_int_distribution<std::size_t> action_dist{0, actions.size() - 1};
+                        action = actions[action_dist(_random)];
                     }
 
                     // step environment

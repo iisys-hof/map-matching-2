@@ -63,7 +63,6 @@ namespace map_matching_2::environment {
         const std::string name = "mdp";
 
         std::size_t state_size = 3;
-        bool intelligent_action = false;
 
         const std::size_t special_actions = 2;
         const action_internal no_action = -1;
@@ -168,9 +167,6 @@ namespace map_matching_2::environment {
                 if (action_size > 0) {
                     std::vector<action_type> actions(action_size);
                     std::iota(actions.begin(), actions.end(), special_actions);
-                    if (intelligent_action) {
-                        _intelligent_actions(actions);
-                    }
                     return actions;
                 }
             }
@@ -246,30 +242,6 @@ namespace map_matching_2::environment {
         using state_map_type = boost::unordered_flat_map<state_internal, state_type>;
         using state_cache_value_type = std::vector<std::pair<bool, reward_tuple>>;
         using state_cache_type = std::vector<state_cache_value_type>;
-
-        void _intelligent_actions(std::vector<action_type> &actions) {
-            std::vector<std::pair<action_type, reward_type>> rewards;
-            rewards.reserve(actions.size());
-
-            state_type _state = state;
-            for (const action_type action : actions) {
-                const auto result = step(action);
-                const auto reward = std::get<2>(result);
-                rewards.emplace_back(std::pair{action, reward});
-                state = _state;
-            }
-
-            // reverse sort, so comparator is >= instead of <
-            const auto rewards_comparator = [](const auto &left, const auto &right) {
-                return left.second > right.second;
-            };
-
-            std::sort(rewards.begin(), rewards.end(), rewards_comparator);
-
-            for (std::size_t i = 0; i < actions.size(); ++i) {
-                actions[i] = rewards[i].first;
-            }
-        }
 
         [[nodiscard]] reward_type
         _reward(const state_internal &state, state_internal &new_state, action_internal &action) {
