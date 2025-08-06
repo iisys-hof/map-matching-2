@@ -353,7 +353,7 @@ Prepare Export Options:
                                         order than the import file;
                                         in case of third-party input networks 
                                         without tags, the ways are given the 
-                                        highway tag
+                                        highway=road tag
 
 Prepare Process Options:
   --simplify arg (=all)                 simplify network graph, highly 
