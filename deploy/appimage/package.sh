@@ -42,7 +42,7 @@ if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
   exit 1
 fi
 
-dockerfile="docker/build/gcc/14-ubuntu-2004/Dockerfile"
+dockerfile="docker/build/gcc/15-ubuntu-2004/Dockerfile"
 if [ ! -e "$dockerfile" ]; then
   echo "Dockerfile $dockerfile does not exist."
   exit 1
