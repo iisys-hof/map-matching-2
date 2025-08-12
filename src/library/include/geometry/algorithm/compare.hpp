@@ -21,6 +21,8 @@
 #include <set>
 #include <memory_resource>
 
+#include <boost/unordered/unordered_flat_map.hpp>
+
 #include "types/geometry/index/compare.hpp"
 
 #include "geometry/rich_type/traits/multi_rich_line.hpp"
@@ -126,6 +128,11 @@ namespace map_matching_2::geometry {
         using rtree_segments_type = compare_rtree_segments_type<rich_segment_type>;
         using rtree_segments_key_type = typename rtree_segments_type::value_type;
 
+        using buffer_key = std::pair<point_type, double>;
+        using buffer_type = typename models<point_type>::box_type;
+        using buffer_map_type = boost::unordered_flat_map<buffer_key, buffer_type>;
+
+        mutable buffer_map_type _buffer_map;
         mutable std::pmr::monotonic_buffer_resource _buffer{1024};
 
         [[nodiscard]] result_type _compare(
@@ -304,6 +311,9 @@ namespace map_matching_2::geometry {
                 }
                 std::cout << std::endl;
             }
+
+            // buffer_map can be cleared now
+            _buffer_map.clear();
 
             // convert to vector for further processing
             std::vector<rich_segment_type> a_segments{a_segments_list.cbegin(), a_segments_list.cend()};
@@ -617,6 +627,18 @@ namespace map_matching_2::geometry {
             return segments_index;
         }
 
+        const buffer_type &_buffer_box(const point_type &point, const double buffer_radius) const {
+            buffer_key key{point, buffer_radius};
+            const auto search = _buffer_map.find(key);
+            const bool exists = search != std::end(_buffer_map);
+            if (exists) {
+                return search->second;
+            } else {
+                const auto it = _buffer_map.emplace(key, geometry::buffer_box<point_type>(point, buffer_radius));
+                return it.first->second;
+            }
+        }
+
         void _adapt_points(std::pmr::list<rich_segment_type> &segments,
                 const std::pmr::list<rich_segment_type> &adopt_segments,
                 double distance_tolerance) const {
@@ -628,7 +650,7 @@ namespace map_matching_2::geometry {
                 const segment_type &segment = segment_it->segment();
                 const point_type &point = first ? segment.first : segment.second;
 
-                const auto buffer = geometry::buffer_box(point, buffer_radius);
+                const auto &buffer = _buffer_box(point, buffer_radius);
                 std::pmr::list<point_type> result_points{&_buffer};
                 points_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(result_points));
 
@@ -680,7 +702,7 @@ namespace map_matching_2::geometry {
             const auto buffer_radius = std::max(1e-3, 2 * distance_tolerance);
 
             for (const auto &point : points_set) {
-                const auto buffer = geometry::buffer_box<point_type>(point, buffer_radius);
+                const auto &buffer = _buffer_box(point, buffer_radius);
                 std::vector<rtree_segments_key_type> result_segments;
                 segments_index.query(boost::geometry::index::intersects(buffer), std::back_inserter(result_segments));
 
