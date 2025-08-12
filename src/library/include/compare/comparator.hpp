@@ -67,8 +67,7 @@ namespace map_matching_2::compare {
                     settings.simplifying_reverse_tolerance,
                     settings.adoption_distance_tolerance,
                     settings.split_distance_tolerance,
-                    settings.split_direction_tolerance,
-                    settings.debug
+                    settings.split_direction_tolerance
             };
 
             comparator_result_type _compare_result{settings};

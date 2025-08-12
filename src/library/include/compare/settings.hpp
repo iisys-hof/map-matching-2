@@ -24,7 +24,7 @@ namespace map_matching_2::compare {
 
     struct settings {
 
-        bool verbose{false}, quiet{false}, debug{false};
+        bool verbose{false}, quiet{false};
 
         geometry::srs_transform matches_srs_transform{}, ground_truth_srs_transform{};
 

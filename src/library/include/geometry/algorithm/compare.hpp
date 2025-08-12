@@ -52,7 +52,7 @@ namespace map_matching_2::geometry {
         using distance_type = typename multi_rich_line_traits<multi_rich_line_type>::distance_type;
         using result_type = comparison<rich_segment_type>;
 
-        bool debug = false;
+        constexpr static bool debug = false;
 
         double simplifying_tolerance = 0.1;
         double simplifying_reverse_tolerance = 0.1;
@@ -64,9 +64,8 @@ namespace map_matching_2::geometry {
 
         constexpr line_comparator(const double simplifying_tolerance, const double simplifying_reverse_tolerance,
                 const double adoption_distance_tolerance, const double split_distance_tolerance,
-                const double split_direction_tolerance, const bool debug)
-            : debug{debug},
-            simplifying_tolerance{simplifying_tolerance},
+                const double split_direction_tolerance)
+            : simplifying_tolerance{simplifying_tolerance},
             simplifying_reverse_tolerance{simplifying_reverse_tolerance},
             adoption_distance_tolerance{adoption_distance_tolerance},
             split_distance_tolerance{split_distance_tolerance},
@@ -179,10 +178,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // simplify with Douglas-Peucker algorithm
@@ -194,10 +195,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Simplified:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // adapt points for erasing tiny differences
@@ -209,10 +212,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Compare Adapted:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // adapt points again to each other for erasing more tiny differences
@@ -224,10 +229,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Ground Truth Adapted:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // fix split points, first self for reverse and loop parts overlapping
@@ -239,10 +246,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Compare Split:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // then split with each other for finding overlaps of both lines
@@ -254,10 +263,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Ground Truth Split:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // adapt points for erasing tiny differences
@@ -269,10 +280,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Compare Again Adapted:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // adapt points again to each other for erasing more tiny differences
@@ -284,10 +297,12 @@ namespace map_matching_2::geometry {
                 for (const auto &a_segment : a_segments_list) {
                     std::cout << a_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
                 std::cout << "Compare Segments Ground Truth Again Adapted:\n";
                 for (const auto &b_segment : b_segments_list) {
                     std::cout << b_segment.wkt() << "\n";
                 }
+                std::cout << std::endl;
             }
 
             // convert to vector for further processing
@@ -634,19 +649,12 @@ namespace map_matching_2::geometry {
                     *segment_it = first
                                   ? rich_segment_type{segment_type{*nearest_point, segment.second}}
                                   : rich_segment_type{segment_type{segment.first, *nearest_point}};
-                    if (not(segment_it == segments.begin() and
-                            geometry::equals_points(point, segment_it->segment().first)) and
-                        std::next(segment_it) != segments.end()) {
-                        auto &next_segment = *std::next(segment_it);
-                        if (not geometry::equals_points(next_segment.segment().first, point)) {
-                            next_segment = rich_segment_type{segment_type{point, next_segment.segment().second}};
-                        }
-                    }
                 }
             };
 
             for (auto segment_it = segments.begin(); segment_it != segments.end(); ++segment_it) {
-                if (segment_it == segments.begin()) {
+                if (segment_it == segments.begin() or not
+                    geometry::equals_points(segment_it->segment().first, std::prev(segment_it)->segment().second)) {
                     adapt_point(segment_it, true);
                 }
                 adapt_point(segment_it, false);

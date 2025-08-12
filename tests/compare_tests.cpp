@@ -545,6 +545,115 @@ BOOST_AUTO_TEST_SUITE(compare_tests)
         BOOST_CHECK_LE(result_41.error_fraction, 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_41.correct, line_41_1.length(), 1e-6);
         BOOST_CHECK_CLOSE_FRACTION(result_41.correct_fraction, 1.0, 1e-6);
+
+        // multi line equal
+        auto line_42_1 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 4, 0})},
+                        rich_line_type{create_line<point_type, line_type>({5, 1, 5, 5})}
+                }
+        };
+        auto line_42_2 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 4, 0})},
+                        rich_line_type{create_line<point_type, line_type>({5, 1, 5, 5})}
+                }
+        };
+        auto result_42 = line_comparator.compare(line_42_1, line_42_2);
+        BOOST_CHECK_LE(result_42.error_added, 1e-6);
+        BOOST_CHECK_LE(result_42.error_missed, 1e-6);
+        BOOST_CHECK_LE(result_42.error_fraction, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_42.correct, 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_42.correct_fraction, 1.0, 1e-6);
+
+        // multi line not equal
+        auto line_43_1 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 4, 0})},
+                        rich_line_type{create_line<point_type, line_type>({5, 1, 5, 5})}
+                }
+        };
+        auto line_43_2 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 5, 0, 5, 5})}
+                }
+        };
+        auto result_43 = line_comparator.compare(line_43_1, line_43_2);
+        BOOST_CHECK_CLOSE_FRACTION(result_43.error_added, 2.0, 1e-6);
+        BOOST_CHECK_LE(result_43.error_missed, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_43.error_fraction, 2.0 / 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_43.correct, 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_43.correct_fraction, 8.0 / 10.0, 1e-6);
+
+        // multi line not equal exchanged
+        auto line_44_1 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 5, 0, 5, 5})}
+                }
+        };
+        auto line_44_2 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 4, 0})},
+                        rich_line_type{create_line<point_type, line_type>({5, 1, 5, 5})}
+                }
+        };
+        auto result_44 = line_comparator.compare(line_44_1, line_44_2);
+        BOOST_CHECK_LE(result_44.error_added, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_44.error_missed, 2.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_44.error_fraction, 2.0 / 10.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_44.correct, 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_44.correct_fraction, 8.0 / 10.0, 1e-6);
+
+        // multi line almost equal
+        auto line_45_1 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 4, 0})},
+                        rich_line_type{create_line<point_type, line_type>({5, 1, 5, 5})}
+                }
+        };
+        auto line_45_2 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{
+                                create_line<point_type, line_type>(
+                                        {-0.000000001, 0.000000001, 4.000000002, 0.000000001})
+                        },
+                        rich_line_type{
+                                create_line<point_type, line_type>(
+                                        {4.999999998, 1.000000001, 4.999999999, 5.000000001})
+                        }
+                }
+        };
+        auto result_45 = line_comparator.compare(line_45_1, line_45_2);
+        BOOST_CHECK_LE(result_45.error_added, 1e-6);
+        BOOST_CHECK_LE(result_45.error_missed, 1e-6);
+        BOOST_CHECK_LE(result_45.error_fraction, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_45.correct, 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_45.correct_fraction, 1.0, 1e-6);
+
+        // multi line not almost equal
+        auto line_46_1 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{create_line<point_type, line_type>({0, 0, 4, 0})},
+                        rich_line_type{create_line<point_type, line_type>({5, 1, 5, 5})}
+                }
+        };
+        auto line_46_2 = multi_rich_line_type{
+                std::vector{
+                        rich_line_type{
+                                create_line<point_type, line_type>(
+                                {
+                                        -0.000000001, 0.000000001, 5.000000002, 0.000000001,
+                                        4.999999998, 0.000000001, 4.999999999, 5.000000001
+                                })
+                        }
+                }
+        };
+        auto result_46 = line_comparator.compare(line_46_1, line_46_2);
+        BOOST_CHECK_CLOSE_FRACTION(result_46.error_added, 2.0, 1e-6);
+        BOOST_CHECK_LE(result_46.error_missed, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_46.error_fraction, 2.0 / 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_46.correct, 8.0, 1e-6);
+        BOOST_CHECK_CLOSE_FRACTION(result_46.correct_fraction, 8.0 / 10.0, 1e-6);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
