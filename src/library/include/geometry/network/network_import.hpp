@@ -157,6 +157,7 @@ namespace map_matching_2::geometry::network {
             using out_edge_descriptor = typename graph_type::out_edge_descriptor;
             using in_edge_descriptor = typename graph_type::in_edge_descriptor;
 
+            bool reindex = false;
             boost::unordered_flat_map<point_type, vertex_descriptor> node_map;
 
             std::vector<std::pair<edge_descriptor, edge_descriptor>> adjacent_edges;
@@ -212,6 +213,7 @@ namespace map_matching_2::geometry::network {
 
                     assert(graph.degree(vertex_desc) == 0);
                     graph.remove_vertex(vertex_desc);
+                    reindex = true;
 
                     if (simplify) {
                         // check if current node can be omitted
@@ -234,30 +236,37 @@ namespace map_matching_2::geometry::network {
                 }
             }
 
-            graph.reindex();
+            if (reindex) {
+                graph.reindex();
+            }
         }
 
         void remove_duplicate_edges() {
             bool reindex = false;
             boost::unordered_flat_set<std::reference_wrapper<const edge_data_type>,
                 boost::hash<edge_data_type>, std::equal_to<edge_data_type>> edge_set;
+            std::vector<edge_descriptor> edges_to_remove;
 
             graph_type &graph = this->graph();
             const auto edges_v = graph.edges_view();
 
-            edge_descriptor edge_desc, edge_val;
-            edge_desc = edges_v.begin();
-            for (edge_val = edge_desc; edge_desc != edges_v.end(); edge_desc = edge_val) {
-                edge_val = edges_v.next(edge_val);
-
+            for (auto edge_desc = edges_v.begin(); edge_desc != edges_v.end(); edge_desc = edges_v.next(edge_desc)) {
                 const edge_data_type &edge = edges_v[edge_desc].get();
 
                 if (edge_set.contains(edge)) {
-                    graph.remove_edge(edge_desc);
-                    reindex = true;
+                    // duplicate edge found
+                    edges_to_remove.emplace_back(edge_desc);
+                } else {
+                    edge_set.emplace(edge);
                 }
+            }
 
-                edge_set.emplace(edge);
+            if (not edges_to_remove.empty()) {
+                reindex = true;
+
+                for (auto edge_desc : edges_to_remove) {
+                    graph.remove_edge(edge_desc);
+                }
             }
 
             if (reindex) {

@@ -142,8 +142,7 @@ namespace map_matching_2::geometry::network {
         }
 
         friend constexpr bool operator==(const edge &left, const edge &right) {
-            return left.id == right.id and
-                    static_cast<rich_line_type>(left.rich_line) == static_cast<rich_line_type>(right.rich_line);
+            return left.id == right.id and left.rich_line == right.rich_line;
         }
 
         friend constexpr bool operator!=(const edge &left, const edge &right) {
