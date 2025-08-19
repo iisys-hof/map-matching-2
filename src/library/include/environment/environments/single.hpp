@@ -323,7 +323,7 @@ namespace map_matching_2::environment {
                                     // if it is shorter, it might be good
                                     reward -= _settings.mdp_length_factor * (route_diff * route_factor);
 
-                                    if (_settings.skip_errors and
+                                    if (_settings.skip_errors and _settings.routing_max_distance_factor > 0 and
                                         route_factor > 2 * _settings.routing_max_distance_factor) {
                                         // when route is 2x longer than max distance, skip
                                         new_state = _skip_state(state);
