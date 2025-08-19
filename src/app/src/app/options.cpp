@@ -327,6 +327,10 @@ namespace map_matching_2::app {
             within_edge_turns = true;
         }
 
+        if (a_star_euclidean) {
+            a_star = true;
+        }
+
         if (radius > radius_upper_limit) {
             radius_upper_limit = radius;
         }
@@ -1161,6 +1165,10 @@ namespace map_matching_2::app {
                         "single-source-multiple-target queries as Dijsktra's algorithm provides; "
                         "moreover the accuracy might be worse, because the A* algorithm might not yield optimal results "
                         "in geographic and spherical coordinate systems due to the heuristic method not being admissible")
+                ("a-star-euclidean", po::bool_switch(&data.a_star_euclidean),
+                        "use heuristic Euclidean distance for geographical and spherical coordinate systems "
+                        "based on a spherical conversion of the degrees into meters; "
+                        "if not enabled uses exact distance computations in A*, which are slower but more accurate")
                 ("routing-max-distance-factor",
                         po::value<double>(&data.routing_max_distance_factor)->default_value(5.0, "5.0"),
                         "max distance factor for upper bound for routing algorithm, "

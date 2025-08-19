@@ -271,7 +271,8 @@ namespace map_matching_2::environment {
 
                         const auto route = _algorithms.router.candidate_route(
                                 _candidates, current_position, current_action, next_position, action,
-                                _settings.within_edge_turns, _settings.a_star, _settings.routing_max_distance_factor);
+                                _settings.within_edge_turns, _settings.a_star, _settings.a_star_euclidean,
+                                _settings.routing_max_distance_factor);
 
                         if (route.is_invalid()) {
                             // no route found from current to next position, fail and skip next position
@@ -395,7 +396,7 @@ namespace map_matching_2::environment {
 
                                     const auto prev_route = _algorithms.router.candidate_route(
                                             _candidates, prev_position, prev_action, current_position, current_action,
-                                            _settings.within_edge_turns, _settings.a_star,
+                                            _settings.within_edge_turns, _settings.a_star, _settings.a_star_euclidean,
                                             _settings.routing_max_distance_factor);
 
                                     if (not prev_route.is_invalid()) {

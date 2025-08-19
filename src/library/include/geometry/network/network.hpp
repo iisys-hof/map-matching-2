@@ -255,8 +255,8 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] std::list<vertex_descriptor>
         a_star_shortest_paths(const vertex_descriptor &start,
-                const vertex_descriptor &goal,
-                distance_type max_distance, double max_distance_factor,
+                const vertex_descriptor &goal, const bool euclidean,
+                const distance_type max_distance, const double max_distance_factor,
                 graph::predecessors_type &predecessors,
                 graph::distances_type<length_type> &distances,
                 graph::colors_type &colors,
@@ -265,9 +265,16 @@ namespace map_matching_2::geometry::network {
                 return edge.rich_line.length();
             };
 
-            const auto heuristic_func = [this](const vertex_descriptor &vertex_desc,
+            const auto euclidean_heuristic_func = [this](const vertex_descriptor &vertex_desc,
                     const vertex_descriptor &goal_desc) constexpr {
                 return geometry::euclidean_distance(
+                        this->graph().get_vertex_data(vertex_desc).point,
+                        this->graph().get_vertex_data(goal_desc).point);
+            };
+
+            const auto exact_heuristic_func = [this](const vertex_descriptor &vertex_desc,
+                    const vertex_descriptor &goal_desc) constexpr {
+                return geometry::point_distance(
                         this->graph().get_vertex_data(vertex_desc).point,
                         this->graph().get_vertex_data(goal_desc).point);
             };
@@ -276,8 +283,15 @@ namespace map_matching_2::geometry::network {
                     max_distance, max_distance_factor, goal, distances, colors, weight_func
             };
 
-            graph::a_star_shortest_path(this->graph(), start, goal,
-                    predecessors, distances, colors, queue, visitor, weight_func, heuristic_func);
+            if (euclidean) {
+                graph::a_star_shortest_path(this->graph(), start, goal,
+                        predecessors, distances, colors, queue, visitor, weight_func,
+                        euclidean_heuristic_func);
+            } else {
+                graph::a_star_shortest_path(this->graph(), start, goal,
+                        predecessors, distances, colors, queue, visitor, weight_func,
+                        exact_heuristic_func);
+            }
 
             std::list<vertex_descriptor> shortest_path;
             for (vertex_descriptor vertex = goal;; vertex = predecessors[vertex]) {

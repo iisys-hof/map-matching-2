@@ -49,7 +49,7 @@ namespace map_matching_2::matching {
         bool console{false};
 
         bool filter_duplicates{true}, simplify_track{true}, median_merge{true}, adaptive_median_merge{true},
-                within_edge_turns{false}, a_star{false}, candidate_adoption_siblings{true},
+                within_edge_turns{false}, a_star{false}, a_star_euclidean{false}, candidate_adoption_siblings{true},
                 candidate_adoption_nearby{true}, candidate_adoption_reverse{false}, adaptive_radius{true};
         double max_time{0.0}, routing_max_distance_factor{5.0}, simplify_track_distance_tolerance{5.0},
                 median_merge_distance_tolerance{10.0}, radius{200.0}, radius_upper_limit{10000.0},
