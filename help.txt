@@ -1014,6 +1014,13 @@ Matching Options:
                                         yield optimal results in geographic and
                                         spherical coordinate systems due to the
                                         heuristic method not being admissible
+  --a-star-euclidean                    use heuristic Euclidean distance for 
+                                        geographical and spherical coordinate 
+                                        systems based on a spherical conversion
+                                        of the degrees into meters; if not 
+                                        enabled uses exact distance 
+                                        computations in A*, which are slower 
+                                        but more accurate
   --routing-max-distance-factor arg (=5.0)
                                         max distance factor for upper bound for
                                         routing algorithm, removes all nodes 
