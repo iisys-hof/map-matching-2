@@ -47,6 +47,10 @@ echo "========================================="
 echo "Testing AppImage on multiple distros"
 echo "========================================="
 
+# change to script dir
+pwd="$(dirname "$0")"
+cd "$pwd" || exit 1
+
 failed_distros=()
 passed_distros=()
 
