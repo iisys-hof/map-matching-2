@@ -1,12 +1,14 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-gcc-trunk-build -f docker/build/gcc/trunk/Dockerfile .
-# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-trunk-build
+# docker build -t map_matching_2-gcc-build -f docker/build/gcc/15-debian13/Dockerfile .
+# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build
 
-FROM debian:12 AS build
+FROM debian:13 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
-ARG GCC_VERSION=16
-ARG CMAKE_VERSION=3.31.6
+# use exact GCC version
+ARG GCC_VERSION=15.2.0
+ARG GDB_VERSION=15.2
+ARG CMAKE_VERSION=4.0.3
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
@@ -17,7 +19,7 @@ RUN apt-get update && apt-get dist-upgrade -y && \
         python3-dev libipt-dev libexpat1-dev liblzma-dev libbabeltrace-dev && \
     # GCC
     mkdir /opt/build && cd /opt/build && \
-    wget -r -l 1 -nH -nd -np -A '*.tar.xz' "https://gcc.gnu.org/pub/gcc/snapshots/LATEST-${GCC_VERSION}/" && \
+    wget -r -l 1 -nH -nd -np -A '*.tar.xz' "https://gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/" && \
     GCC_FILE=$(ls -1 gcc-*.tar.xz) && \
     tar -xf "$GCC_FILE" && \
     GCC_PATH=$(basename "$GCC_FILE" '.tar.xz') && \
@@ -42,8 +44,8 @@ RUN apt-get update && apt-get dist-upgrade -y && \
     update-alternatives --install /usr/bin/cmake cmake /usr/local/bin/cmake 100 && \
     # gdb
     mkdir /opt/build && cd /opt/build && \
-    wget "https://gcc.gnu.org/pub/gdb/snapshots/current/gdb.tar.xz" && \
-    GDB_FILE=$(ls -1 gdb.tar.xz) && \
+    wget "https://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.xz" && \
+    GDB_FILE=$(ls -1 gdb-*.tar.xz) && \
     tar -xf "$GDB_FILE" && \
     GDB_PATH=$(basename "$GDB_FILE" '.tar.xz') && \
     cd "$GDB_PATH" && mkdir objdir && cd objdir && \

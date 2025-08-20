@@ -1,19 +1,17 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-clang-build -f docker/build/clang/19/Dockerfile .
-# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-clang-build
+# docker build -t map_matching_2-clang-ubuntu-2204-build -f docker/build/clang/21-ubuntu-2204/Dockerfile .
+# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-clang-ubuntu-2204-build
 
-FROM debian:12 AS build
+FROM ubuntu:22.04 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # only use major LLVM version
-ARG LLVM_VERSION=19
-ARG CMAKE_VERSION=3.31.6
+ARG LLVM_VERSION=21
+ARG CMAKE_VERSION=4.0.3
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
         tzdata make lsb-release ca-certificates wget software-properties-common gnupg xz-utils libssl-dev && \
-    # https://github.com/hof/bookworm-apt-add-repository-issue
-    [ ! -e /etc/apt/sources.list ] && echo "#" | tee /etc/apt/sources.list && \
     # LLVM
     wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
@@ -33,5 +31,6 @@ RUN apt-get update && apt-get dist-upgrade -y && \
     # debug tools
     apt-get install --no-install-recommends -y \
         gdb ninja-build valgrind \
-        locales-all dos2unix rsync tar python3 python3-dev linux-perf time git && \
+        locales-all dos2unix rsync tar python3 python3-dev linux-tools-generic time git && \
+    find /usr/lib/linux-tools/*/ -type l -executable -exec /bin/bash -c 'for file; do ln -sfn "$file" "/usr/bin/$(basename $file)"; done' /bin/bash {} + && \
     rm -rf /var/lib/apt/lists/*

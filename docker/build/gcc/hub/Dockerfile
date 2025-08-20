@@ -5,7 +5,7 @@
 FROM gcc:15 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
-ARG CMAKE_VERSION=3.31.6
+ARG CMAKE_VERSION=4.0.3
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

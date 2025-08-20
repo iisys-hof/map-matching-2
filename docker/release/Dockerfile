@@ -2,7 +2,7 @@
 # docker build -t map_matching_2 -f docker/release/Dockerfile .
 # docker run --rm -v .:/tmp/map-matching-2 -u $(id -u):$(id -g) map_matching_2
 
-FROM map_matching_2-gcc-ubuntu-2004-build AS build
+FROM map_matching_2-gcc-ubuntu-2204-build AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 

@@ -3,7 +3,7 @@
 # docker run --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined -it --rm map_matching_2-appimage
 # docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-appimage
 
-FROM map_matching_2-gcc-ubuntu-2004-build AS build
+FROM map_matching_2-gcc-ubuntu-2204-build AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 

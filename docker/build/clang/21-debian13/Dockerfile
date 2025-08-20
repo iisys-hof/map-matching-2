@@ -1,17 +1,17 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-clang-build -f docker/build/clang/20/Dockerfile .
+# docker build -t map_matching_2-clang-build -f docker/build/clang/21-debian13/Dockerfile .
 # docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-clang-build
 
-FROM debian:12 AS build
+FROM debian:13 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # only use major LLVM version
-ARG LLVM_VERSION=20
-ARG CMAKE_VERSION=3.31.6
+ARG LLVM_VERSION=21
+ARG CMAKE_VERSION=4.0.3
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \
-        tzdata make lsb-release ca-certificates wget software-properties-common gnupg xz-utils libssl-dev && \
+        tzdata make lsb-release ca-certificates wget gnupg xz-utils libssl-dev && \
     # https://github.com/hof/bookworm-apt-add-repository-issue
     [ ! -e /etc/apt/sources.list ] && echo "#" | tee /etc/apt/sources.list && \
     # LLVM
