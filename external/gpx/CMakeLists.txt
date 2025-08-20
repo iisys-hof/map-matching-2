@@ -20,14 +20,14 @@ FetchContent_MakeAvailable(gpx)
 if (NOT gpx_EXISTS)
     # fix for wrong directory and deprecated cmake version in library when using as subdirectory
     FILE(READ "${gpx_SOURCE_DIR}/CMakeLists.txt" gpx_CMAKE_LISTS)
-    STRING(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9\\.]+\\)" "cmake_minimum_required(VERSION 3.5)" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
+    STRING(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9\\.]+\\)" "cmake_minimum_required(VERSION 3.10)" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
     STRING(REPLACE "\${CMAKE_SOURCE_DIR}" "\${CMAKE_CURRENT_SOURCE_DIR}" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
     STRING(REPLACE "\${CMAKE_BINARY_DIR}" "\${CMAKE_CURRENT_BINARY_DIR}" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
     FILE(WRITE "${gpx_SOURCE_DIR}/CMakeLists.txt" "${gpx_CMAKE_LISTS}")
 
     # fix deprecated cmake version in subdir
     FILE(READ "${gpx_SOURCE_DIR}/gpx/CMakeLists.txt" gpx_CMAKE_LISTS)
-    STRING(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9\\.]+\\)" "cmake_minimum_required(VERSION 3.5)" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
+    STRING(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9\\.]+\\)" "cmake_minimum_required(VERSION 3.10)" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
     FILE(WRITE "${gpx_SOURCE_DIR}/gpx/CMakeLists.txt" "${gpx_CMAKE_LISTS}")
 endif ()
 
