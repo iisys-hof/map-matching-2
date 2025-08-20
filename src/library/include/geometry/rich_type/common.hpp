@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <limits>
+#include <concepts>
 
 namespace map_matching_2::geometry {
 
