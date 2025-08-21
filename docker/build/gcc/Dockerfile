@@ -1,8 +1,8 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-gcc-ubuntu-2204-build -f docker/build/gcc/15-ubuntu-2204/Dockerfile .
-# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-ubuntu-2204-build
+# docker build -t map_matching_2-gcc-build -f docker/build/gcc/Dockerfile .
+# docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build
 
-FROM ubuntu:22.04 AS build
+FROM ubuntu:20.04 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version

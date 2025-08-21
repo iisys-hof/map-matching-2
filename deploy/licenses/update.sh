@@ -19,16 +19,16 @@ if [ ! -d "$dir" ]; then
 fi
 
 cd "$dir" || exit 1
-dockerfile="docker/build/gcc/15-ubuntu-2204/Dockerfile"
+dockerfile="docker/build/gcc/Dockerfile"
 if [ ! -e "$dockerfile" ]; then
   echo "Dockerfile $dockerfile does not exist."
   exit 1
 fi
 
-if ! docker images -q "map_matching_2-gcc-ubuntu-2204-build" > /dev/null 2>&1; then
-  docker build -t map_matching_2-gcc-ubuntu-2204-build -f "$dockerfile" . || exit 1
+if ! docker images -q "map_matching_2-gcc-build" > /dev/null 2>&1; then
+  docker build -t map_matching_2-gcc-build -f "$dockerfile" . || exit 1
 fi
-docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-ubuntu-2204-build \
+docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build \
   /bin/bash -c "cmake --build /tmp/map-matching-2/cmake-build-release --target install -j $(nproc)"
 
 # update licenses

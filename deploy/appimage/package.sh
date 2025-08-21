@@ -42,14 +42,14 @@ if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
   exit 1
 fi
 
-dockerfile="docker/build/gcc/15-ubuntu-2204/Dockerfile"
+dockerfile="docker/build/gcc/Dockerfile"
 if [ ! -e "$dockerfile" ]; then
   echo "Dockerfile $dockerfile does not exist."
   exit 1
 fi
 
-if ! docker images -q "map_matching_2-gcc-ubuntu-2204-build" > /dev/null 2>&1; then
-  docker build -t map_matching_2-gcc-ubuntu-2204-build -f "$dockerfile" . || exit 1
+if ! docker images -q "map_matching_2-gcc-build" > /dev/null 2>&1; then
+  docker build -t map_matching_2-gcc-build -f "$dockerfile" . || exit 1
 fi
 
 dockerfile="docker/appimage/Dockerfile"
