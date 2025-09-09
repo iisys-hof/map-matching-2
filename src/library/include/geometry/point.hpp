@@ -257,22 +257,10 @@ namespace map_matching_2::geometry {
         return not(left == right);
     }
 
-    template<is_time_point TimePoint, std::size_t I = 0>
-    bool less_impl(const TimePoint &left, const TimePoint &right) {
-        if constexpr (I < boost::geometry::dimension<TimePoint>::value) {
-            return left.timestamp() < right.timestamp() ||
-                    left.timestamp() == right.timestamp() && (
-                        boost::geometry::get<I>(left) < boost::geometry::get<I>(right) ||
-                        (boost::geometry::get<I>(left) == boost::geometry::get<I>(right) &&
-                            less_impl<TimePoint, I + 1>(left, right)));
-        }
-        return false;
-    }
-
     template<typename CoordinateType, std::size_t DimensionCount, typename CoordinateSystem>
     bool operator<(const time_point<CoordinateType, DimensionCount, CoordinateSystem> &left,
             const time_point<CoordinateType, DimensionCount, CoordinateSystem> &right) {
-        return less_impl(left, right);
+        return left.timestamp() < right.timestamp();
     }
 
     template<typename CoordinateType, std::size_t DimensionCount, typename CoordinateSystem>
