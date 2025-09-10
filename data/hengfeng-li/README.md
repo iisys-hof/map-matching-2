@@ -56,17 +56,17 @@ Results on our test system (accuracy is the weighted mean correct fraction in pe
 
 | Mode                     | Time (s) | Max RAM (MiB) | Accuracy (%) |
 |:-------------------------|---------:|--------------:|-------------:|
-| Prepare                  |     1.63 |           144 |          N/A |
-| Prepare *                |     1.05 |           138 |          N/A |
-| Prepare (OSM)            |     3.06 |           234 |          N/A |
-| Prepare (OSM) *          |     2.15 |           224 |          N/A |
-| Prepare (Ground Truth)   |     1.48 |           146 |          N/A |
-| Prepare (Ground Truth) * |     1.22 |           170 |          N/A |
-| Convert Ground Truth     |     0.21 |            74 |          N/A |
-| Match                    |     0.50 |            66 |          N/A |
-| Match (OSM)              |     0.81 |            74 |          N/A |
-| Compare                  |     0.24 |            16 |        99.80 |
-| Compare (OSM)            |     0.24 |            20 |        99.86 |
+| Prepare                  |     1.52 |           142 |          N/A |
+| Prepare *                |     0.93 |           136 |          N/A |
+| Prepare (OSM)            |     3.02 |           241 |          N/A |
+| Prepare (OSM) *          |     2.24 |           229 |          N/A |
+| Prepare (Ground Truth)   |     1.38 |           146 |          N/A |
+| Prepare (Ground Truth) * |     1.09 |           170 |          N/A |
+| Convert Ground Truth     |     0.14 |            78 |          N/A |
+| Match                    |     0.42 |            62 |          N/A |
+| Match (OSM)              |     0.75 |            74 |          N/A |
+| Compare                  |     0.16 |            20 |        99.80 |
+| Compare (OSM)            |     0.16 |            20 |        99.86 |
 
 Max RAM contains shared memory (cached memory backed by disk, not actually used).\
 The prepare runs marked with * were run with `--memory-mapped-preparation off`.

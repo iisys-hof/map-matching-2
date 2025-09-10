@@ -47,15 +47,15 @@ Results on our test system (accuracy is the weighted mean correct fraction in pe
 
 | Mode                     | Time (s) | Max RAM (MiB) | Accuracy (%) |
 |:-------------------------|---------:|--------------:|-------------:|
-| Prepare                  |    31.24 |         2,717 |          N/A |
-| Prepare *                |    16.24 |         1,761 |          N/A |
-| Prepare (Ground Truth)   |    25.98 |         2,640 |          N/A |
-| Prepare (Ground Truth) * |    20.64 |         2,553 |          N/A |
-| Convert Ground Truth     |     8.69 |         1,303 |          N/A |
-| Match                    |     7.77 |         1,220 |          N/A |
-| Match (Export-Edges)     |    28.82 |         2,934 |          N/A |
-| Compare                  |     0.94 |            41 |        98.73 |
-| Compare (Export-Edges)   |     0.90 |            55 |        98.93 |
+| Prepare                  |    32.80 |         2,712 |          N/A |
+| Prepare *                |    16.05 |         1,760 |          N/A |
+| Prepare (Ground Truth)   |    26.50 |         2,639 |          N/A |
+| Prepare (Ground Truth) * |    20.17 |         2,553 |          N/A |
+| Convert Ground Truth     |     7.69 |         1,285 |          N/A |
+| Match                    |     8.20 |         1,570 |          N/A |
+| Match (Export-Edges)     |    31.27 |         4,486 |          N/A |
+| Compare                  |     0.84 |           210 |        98.73 |
+| Compare (Export-Edges)   |     0.83 |           193 |        98.93 |
 
 Max RAM contains shared memory (cached memory backed by disk, not actually used).\
 The prepare runs marked with * were run with `--memory-mapped-preparation off`.

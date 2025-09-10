@@ -39,11 +39,11 @@ Results on our test system (accuracy is the weighted mean correct fraction in pe
 
 | Mode                 | Time (s) | Max RAM (MiB) | Accuracy (%) |
 |:---------------------|---------:|--------------:|-------------:|
-| Prepare              |     4.14 |           229 |          N/A |
-| Prepare *            |     3.26 |           320 |          N/A |
-| Convert Ground Truth |     1.34 |            47 |          N/A |
-| Match                |     2.19 |            98 |          N/A |
-| Compare              |     0.51 |            24 |        99.89 |
+| Prepare              |     3.87 |           225 |          N/A |
+| Prepare *            |     3.12 |           312 |          N/A |
+| Convert Ground Truth |     1.17 |            44 |          N/A |
+| Match                |     2.08 |            94 |          N/A |
+| Compare              |     0.45 |            30 |        99.89 |
 
 Max RAM contains shared memory (cached memory backed by disk, not actually used).\
 The prepare runs marked with * were run with `--memory-mapped-preparation off`.

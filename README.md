@@ -99,11 +99,11 @@ results in the respective subfolders:
 
 | Data set                                    | Type           | Tracks | Time (s) | Memory (MiB) | Accuracy (%) |
 |:--------------------------------------------|----------------|-------:|---------:|-------------:|-------------:|
-| [GIS Cup 2012](data/gis-cup)                | Hand-corrected |     10 |     0.79 |          244 |        98.59 |
-| [Worldwide](data/kubicka-et-al)             | Hand-corrected |    100 |     7.83 |        1,278 |        98.73 |
-| [Floating Car Data](data/floating-car-data) | Hand-corrected |    263 |     0.67 |          488 |        99.58 |
-| [Melbourne](data/hengfeng-li)               | Ground truth   |      1 |     0.49 |           72 |        99.80 |
-| [Seattle](data/newson-krumm)                | Ground truth   |      1 |     2.09 |           98 |        99.89 |
+| [GIS Cup 2012](data/gis-cup)                | Hand-corrected |     10 |     0.73 |          250 |        98.59 |
+| [Worldwide](data/kubicka-et-al)             | Hand-corrected |    100 |     8.20 |        1,570 |        98.73 |
+| [Floating Car Data](data/floating-car-data) | Hand-corrected |    263 |     0.60 |          538 |        99.65 |
+| [Melbourne](data/hengfeng-li)               | Ground truth   |      1 |     0.42 |           62 |        99.80 |
+| [Seattle](data/newson-krumm)                | Ground truth   |      1 |     2.08 |           94 |        99.89 |
 
 As we can see, the overall accuracy of `map_matching_2` is pretty high in various situations.
 
@@ -521,11 +521,11 @@ Make sure that Ninja is used from CMake as build tool on both systems.
 We recommend reviewing the benchmarks that we made in our publication (https://doi.org/10.1111/tgis.13107).
 
 All the following examples were run on a dedicated server with 2x AMD EPYC 7742 64-Core Processor with 2x 128 Threads
-and 1024 MB DDR4 RAM on a local NVMe SSD in an Ubuntu 20.04 LTS LXC container.
+and 1024 MB DDR4 RAM on a local NVMe SSD in an Ubuntu 22.04 LTS LXC container.
 
 #### Prepare Benchmarks
 
-In these benchmarks, we compare the old version 0.3 preparation step with the new version 1.0 preparation step.
+In these benchmarks, we compare the old version 0.3 preparation step with the New Version 1.1.7 preparation step.
 
 We used the [data/floating-car-data/conf/prepare.conf](data/floating-car-data/conf/prepare.conf) as a base. The import
 is the `oberfranken-latest.osm.pbf` in the version that we had at the time we ran the benchmarks.
@@ -548,9 +548,9 @@ overhead, however, it can be opened near instantaneously.
 
 | Mode                              | Time (s) | CPU resources (s) | Max RAM (MiB) | `.osm.pbf` size (MiB) | binary size (MiB) |
 |:----------------------------------|---------:|------------------:|--------------:|----------------------:|------------------:|
-| Prepare (Old Version 0.3)         |    17.03 |             19.21 |         1,824 |                    74 |               283 |
-| Prepare with full MMap (Default)  |    33.84 |             35.98 |         2,264 |                    74 |               469 |
-| Prepare without intermediate MMap |    13.02 |             15.13 |         1,545 |                    74 |               469 |
+| Prepare (Old Version 0.3)         |    17.71 |             19.44 |         1,821 |                    74 |               283 |
+| Prepare with full MMap (Default)  |    29.09 |             29.36 |         2,297 |                    74 |               494 |
+| Prepare without intermediate MMap |    14.58 |             16.55 |         1,407 |                    74 |               494 |
 
 <details>
 <summary>Prepare Commands</summary>
@@ -565,14 +565,14 @@ overhead, however, it can be opened near instantaneously.
 
 ```shell
 # Prepare with full MMap (Default)
-./map_matching_2-1.0.3-x86_64.AppImage \
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/prepare.conf \
   --verbose
 ```
 
 ```shell
 # Prepare without intermediate MMap
-./map_matching_2-1.0.3-x86_64.AppImage \
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/prepare.conf \
   --memory-mapped-preparation off \
   --verbose
@@ -588,16 +588,34 @@ publication (https://doi.org/10.1111/tgis.13107).
 The benchmarks are based on the [data/floating-car-data/conf/match.conf](data/floating-car-data/conf/match.conf) and
 the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/match_raw.conf) files.
 
-| Mode                        | Threads | Track points | Sanitized track points | Candidates | Combinations | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
-|:----------------------------|--------:|-------------:|-----------------------:|-----------:|-------------:|---------------:|------------------:|-------------------------:|--------------:|
-| Match (Old Version 0.3)     |     256 |       14,651 |                  5,745 |    135,088 |    3,713,118 |           7.31 |            108.28 |                     0.71 |         3,447 |
-| Match (New Version 1.0)     |     256 |       14,651 |                  5,745 |    135,123 |    3,715,146 |           0.68 |             14.01 |                     0.34 |           434 |
-| Match (Old Version 0.3)     |       1 |       14,651 |                  5,745 |    135,088 |    3,713,118 |          20.59 |             20.57 |                    14.43 |           923 |
-| Match (New Version 1.0)     |       1 |       14,651 |                  5,745 |    135,123 |    3,715,146 |          10.01 |             10.04 |                     9.89 |           120 |
-| Match RAW (Old Version 0.3) |     256 |       88,807 |                 32,599 |    811,417 |   27,835,497 |          11.92 |            933.23 |                     4.73 |         5,438 |
-| Match RAW (New Version 1.0) |     256 |       88,825 |                 32,617 |    811,700 |   27,840,536 |           6.12 |             89.22 |                     5.38 |         1,576 |
-| Match RAW (Old Version 0.3) |       1 |       88,807 |                 32,599 |    811,417 |   27,835,497 |          93.49 |             93.45 |                    87.09 |           958 |
-| Match RAW (New Version 1.0) |       1 |       88,825 |                 32,617 |    811,700 |   27,840,536 |          61.74 |             62.29 |                    61.57 |           356 |
+First the benchmark definitions.
+The first letter stands for `O = OLD` or `N = NEW`,
+the second letter stands for `M = Multithreading` or `S = Singlethreading`,
+the third letter when it is defined stands for `R = Raw points`.
+
+| Benchmark | Mode                          | Threads | Track points | Sanitized track points | Candidates | Combinations |
+|:----------|:------------------------------|--------:|-------------:|-----------------------:|-----------:|-------------:|
+| O_M       | Match (Old Version 0.3)       |     256 |       14,651 |                  5,745 |    135,088 |    3,713,118 |
+| N_M       | Match (New Version 1.1.7)     |     256 |       14,651 |                  5,600 |    131,181 |    3,589,816 |
+| O_S       | Match (Old Version 0.3)       |       1 |       14,651 |                  5,745 |    135,088 |    3,713,118 |
+| N_S       | Match (New Version 1.1.7)     |       1 |       14,651 |                  5,600 |    131,181 |    3,589,816 |
+| O_M_R     | Match RAW (Old Version 0.3)   |     256 |       88,807 |                 32,599 |    811,417 |   27,835,497 |
+| N_M_R     | Match RAW (New Version 1.1.7) |     256 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
+| O_S_R     | Match RAW (Old Version 0.3)   |       1 |       88,807 |                 32,599 |    811,417 |   27,835,497 |
+| N_S_R     | Match RAW (New Version 1.1.7) |       1 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
+
+And here are the results, the columns are in the same order as the table above:
+
+| Benchmark | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
+|-----------|---------------:|------------------:|-------------------------:|--------------:|
+| O_M       |           6.91 |             48.50 |                     0.40 |         3,457 |
+| N_M       |           0.60 |             17.03 |                     0.27 |           538 |
+| O_S       |          20.59 |             20.88 |                    14.40 |           923 |
+| N_S       |           9.71 |              9.80 |                     9.64 |           116 |
+| O_M_R     |          11.27 |            168.24 |                     4.08 |         5,429 |
+| N_M_R     |           5.07 |            106.87 |                     4.25 |         2,048 |
+| O_S_R     |          90.53 |             90.45 |                    83.84 |           957 |
+| N_S_R     |          58.86 |             59.30 |                    58.76 |           310 |
 
 <details>
 <summary>Match Commands</summary>
@@ -613,8 +631,8 @@ the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/mat
 ```
 
 ```shell
-# Match (New Version 1.0) with all threads
-./map_matching_2-1.0.3-x86_64.AppImage \
+# Match (New Version 1.1.7) with all threads
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match.conf \
   --verbose
 ```
@@ -631,8 +649,8 @@ the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/mat
 ```
 
 ```shell
-# Match (New Version 1.0) with 1 thread
-./map_matching_2-1.0.3-x86_64.AppImage \
+# Match (New Version 1.1.7) with 1 thread
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match.conf \
   --threads 1 \
   --verbose
@@ -652,8 +670,8 @@ the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/mat
 ```
 
 ```shell
-# Match RAW (New Version 1.0) with all threads
-./map_matching_2-1.0.3-x86_64.AppImage \
+# Match RAW (New Version 1.1.7) with all threads
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match_raw.conf \
   --verbose
 ```
@@ -673,8 +691,8 @@ the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/mat
 ```
 
 ```shell
-# Match RAW (New Version 1.0) with 1 thread
-./map_matching_2-1.0.3-x86_64.AppImage \
+# Match RAW (New Version 1.1.7) with 1 thread
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match_raw.conf \
   --threads 1 \
   --verbose
@@ -694,10 +712,10 @@ the new memory mapped network files, which is a lot faster and reduces the total
 Reading the network graph alone in the old version needs quite some resources, compared to opening the memory mapped
 network files in the new version:
 
-| Mode                           | Time (s) | CPU resources (s) | Max RAM (MiB) |
-|:-------------------------------|---------:|------------------:|--------------:|
-| Read Network (Old Version 0.3) |     5.85 |              5.84 |           921 |
-| Open Network (New Version 1.0) |     0.16 |              0.23 |            22 |
+| Mode                             | Time (s) | CPU resources (s) | Max RAM (MiB) |
+|:---------------------------------|---------:|------------------:|--------------:|
+| Read Network (Old Version 0.3)   |     5.64 |              5.63 |           921 |
+| Open Network (New Version 1.1.7) |     0.10 |              0.20 |            20 |
 
 <details>
 <summary>Read / Open Network Commands</summary>
@@ -711,8 +729,8 @@ echo "" | ./map_matching_2 \
 ```
 
 ```shell
-# Open Network (New Version 1.0)
-echo "" | ./map_matching_2-1.0.3-x86_64.AppImage \
+# Open Network (New Version 1.1.7)
+echo "" | ./map_matching_2-1.1.7-x86_64.AppImage \
     --match \
     --input data/floating-car-data/network/ \
     --read-line --console \
@@ -724,7 +742,8 @@ echo "" | ./map_matching_2-1.0.3-x86_64.AppImage \
 #### Compare benchmarks
 
 In this benchmark, we compare the results from the old and new version with the provided map matching results from our
-publication (https://doi.org/10.1111/tgis.13107). This is to check whether the new version 1.0 is as accurate as the old
+publication (https://doi.org/10.1111/tgis.13107). This is to check whether the New Version 1.1.7 is as accurate as the
+old
 version 0.3 that was used in the publication.
 
 The comparison is based on the [data/floating-car-data/conf/compare.conf](data/floating-car-data/conf/compare.conf)
@@ -733,11 +752,11 @@ file.
 We compared the results of the old version with the `ground_truth.csv` with the old version and the new version,
 and we compared the results of the new version with the `ground_truth.csv` with the new version.
 
-| Mode                                     | Time (s) | CPU resources (s) | Actual comparison time (s) | Max RAM (MiB) | Mean correct fraction (%) | Weighted mean correct fraction (%) |
-|:-----------------------------------------|---------:|------------------:|---------------------------:|--------------:|--------------------------:|-----------------------------------:|
-| Comparison Old Matches (Old Version 0.3) |     6.51 |             15.93 |                       0.36 |           925 |                     99.40 |                                N/A |
-| Comparison Old Matches (New Version 1.0) |     0.55 |              7.66 |                       0.38 |            32 |                     99.40 |                              99.58 |
-| Comparison New Matches (New Version 1.0) |     0.58 |              7.17 |                       0.41 |            38 |                     99.40 |                              99.58 |
+| Mode                                       | Time (s) | CPU resources (s) | Actual comparison time (s) | Max RAM (MiB) | Mean correct fraction (%) | Weighted mean correct fraction (%) |
+|:-------------------------------------------|---------:|------------------:|---------------------------:|--------------:|--------------------------:|-----------------------------------:|
+| Comparison Old Matches (Old Version 0.3)   |     6.27 |             14.50 |                       0.35 |           927 |                     99.17 |                                N/A |
+| Comparison Old Matches (New Version 1.1.7) |     0.38 |              7.46 |                       0.25 |           126 |                     99.17 |                              98.98 |
+| Comparison New Matches (New Version 1.1.7) |     0.36 |              9.00 |                       0.21 |            90 |                     99.62 |                              99.65 |
 
 We can see that the accuracy is exactly the same. However, the new version is faster comparing the results.
 The sub-second times and small memory differences are subject to measurement uncertainty and in practice equal.
@@ -766,8 +785,8 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 ```
 
 ```shell
-# Comparison Old Matches (New Version 1.0), there is no config file given in the examples directory
-./map_matching_2-1.0.3-x86_64.AppImage \
+# Comparison Old Matches (New Version 1.1.7), there is no config file given in the examples directory
+./map_matching_2-1.1.7-x86_64.AppImage \
   --compare \
   --output /data/floating-car-data/old/ \
   --filename comparison.csv \
@@ -779,8 +798,8 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 ```
 
 ```shell
-# Comparison New Matches (New Version 1.0)
-./map_matching_2-1.0.3-x86_64.AppImage \
+# Comparison New Matches (New Version 1.1.7)
+./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/compare.conf \
   --verbose
 ```

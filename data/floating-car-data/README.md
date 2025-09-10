@@ -61,13 +61,13 @@ Results on our test system (accuracy is the weighted mean correct fraction in pe
 
 | Mode            | Time (s) | Max RAM (MiB) | Accuracy (%) |
 |:----------------|---------:|--------------:|-------------:|
-| Prepare         |    32.80 |         2,271 |          N/A |
-| Prepare *       |    12.87 |         1,543 |          N/A |
-| Match           |     0.66 |           422 |          N/A |
-| Compare         |     0.59 |            38 |        99.58 |
-| Match (RAW)     |     5.56 |         1,620 |          N/A |
-| Prepare (All)   |    37.38 |         2,602 |          N/A |
-| Prepare (All) * |    14.48 |         1,688 |          N/A |
+| Prepare         |    29.09 |         2,297 |          N/A |
+| Prepare *       |    14.58 |         1,407 |          N/A |
+| Match           |     0.60 |           538 |          N/A |
+| Compare         |     0.36 |            90 |        99.65 |
+| Match (RAW)     |     5.07 |         2,048 |          N/A |
+| Prepare (All)   |    38.64 |         2,644 |          N/A |
+| Prepare (All) * |    15.11 |         1,589 |          N/A |
 
 Max RAM contains shared memory (cached memory backed by disk, not actually used).\
 The prepare runs marked with * were run with `--memory-mapped-preparation off`.
