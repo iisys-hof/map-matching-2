@@ -8,9 +8,11 @@ Float Car Data (FCD) map matching dataset to download from: \
 
 Place in this directory from the `benchmarks.zip` zip file \
 from the `benchmarks/docker/initialize/data/` folder \
-the `oberfranken-latest.osm.pbf` OSM file, please see `odbl-10.txt` for licence information, \
-the `points.csv` csv file, and \
-the `ground_truth.csv` csv file.
+the `oberfranken-latest.osm.pbf` OSM file, please see `odbl-10.txt` for licence information.
+
+The `points.csv` and the `ground_truth.csv` csv files are already supplied in this directory.
+The `ground_truth.csv` file supplied here is an updated version of the original file in the `benchmarks.zip` file.
+It contains some corrections to the ground truth that were overlooked in the original file.
 
 Additionally, we provide the anonymized `points_anonymized.csv` raw FCD file with permission
 from [Map and Route GmbH & Co. KG](https://www.mapandroute.de/) for further testing purposes. \

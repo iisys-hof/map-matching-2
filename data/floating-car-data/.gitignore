@@ -1,6 +1,4 @@
-points.csv
 tracks_anonymized.csv
-ground_truth.csv
 odbl-10.txt
 *.osm.pbf
 network/
