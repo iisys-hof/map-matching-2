@@ -962,6 +962,21 @@ Matching Options:
   --filter-duplicates arg (=on)         filter duplicate (adjacent spatially 
                                         equal) points in tracks before 
                                         matching, is recommended
+  --filter-warps arg (=on)              filter warping points in tracks before 
+                                        matching, is recommended; is skipped 
+                                        when no valid time information is 
+                                        given; effectively also removes all 
+                                        points with the same timestamp; a warp 
+                                        is defined between two adjacent points 
+                                        when the speed is over the warp-speed, 
+                                        see below; such points, which usually 
+                                        are large outliers, are then removed 
+                                        from the track
+  --warp-speed arg (=1500.0)            warp speed in kilometers per hour 
+                                        (km/h) for the filter-warps method 
+                                        above; nothing on ground should move 
+                                        faster, but if it does, the value can 
+                                        be adjusted
   --simplify-track arg (=on)            simplify track with Douglas-Peucker 
                                         algorithm
   --simplify-track-distance-tolerance arg (=5.0)
@@ -1559,14 +1574,18 @@ Comparison Options:
                                         compare reverse detection azimuth 
                                         tolerance in degrees for splitting 
                                         simplifications
-  --compare-adoption-distance-tolerance arg (=0.1)
+  --compare-adoption-distance-tolerance arg (=0.3)
                                         compare adoption distance tolerance in 
                                         meters around a point for merging close
-                                        points to remove tiny differences
+                                        points to remove tiny differences; 
+                                        should be slightly larger than twice 
+                                        the compare-simplify-distance-tolerance
   --compare-split-distance-tolerance arg (=1.0)
                                         compare split distance tolerance in 
                                         meters for splitting lines at closest 
-                                        points between lines
+                                        points between lines; should be 
+                                        slightly larger than twice the 
+                                        compare-adoption-distance-tolerance
   --compare-split-direction-tolerance arg (=90.0)
                                         compare split direction tolerance in 
                                         degrees for allowing only splits at 
