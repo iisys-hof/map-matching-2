@@ -40,7 +40,7 @@ namespace map_matching_2::geometry {
             const auto &rich_line = multi_rich_line.at(i);
             for (std::size_t j = 0; j < rich_line.size(); ++j) {
                 curr = &rich_line.at(j);
-                if (curr and prev) {
+                if (curr and prev and curr->is_valid() and prev->is_valid()) {
                     double time_difference = curr->timestamp() - prev->timestamp();
                     if (time_difference >= split_time) {
                         callback(start_outer, start_inner, j, i + 1);
@@ -96,7 +96,7 @@ namespace map_matching_2::geometry {
 
         for (std::size_t i = 0; i < rich_line.size(); ++i) {
             curr = &rich_line.at(i);
-            if (curr and prev) {
+            if (curr and prev and curr->is_valid() and prev->is_valid()) {
                 double time_difference = curr->timestamp() - prev->timestamp();
                 if (time_difference >= split_time) {
                     callback(start, i);

@@ -646,12 +646,12 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
     BOOST_AUTO_TEST_CASE(rich_line_time_split_test) {
         test_split_time_rich_line(
                 create_line<time_point_type, time_line_type>({
-                        {0, 0, 0},
-                        {1, 0, 1},
-                        {2, 0, 2},
-                        {3, 0, 3},
-                        {4, 0, 10},
-                        {5, 0, 11}
+                        {0, 0, true, 0},
+                        {1, 0, true, 1},
+                        {2, 0, true, 2},
+                        {3, 0, true, 3},
+                        {4, 0, true, 10},
+                        {5, 0, true, 11}
                 }), 5,
                 [](const auto &multi_rich_line) {
                     BOOST_CHECK_EQUAL(multi_rich_line.size(), 2);
@@ -669,15 +669,15 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
 
         test_split_time_rich_line(
                 create_line<time_point_type, time_line_type>({
-                        {0, 0, 0},
-                        {1, 0, 1},
-                        {2, 0, 2},
-                        {3, 0, 3},
-                        {4, 0, 10},
-                        {5, 0, 11},
-                        {6, 0, 20},
-                        {7, 0, 21},
-                        {8, 0, 22}
+                        {0, 0, true, 0},
+                        {1, 0, true, 1},
+                        {2, 0, true, 2},
+                        {3, 0, true, 3},
+                        {4, 0, true, 10},
+                        {5, 0, true, 11},
+                        {6, 0, true, 20},
+                        {7, 0, true, 21},
+                        {8, 0, true, 22}
                 }), 5,
                 [](const auto &multi_rich_line) {
                     BOOST_CHECK_EQUAL(multi_rich_line.size(), 3);
@@ -698,15 +698,15 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
 
         test_split_time_rich_line(
                 create_line<time_point_type, time_line_type>({
-                        {0, 0, 0},
-                        {1, 0, 1},
-                        {2, 0, 2},
-                        {3, 0, 3},
-                        {4, 0, 4},
-                        {5, 0, 5},
-                        {6, 0, 6},
-                        {7, 0, 7},
-                        {8, 0, 8}
+                        {0, 0, true, 0},
+                        {1, 0, true, 1},
+                        {2, 0, true, 2},
+                        {3, 0, true, 3},
+                        {4, 0, true, 4},
+                        {5, 0, true, 5},
+                        {6, 0, true, 6},
+                        {7, 0, true, 7},
+                        {8, 0, true, 8}
                 }), 5,
                 [](const auto &multi_rich_line) {
                     BOOST_CHECK_EQUAL(multi_rich_line.size(), 1);
@@ -723,43 +723,43 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
     BOOST_AUTO_TEST_CASE(multi_rich_line_time_split_test) {
         test_split_time_multi_rich_line(time_multi_line_type{
                         create_line<time_point_type, time_line_type>({
-                                {0, 0, 0},
-                                {1, 0, 1},
-                                {2, 0, 2},
-                                {3, 0, 3},
-                                {4, 0, 10},
-                                {5, 0, 11},
-                                {6, 0, 20},
-                                {7, 0, 21},
-                                {8, 0, 22},
-                                {9, 0, 23},
-                                {10, 0, 24}
+                                {0, 0, true, 0},
+                                {1, 0, true, 1},
+                                {2, 0, true, 2},
+                                {3, 0, true, 3},
+                                {4, 0, true, 10},
+                                {5, 0, true, 11},
+                                {6, 0, true, 20},
+                                {7, 0, true, 21},
+                                {8, 0, true, 22},
+                                {9, 0, true, 23},
+                                {10, 0, true, 24}
                         }),
                         create_line<time_point_type, time_line_type>({
-                                {10, 0, 25},
-                                {11, 0, 26},
-                                {12, 0, 27},
-                                {13, 0, 28},
-                                {14, 0, 29},
-                                {15, 0, 40},
-                                {16, 0, 41},
-                                {17, 0, 42},
-                                {18, 0, 43},
-                                {19, 0, 44},
-                                {20, 0, 45}
+                                {10, 0, true, 25},
+                                {11, 0, true, 26},
+                                {12, 0, true, 27},
+                                {13, 0, true, 28},
+                                {14, 0, true, 29},
+                                {15, 0, true, 40},
+                                {16, 0, true, 41},
+                                {17, 0, true, 42},
+                                {18, 0, true, 43},
+                                {19, 0, true, 44},
+                                {20, 0, true, 45}
                         }),
                         create_line<time_point_type, time_line_type>({
-                                {30, 0, 60},
-                                {31, 0, 61},
-                                {32, 0, 62},
-                                {33, 0, 63},
-                                {34, 0, 64},
-                                {35, 0, 65},
-                                {36, 0, 66},
-                                {37, 0, 80},
-                                {38, 0, 81},
-                                {39, 0, 82},
-                                {40, 0, 83}
+                                {30, 0, true, 60},
+                                {31, 0, true, 61},
+                                {32, 0, true, 62},
+                                {33, 0, true, 63},
+                                {34, 0, true, 64},
+                                {35, 0, true, 65},
+                                {36, 0, true, 66},
+                                {37, 0, true, 80},
+                                {38, 0, true, 81},
+                                {39, 0, true, 82},
+                                {40, 0, true, 83}
                         })
                 }, 5,
                 [](const auto &multi_rich_line) {
@@ -793,43 +793,43 @@ BOOST_AUTO_TEST_SUITE(model_algorithm_tests)
 
         test_split_time_multi_rich_line(time_multi_line_type{
                         create_line<time_point_type, time_line_type>({
-                                {0, 0, 0},
-                                {1, 0, 1},
-                                {2, 0, 2},
-                                {3, 0, 3},
-                                {4, 0, 4},
-                                {5, 0, 5},
-                                {6, 0, 6},
-                                {7, 0, 7},
-                                {8, 0, 8},
-                                {9, 0, 9},
-                                {10, 0, 10}
+                                {0, 0, true, 0},
+                                {1, 0, true, 1},
+                                {2, 0, true, 2},
+                                {3, 0, true, 3},
+                                {4, 0, true, 4},
+                                {5, 0, true, 5},
+                                {6, 0, true, 6},
+                                {7, 0, true, 7},
+                                {8, 0, true, 8},
+                                {9, 0, true, 9},
+                                {10, 0, true, 10}
                         }),
                         create_line<time_point_type, time_line_type>({
-                                {10, 0, 11},
-                                {11, 0, 12},
-                                {12, 0, 13},
-                                {13, 0, 14},
-                                {14, 0, 15},
-                                {15, 0, 16},
-                                {16, 0, 17},
-                                {17, 0, 18},
-                                {18, 0, 19},
-                                {19, 0, 20},
-                                {20, 0, 21}
+                                {10, 0, true, 11},
+                                {11, 0, true, 12},
+                                {12, 0, true, 13},
+                                {13, 0, true, 14},
+                                {14, 0, true, 15},
+                                {15, 0, true, 16},
+                                {16, 0, true, 17},
+                                {17, 0, true, 18},
+                                {18, 0, true, 19},
+                                {19, 0, true, 20},
+                                {20, 0, true, 21}
                         }),
                         create_line<time_point_type, time_line_type>({
-                                {30, 0, 30},
-                                {31, 0, 31},
-                                {32, 0, 32},
-                                {33, 0, 33},
-                                {34, 0, 34},
-                                {35, 0, 35},
-                                {36, 0, 36},
-                                {37, 0, 37},
-                                {38, 0, 38},
-                                {39, 0, 39},
-                                {40, 0, 40}
+                                {30, 0, true, 30},
+                                {31, 0, true, 31},
+                                {32, 0, true, 32},
+                                {33, 0, true, 33},
+                                {34, 0, true, 34},
+                                {35, 0, true, 35},
+                                {36, 0, true, 36},
+                                {37, 0, true, 37},
+                                {38, 0, true, 38},
+                                {39, 0, true, 39},
+                                {40, 0, true, 40}
                         })
                 }, 5,
                 [](const auto &multi_rich_line) {

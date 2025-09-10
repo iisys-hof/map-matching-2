@@ -286,6 +286,7 @@ namespace map_matching_2::app {
 
         const bool is_trajectory_simplification_manually = not vm["trajectory-simplification"].defaulted();
         const bool is_filter_duplicates_manually = not vm["filter-duplicates"].defaulted();
+        const bool is_filter_warps_manually = not vm["filter-warps"].defaulted();
         const bool is_simplify_track_manually = not vm["simplify-track"].defaulted();
         const bool is_median_merge_manually = not vm["median-merge"].defaulted();
         const bool is_adaptive_median_merge_manually = not vm["adaptive-median-merge"].defaulted();
@@ -298,6 +299,9 @@ namespace map_matching_2::app {
         if (is_trajectory_simplification_manually) {
             if (not is_filter_duplicates_manually) {
                 filter_duplicates = trajectory_simplification;
+            }
+            if (not is_filter_warps_manually) {
+                filter_warps = trajectory_simplification;
             }
             if (not is_simplify_track_manually) {
                 simplify_track = trajectory_simplification;
@@ -351,6 +355,9 @@ namespace map_matching_2::app {
             }
             if (not filter_duplicates) {
                 std::cout << "Disabled duplicate points filtering." << std::endl;
+            }
+            if (not filter_warps) {
+                std::cout << "Disabled warping points filtering." << std::endl;
             }
             if (not simplify_track) {
                 std::cout << "Disabled Douglas-Peucker track simplification." << std::endl;
@@ -1133,6 +1140,15 @@ namespace map_matching_2::app {
                         "and 'adaptive-median-merge' when set to off; enabled by default")
                 ("filter-duplicates", po::value<bool>(&data.filter_duplicates)->default_value(true, "on"),
                         "filter duplicate (adjacent spatially equal) points in tracks before matching, is recommended")
+                ("filter-warps", po::value<bool>(&data.filter_warps)->default_value(true, "on"),
+                        "filter warping points in tracks before matching, is recommended; "
+                        "is skipped when no valid time information is given; "
+                        "effectively also removes all points with the same timestamp; "
+                        "a warp is defined between two adjacent points when the speed is over the warp-speed, see below; "
+                        "such points, which usually are large outliers, are then removed from the track")
+                ("warp-speed", po::value<double>(&data.warp_speed)->default_value(1500.0, "1500.0"),
+                        "warp speed in kilometers per hour (km/h) for the filter-warps method above; "
+                        "nothing on ground should move faster, but if it does, the value can be adjusted")
                 ("simplify-track", po::value<bool>(&data.simplify_track)->default_value(true, "on"),
                         "simplify track with Douglas-Peucker algorithm")
                 ("simplify-track-distance-tolerance",
@@ -1352,11 +1368,13 @@ namespace map_matching_2::app {
                         po::value<double>(&data.simplifying_reverse_tolerance)->default_value(0.1, "0.1"),
                         "compare reverse detection azimuth tolerance in degrees for splitting simplifications")
                 ("compare-adoption-distance-tolerance",
-                        po::value<double>(&data.adoption_distance_tolerance)->default_value(0.1, "0.1"),
-                        "compare adoption distance tolerance in meters around a point for merging close points to remove tiny differences")
+                        po::value<double>(&data.adoption_distance_tolerance)->default_value(0.3, "0.3"),
+                        "compare adoption distance tolerance in meters around a point for merging close points to remove tiny differences; "
+                        "should be slightly larger than twice the compare-simplify-distance-tolerance")
                 ("compare-split-distance-tolerance",
                         po::value<double>(&data.split_distance_tolerance)->default_value(1.0, "1.0"),
-                        "compare split distance tolerance in meters for splitting lines at closest points between lines")
+                        "compare split distance tolerance in meters for splitting lines at closest points between lines; "
+                        "should be slightly larger than twice the compare-adoption-distance-tolerance")
                 ("compare-split-direction-tolerance",
                         po::value<double>(&data.split_direction_tolerance)->default_value(90.0, "90.0"),
                         "compare split direction tolerance in degrees for allowing only splits at points "

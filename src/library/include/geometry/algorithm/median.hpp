@@ -123,12 +123,18 @@ namespace map_matching_2::geometry {
     [[nodiscard]] TimePoint median_time_point(const Container<TimePoint, Allocator<TimePoint>> &time_points) {
         auto point = median_point(time_points);
 
+        bool all_valid = true;
         std::vector<typename TimePoint::timestamp_type> times;
         times.reserve(time_points.size());
         for (const auto &time_point : time_points) {
             times.emplace_back(time_point.timestamp());
+            if (not time_point.is_valid()) {
+                all_valid = false;
+            }
         }
 
+        // only keep the valid flag if all times that are merged were valid
+        point.set_valid(all_valid);
         point.timestamp(median(times));
 
         return point;

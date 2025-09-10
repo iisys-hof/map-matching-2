@@ -39,6 +39,8 @@ namespace map_matching_2::app {
 
         settings.max_time = data.matching.max_time;
         settings.filter_duplicates = data.matching.filter_duplicates;
+        settings.filter_warps = data.matching.filter_warps;
+        settings.warp_speed = data.matching.warp_speed;
         settings.simplify_track = data.matching.simplify_track;
         settings.median_merge = data.matching.median_merge;
         settings.adaptive_median_merge = data.matching.adaptive_median_merge;

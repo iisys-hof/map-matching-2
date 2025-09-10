@@ -28,8 +28,8 @@ namespace map_matching_2::matching {
         if (defect_set.contains(defect::equal)) {
             defect_str.append("equal, ");
         }
-        if (defect_set.contains(defect::forward_backward)) {
-            defect_str.append("forward_backward, ");
+        if (defect_set.contains(defect::warp)) {
+            defect_str.append("warp, ");
         }
         if (not defect_str.empty() and defect_str.ends_with(", ")) {
             defect_str.erase(defect_str.length() - 2);

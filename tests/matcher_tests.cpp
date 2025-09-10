@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 "candidate_search_test_edges.csv");
 
         auto track = create_track("two", {
-                {0.1, 0.1, 0},
-                {4.2, -0.2, 1},
-                {9.8, 0.3, 2}
+                {0.1, 0.1, true, 0},
+                {4.2, -0.2, true, 1},
+                {9.8, 0.3, true, 2}
         });
 
         std::cout << track.str() << std::endl;
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 "candidate_search_grid_test_edges.csv");
 
         auto track = create_track("one", {
-                {2.2, 2.2, 0},
-                {4.5, 2.5, 1},
-                {4.9, 5.8, 2}
+                {2.2, 2.2, true, 0},
+                {4.5, 2.5, true, 1},
+                {4.9, 5.8, true, 2}
         });
 
         std::cout << track.str() << std::endl;
@@ -259,10 +259,10 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_CLOSE_FRACTION(route_2_6.length(), 0.7, 1e-3);
 
         auto track_2 = create_track("two", {
-                {2.2, 2.2, 0},
-                {4.2, 2.1, 1},
-                {2.8, 1.9, 2},
-                {5.3, 1.8, 3}
+                {2.2, 2.2, true, 0},
+                {4.2, 2.1, true, 1},
+                {2.8, 1.9, true, 2},
+                {5.3, 1.8, true, 3}
         });
 
         std::cout << track_2.str() << std::endl;
@@ -321,9 +321,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 map_matching_2::matching::matcher_forwarder matcher_forwarder{matcher, match_settings};
 
                 auto track = create_track("one", {
-                        {2.3, 2.2, 0},
-                        {5.1, 2.3, 1},
-                        {4.9, 5.8, 2}
+                        {2.3, 2.2, true, 0},
+                        {5.1, 2.3, true, 1},
+                        {4.9, 5.8, true, 2}
                 });
 
                 matcher_forwarder.pass(track);

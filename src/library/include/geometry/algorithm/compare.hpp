@@ -58,7 +58,7 @@ namespace map_matching_2::geometry {
 
         double simplifying_tolerance = 0.1;
         double simplifying_reverse_tolerance = 0.1;
-        double adoption_distance_tolerance = 0.1;
+        double adoption_distance_tolerance = 0.3;
         double split_distance_tolerance = 1.0;
         double split_direction_tolerance = 90.0;
 

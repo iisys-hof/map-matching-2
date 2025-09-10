@@ -107,6 +107,7 @@ namespace map_matching_2::io::track {
                             finish_import();
                         }
 
+                        bool valid_time = false;
                         std::uint64_t timestamp = 0;
                         std::string time;
                         for (const auto &_field_time : _csv_settings.field_time) {
@@ -127,12 +128,14 @@ namespace map_matching_2::io::track {
                             if (_csv_settings.no_parse_time) {
                                 if (util::is_number(time)) {
                                     timestamp = std::stoul(time);
+                                    valid_time = true;
                                 } else if (_points.contains(id)) {
                                     const auto &out_line = std::any_cast<line_type_out>(_points[id]);
                                     timestamp = out_line.size();
                                 }
                             } else {
                                 timestamp = util::parse_time(time, _csv_settings.time_format);
+                                valid_time = true;
                             }
                         } else if (_points.contains(id)) {
                             const auto &out_line = std::any_cast<line_type_out>(_points[id]);
@@ -157,7 +160,7 @@ namespace map_matching_2::io::track {
                                 auto &out_line = std::any_cast<line_type_out &>(_points[id]);
                                 point_type_out out_point;
                                 geometry::reproject_point(in_point, out_point, _reprojector_variant);
-                                out_line.emplace_back(std::move(out_point), timestamp);
+                                out_line.emplace_back(std::move(out_point), valid_time, timestamp);
                             } else if (wkt_string.starts_with("LINESTRING")) {
                                 if (_csv_settings.no_id) {
                                     id = std::to_string(row_num);
@@ -207,7 +210,7 @@ namespace map_matching_2::io::track {
                             auto &out_line = std::any_cast<line_type_out &>(_points[id]);
                             point_type_out out_point;
                             geometry::reproject_point(point_type_in{x, y}, out_point, _reprojector_variant);
-                            out_line.emplace_back(std::move(out_point), timestamp);
+                            out_line.emplace_back(std::move(out_point), valid_time, timestamp);
                         }
 
                         _current_id = id;
@@ -222,11 +225,13 @@ namespace map_matching_2::io::track {
                 using multi_track_type = geometry::track::import_multi_track_type<point_type_out>;
                 using line_type_out = typename multi_track_type::line_type;
 
+                const geometry::timestamp_comparator<point_type_out> _timestamp_comparator;
+
                 for (auto &pair : _points) {
                     const auto &id = pair.first;
                     if (_selectors.empty() or _selectors.contains(id)) {
                         auto &out_line = std::any_cast<line_type_out &>(pair.second);
-                        std::stable_sort(std::begin(out_line), std::end(out_line));
+                        std::stable_sort(std::begin(out_line), std::end(out_line), _timestamp_comparator);
                         _forwarder.pass(multi_track_type{id, std::move(out_line)});
                     }
                 }

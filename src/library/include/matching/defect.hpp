@@ -23,7 +23,7 @@ namespace map_matching_2::matching {
     enum defect {
         none,
         equal,
-        forward_backward
+        warp
     };
 
     std::ostream &operator<<(std::ostream &out, const boost::unordered_flat_set<defect> &defect_set);

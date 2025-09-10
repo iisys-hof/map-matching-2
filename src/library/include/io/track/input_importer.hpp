@@ -97,7 +97,7 @@ namespace map_matching_2::io::track {
                         boost::geometry::read_wkt(wkt_point, in_point);
                         point_type_out out_point;
                         geometry::reproject_point(in_point, out_point, _reprojector_variant);
-                        out_line.emplace_back(std::move(out_point), timestamp++);
+                        out_line.emplace_back(std::move(out_point), false, timestamp++);
                     }
 
                     _forwarder.pass(multi_track_type{id_str, std::move(out_line)});

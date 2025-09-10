@@ -32,7 +32,7 @@ namespace map_matching_2::compare {
 
         bool console{false}, ignore_non_existent{false};
 
-        double simplifying_tolerance{0.1}, simplifying_reverse_tolerance{0.1}, adoption_distance_tolerance{0.1},
+        double simplifying_tolerance{0.1}, simplifying_reverse_tolerance{0.1}, adoption_distance_tolerance{0.3},
                 split_distance_tolerance{1.0}, split_direction_tolerance{90.0};
 
     };

@@ -48,24 +48,24 @@ namespace map_matching_2::geometry {
         constexpr time_point() = default;
 
         constexpr explicit time_point(const CoordinateType &v0,
-                const timestamp_type time = 0) requires
+                const bool valid = false, const timestamp_type time = 0) requires
             (boost::geometry::detail::is_coordinates_number_leq<CoordinateType, 1, DimensionCount>::value)
-            : base_type{v0}, _time{time} {}
+            : base_type{v0}, _valid{valid}, _time{time} {}
 
         constexpr time_point(const CoordinateType &v0, const CoordinateType &v1,
-                const timestamp_type time = 0) requires
+                const bool valid = false, const timestamp_type time = 0) requires
             (boost::geometry::detail::is_coordinates_number_leq<CoordinateType, 2, DimensionCount>::value)
-            : base_type{v0, v1}, _time{time} {}
+            : base_type{v0, v1}, _valid{valid}, _time{time} {}
 
         constexpr time_point(const CoordinateType &v0, const CoordinateType &v1, const CoordinateType &v2,
-                const timestamp_type time = 0) requires
+                const bool valid = false, const timestamp_type time = 0) requires
             (boost::geometry::detail::is_coordinates_number_leq<CoordinateType, 3, DimensionCount>::value)
-            : base_type{v0, v1, v2}, _time{time} {}
+            : base_type{v0, v1, v2}, _valid{valid}, _time{time} {}
 
         constexpr time_point(const time_point &other) = default;
 
-        constexpr time_point(const time_point &other, const timestamp_type time)
-            : base_type(other), _time{time} {}
+        constexpr time_point(const time_point &other, const bool valid, const timestamp_type time)
+            : base_type(other), _valid{valid}, _time{time} {}
 
         template<typename Point> requires
             (not std::same_as<Point, time_point> and std::derived_from<Point, base_type>)
@@ -74,8 +74,8 @@ namespace map_matching_2::geometry {
 
         constexpr time_point(time_point &&other) noexcept = default;
 
-        constexpr time_point(time_point &&other, const timestamp_type time) noexcept
-            : base_type(std::move(other)), _time{time} {}
+        constexpr time_point(time_point &&other, const bool valid, const timestamp_type time) noexcept
+            : base_type(std::move(other)), _valid{valid}, _time{time} {}
 
         template<typename Point> requires
             (not std::same_as<Point, time_point> and std::derived_from<Point, base_type>)
@@ -106,6 +106,14 @@ namespace map_matching_2::geometry {
 
         constexpr ~time_point() = default;
 
+        [[nodiscard]] constexpr bool is_valid() const {
+            return _valid;
+        }
+
+        constexpr void set_valid(const bool valid) {
+            _valid = valid;
+        }
+
         [[nodiscard]] constexpr timestamp_type timestamp() const {
             return _time;
         }
@@ -115,6 +123,7 @@ namespace map_matching_2::geometry {
         }
 
     private:
+        bool _valid{false};
         timestamp_type _time{0};
 
     };
@@ -229,6 +238,7 @@ namespace map_matching_2::geometry {
     template<is_time_point TimePoint, std::size_t... Is>
     std::size_t hash_value_impl(const TimePoint &data, std::index_sequence<Is...>) {
         std::size_t seed = 0;
+        boost::hash_combine(seed, data.is_valid());
         boost::hash_combine(seed, data.timestamp());
         ((boost::hash_combine(seed, boost::geometry::get<Is>(data))), ...);
         return seed;
@@ -236,7 +246,7 @@ namespace map_matching_2::geometry {
 
     template<is_time_point TimePoint, std::size_t... Is>
     bool equals_impl(const TimePoint &left, const TimePoint &right, std::index_sequence<Is...>) {
-        return left.timestamp() == right.timestamp() &&
+        return left.is_valid() and right.is_valid() and left.timestamp() == right.timestamp() &&
                 ((boost::geometry::get<Is>(left) == boost::geometry::get<Is>(right)) && ...);
     }
 
@@ -257,10 +267,24 @@ namespace map_matching_2::geometry {
         return not(left == right);
     }
 
+    template<is_time_point TimePoint, std::size_t I = 0>
+    bool less_impl(const TimePoint &left, const TimePoint &right) {
+        if constexpr (I < boost::geometry::dimension<TimePoint>::value) {
+            return left.timestamp() < right.timestamp() ||
+                    left.timestamp() == right.timestamp() && (
+                        left.is_valid() < right.is_valid() ||
+                        left.is_valid() == right.is_valid() && (
+                            boost::geometry::get<I>(left) < boost::geometry::get<I>(right) ||
+                            (boost::geometry::get<I>(left) == boost::geometry::get<I>(right) &&
+                                less_impl<TimePoint, I + 1>(left, right))));
+        }
+        return false;
+    }
+
     template<typename CoordinateType, std::size_t DimensionCount, typename CoordinateSystem>
     bool operator<(const time_point<CoordinateType, DimensionCount, CoordinateSystem> &left,
             const time_point<CoordinateType, DimensionCount, CoordinateSystem> &right) {
-        return left.timestamp() < right.timestamp();
+        return less_impl(left, right);
     }
 
     template<typename CoordinateType, std::size_t DimensionCount, typename CoordinateSystem>
@@ -280,6 +304,13 @@ namespace map_matching_2::geometry {
             const time_point<CoordinateType, DimensionCount, CoordinateSystem> &right) {
         return not(left < right); // equivalent to left >= right
     }
+
+    template<is_time_point TimePoint>
+    struct timestamp_comparator {
+        bool operator()(const TimePoint &left, const TimePoint &right) const {
+            return left.timestamp() < right.timestamp();
+        }
+    };
 
 }
 

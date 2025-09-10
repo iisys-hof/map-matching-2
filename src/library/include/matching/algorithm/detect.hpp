@@ -36,9 +36,9 @@ namespace map_matching_2::matching {
         using rich_line_type = RichLine;
         using set_type = boost::unordered_flat_set<defect>;
 
-        [[nodiscard]] static std::vector<set_type> detect(
-                const rich_line_type &rich_line, const bool detect_duplicates = true,
-                const bool detect_forward_backward = false) {
+        [[nodiscard]] static std::vector<set_type> detect(const rich_line_type &rich_line,
+                const bool detect_duplicates = true,
+                const bool detect_warps = true, const double warp_speed = 1500.0) {
             std::vector<set_type> defects(rich_line.size(), set_type{});
 
             if (detect_duplicates) {
@@ -49,19 +49,28 @@ namespace map_matching_2::matching {
                 }
             }
 
-            if (detect_forward_backward) {
-                for (std::int64_t from = 0, to = 1; to < rich_line.size(); ++from, ++to) {
-                    while (to < rich_line.size() and
-                        (defects[to].contains(defect::forward_backward) or
-                            defects[to].contains(defect::equal))) {
-                        ++to;
-                    }
-                    if (_forward_backward(rich_line, from, to)) {
-                        defects[to].emplace(defect::forward_backward);
-                        --from;
-                        --to;
-                    } else if (from + 1 != to) {
-                        from = to - 1;
+            if (detect_warps) {
+                for (std::size_t from = 0, to = 1; to < rich_line.size(); ++from, ++to) {
+                    if (_warp(rich_line, from, to, warp_speed)) {
+                        // we detected a warp but we still have to check whether we remove the from or to point
+                        double destination_distance = std::numeric_limits<double>::max();
+                        double origin_distance = std::numeric_limits<double>::max();
+                        if (to + 1 < rich_line.size()) {
+                            // simulate removing the to point and calculate the new segment distance
+                            destination_distance = geometry::point_distance(rich_line.at(from), rich_line.at(to + 1));
+                        }
+                        if (from >= 1) {
+                            // simulate removing the from point and calculate the new segment distance
+                            origin_distance = geometry::point_distance(rich_line.at(from - 1), rich_line.at(to));
+                        }
+
+                        if (destination_distance <= origin_distance) {
+                            // the destination distance smaller (or equal), so removing the to point is advised
+                            defects[to].emplace(defect::warp);
+                        } else {
+                            // the origin distance smaller, so removing the from point is advised
+                            defects[from].emplace(defect::warp);
+                        }
                     }
                 }
             }
@@ -82,22 +91,6 @@ namespace map_matching_2::matching {
 
             return defects;
         }
-
-        // [[nodiscard]] static set_type detect(
-        //         const rich_line_type &rich_line, const std::size_t from, const std::size_t to,
-        //         const bool detect_forward_backward = false) {
-        //     set_type defect_set;
-        //
-        //     if (detect_forward_backward and _forward_backward(rich_line, from, to)) {
-        //         defect_set.emplace(defect::forward_backward);
-        //     }
-        //
-        //     if (defect_set.empty()) {
-        //         defect_set.emplace(defect::none);
-        //     }
-        //
-        //     return defect_set;
-        // }
 
         static void remove_defects(rich_line_type &rich_line, const std::vector<set_type> &defects) {
             std::vector<std::size_t> remove;
@@ -120,33 +113,36 @@ namespace map_matching_2::matching {
             return geometry::equals_points(rich_line.at(from), rich_line.at(to));
         }
 
-        bool static _forward_backward(const rich_line_type &rich_line, const std::size_t from, const std::size_t to,
-                const double relative_difference = 0.8) {
-            if (from >= rich_line.size() or to >= rich_line.size()) {
-                return false;
+        bool static _warp(const rich_line_type &rich_line, const std::size_t from, const std::size_t to,
+                const double warp_speed) {
+            using point_type = typename geometry::rich_line_traits<rich_line_type>::point_type;
+
+            if constexpr (geometry::is_time_point<point_type>) {
+                const point_type &from_point = rich_line.at(from);
+                const point_type &to_point = rich_line.at(to);
+
+                if (geometry::equals_points(from_point, to_point)) {
+                    // on equal position, we did not warp because we did not move at all
+                    return false;
+                }
+
+                if (from_point.is_valid() and to_point.is_valid()) {
+                    // only continue if both points contain valid timestamps
+                    if (to_point.timestamp() == from_point.timestamp()) {
+                        // on the exact same timestamp with different positions, we definitely warped
+                        return true;
+                    }
+
+                    const double time_difference = to_point.timestamp() - from_point.timestamp();
+                    const double way = geometry::point_distance(from_point, to_point);
+                    // speed in m/s is way through time, multiplied by 3.6 is km/h
+                    const double speed = (way / time_difference) * 3.6;
+
+                    return speed >= warp_speed;
+                }
             }
 
-            const std::int64_t prev = static_cast<std::int64_t>(from) - 1;
-            if (prev < 0) {
-                return false;
-            }
-
-            bool adjacent_from = prev + 1 == from;
-            const auto current_azimuth =
-                    adjacent_from
-                    ? rich_line.azimuth(prev)
-                    : geometry::azimuth_deg(rich_line.at(prev), rich_line.at(from));
-            bool adjacent_to = from + 1 == to;
-            const auto next_azimuth =
-                    adjacent_to
-                    ? rich_line.azimuth(from)
-                    : geometry::azimuth_deg(rich_line.at(from), rich_line.at(to));
-            const auto diff_azimuth = geometry::angle_diff(current_azimuth, next_azimuth);
-
-            const auto relative_probability = std::fabs(diff_azimuth) / 180.0;
-            assert(relative_probability >= 0.0 and relative_probability <= 1.0);
-
-            return relative_probability >= relative_difference;
+            return false;
         }
 
     };
