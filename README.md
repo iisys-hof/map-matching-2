@@ -152,6 +152,7 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
       This means even hand-drawn tracks can be matched.
 - **Trajectory Simplification:** Novel implementation for addressing small noise pruning.
     - **Duplicate points:** Removal of duplicate points without altering the geometric track shape.
+    - **Warp detection:** Removal of points with impossibly high travel speed between the positions.
     - **Douglas-Peucker Algorithm:** Removal of unnecessary points in straight lines, removes points without
       significantly altering the geometric track shape. Can be further configured.
     - **Point-Cloud-Merge:** Removes noise within a small radius around static positions without significantly altering
