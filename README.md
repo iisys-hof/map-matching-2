@@ -813,6 +813,9 @@ More accuracy metrics from other data sets are shown in the [data](data) subfold
 
 *This is the successor to the deprecated repository [Map Matching](https://github.com/iisys-hof/map-matching).*
 
+The development of this application has been sponsored by
+the [Institute of Information Systems at Hof University](https://github.com/iisys-hof).
+
 If you want to cite this work, please also cite the official publication:
 
 A. Wöltche, "Open source map matching with Markov decision processes: A new method and a detailed benchmark with
