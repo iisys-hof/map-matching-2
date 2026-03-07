@@ -116,18 +116,6 @@ if (EXPLICIT_TEMPLATES)
             src/types/matching/matcher.cpp)
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND (
-        CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 12 OR (
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 12 AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16)))
-    # boost/geometry/srs/epsg.hpp dependency severely impacts optimization time
-    # see https://github.com/boostorg/geometry/issues/1006
-    set_source_files_properties(
-            src/geometry/srs.cpp
-            PROPERTIES
-            COMPILE_FLAGS "-O0 $<$<BOOL:${ADDRESS_SANITIZER}>:-fno-sanitize=address>")
-endif ()
-
 target_compile_definitions(library
         PUBLIC
         _USE_MATH_DEFINES
@@ -140,6 +128,10 @@ if (MSVC)
             PUBLIC
             NOMINMAX
             XML_STATIC)
+
+    target_compile_options(library
+            PUBLIC
+            /Zc:__cplusplus)
 endif ()
 
 target_include_directories(library

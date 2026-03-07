@@ -19,7 +19,7 @@ if [ ! -d "$dir" ]; then
 fi
 
 cd "$dir" || exit 1
-dockerfile="docker/build/gcc/Dockerfile"
+dockerfile="docker/build/ubuntu/gcc/Dockerfile"
 if [ ! -e "$dockerfile" ]; then
   echo "Dockerfile $dockerfile does not exist."
   exit 1
@@ -29,7 +29,7 @@ if ! docker images -q "map_matching_2-gcc-build" > /dev/null 2>&1; then
   docker build -t map_matching_2-gcc-build -f "$dockerfile" . || exit 1
 fi
 docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build \
-  /bin/bash -c "cmake --build /tmp/map-matching-2/cmake-build-release --target install -j $(nproc)"
+  /bin/bash -c "cmake --build /tmp/map-matching-2/cmake-build-release-gcc --target install -j $(nproc)"
 
 # update licenses
 directories=("boost" "bz2" "csv_parser" "date" "expat" "gpx" "libosmium" "protozero" "rpmalloc" "zlib")

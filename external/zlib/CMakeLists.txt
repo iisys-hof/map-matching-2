@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(zlib
         GIT_REPOSITORY https://github.com/madler/zlib.git
-        GIT_TAG v1.3.1
+        GIT_TAG v1.3.2
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
@@ -18,7 +18,7 @@ if (NOT zlib_EXISTS)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
             -DCMAKE_MSVC_RUNTIME_LIBRARY=${CMAKE_MSVC_RUNTIME_LIBRARY}
-            -DZLIB_BUILD_EXAMPLES=OFF
+            -DZLIB_BUILD_TESTING=OFF
             -S "${zlib_SOURCE_DIR}"
             -B "${zlib_BINARY_DIR}")
     execute_process(COMMAND ${CMAKE_COMMAND}

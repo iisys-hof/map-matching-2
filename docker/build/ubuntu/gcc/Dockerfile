@@ -1,5 +1,5 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-gcc-build -f docker/build/gcc/Dockerfile .
+# docker build -t map_matching_2-gcc-build -f docker/build/ubuntu/gcc/Dockerfile .
 # docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build
 
 FROM ubuntu:20.04 AS build
@@ -8,7 +8,7 @@ ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
 ARG GCC_VERSION=15.2.0
 ARG GDB_VERSION=15.2
-ARG CMAKE_VERSION=4.0.3
+ARG CMAKE_VERSION=4.2.3
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(csv_parser
         GIT_REPOSITORY https://github.com/vincentlaucsb/csv-parser.git
-        GIT_TAG 2.3.0
+        GIT_TAG 2.5.1
         GIT_SUBMODULES ""
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)

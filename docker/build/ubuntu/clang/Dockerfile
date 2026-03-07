@@ -1,13 +1,13 @@
 # Build and run from project directory:
-# docker build -t map_matching_2-clang-build -f docker/build/clang/Dockerfile .
+# docker build -t map_matching_2-clang-build -f docker/build/ubuntu/clang/Dockerfile .
 # docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-clang-build
 
 FROM ubuntu:20.04 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # only use major LLVM version
-ARG LLVM_VERSION=21
-ARG CMAKE_VERSION=4.0.3
+ARG LLVM_VERSION=22
+ARG CMAKE_VERSION=4.2.3
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

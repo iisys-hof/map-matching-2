@@ -1,5 +1,5 @@
 option(BUILD_ONLY_LIBRARY "Build only library" OFF)
-cmake_dependent_option(INSTALL_ALL_SHARED_LIBS "Install all shared libraries to install directory" ON "NOT MSVC" OFF)
+cmake_dependent_option(INSTALL_ALL_SHARED_LIBS "Install all shared libraries to install directory" ON "NOT MSVC AND TOTAL_STATIC_LINKING" OFF)
 
 message(STATUS "Build only library: ${BUILD_ONLY_LIBRARY}")
 message(STATUS "Install all shared libraries: ${INSTALL_ALL_SHARED_LIBS}")

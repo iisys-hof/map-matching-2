@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 4.2)
 
 # project
 project(map_matching_2
@@ -21,6 +21,7 @@ if (DEFINED CMAKE_GENERATOR)
 endif ()
 
 include(CMakeDependentOption)
+include(CheckCXXCompilerFlag)
 
 # options
 cmake_dependent_option(TOP_LEVEL_PROJECT "Top level project" ON
@@ -40,9 +41,8 @@ option(EXTERNAL_DEPENDENCIES "Configure external dependencies" ON)
 option(REPORT_COMPILE_TIME "Report compile time" OFF)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    cmake_dependent_option(STATIC_LINKING "Use static linking of system libraries" ON
-            "NOT DEBUG_BUILD" OFF)
-    option(TOTAL_STATIC_LINKING "Use total static linking with -static" ON)
+    option(STATIC_LINKING "Use static linking of system libraries" ON)
+    option(TOTAL_STATIC_LINKING "Use total static linking with -static" OFF)
     option(ENABLE_CET "Enable Control-flow Enforcement Technology" OFF)
     option(SET_OG_DEBUG_FLAG "Set Debug flag to -Og" OFF)
     option(COMPRESS_DEBUG_STRINGS "Compress strings in Debug builds" ON)
@@ -50,8 +50,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
     cmake_dependent_option(STATIC_ADDRESS_SANITIZER "Use static Address Sanitizer library" ON "ADDRESS_SANITIZER" OFF)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         option(SPLIT_DEBUG_INFO "Split Debug information into DWARF files" OFF)
-        option(USE_GOLD_LINKER "Use gold linker instead of ld" ON)
-        option(CREATE_GDB_INDEX "Create gdb-index" ON)
+        option(USE_GOLD_LINKER "Use gold linker instead of ld" OFF)
+        cmake_dependent_option(CREATE_GDB_INDEX "Create gdb-index" ON "USE_GOLD_LINKER" OFF)
         option(DISABLE_TEMPLATE_BACKTRACE_LIMIT "Disable template backtrace limit" ON)
         option(ENABLE_EXTERNIS "Enable externis" OFF)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -117,7 +117,6 @@ if (EXPLICIT_TEMPLATES)
 endif ()
 
 if (NATIVE_BUILD)
-    include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag("-march=native" _MARCH_NATIVE)
     if (_MARCH_NATIVE)
         add_compile_options(-march=native)
