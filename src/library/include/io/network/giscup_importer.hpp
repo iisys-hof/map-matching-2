@@ -34,6 +34,8 @@
 
 #include "geometry/algorithm/srs_dispatch.hpp"
 
+#include "util/string.hpp"
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::network {
@@ -61,6 +63,7 @@ namespace map_matching_2::io::network {
                         if constexpr (std::same_as<OutputCS, graph_cs_type>) {
                             using point_type_in = geometry::point_type<InputCS>;
                             using point_type_out = geometry::point_type<OutputCS>;
+                            using coordinate_type_in = typename geometry::data<point_type_in>::coordinate_type;
 
                             using node_type = geometry::network::node_type<point_type_out>;
 
@@ -84,8 +87,11 @@ namespace map_matching_2::io::network {
                                 while (std::getline(nodes, line)) {
                                     boost::split(parts, line, boost::is_any_of(" "));
 
-                                    const vertex_size_type node_id = std::stol(parts.at(0));
-                                    point_type_in point{std::stod(parts.at(2)), std::stod(parts.at(1))};
+                                    const vertex_size_type node_id = util::parse_number<vertex_size_type>(parts.at(0));
+                                    point_type_in point{
+                                            util::parse_number<coordinate_type_in>(parts.at(2)),
+                                            util::parse_number<coordinate_type_in>(parts.at(1))
+                                    };
 
                                     const vertex_size_type vertex_index = _graph_helper.add_vertex_with_index_mapping(
                                             node_type{
@@ -106,9 +112,12 @@ namespace map_matching_2::io::network {
                                 while (std::getline(edges, line)) {
                                     boost::split(parts, line, boost::is_any_of(" "));
 
-                                    const vertex_size_type edge_id = std::stol(parts.at(0));
-                                    const vertex_size_type from_node_id = std::stol(parts.at(1));
-                                    const vertex_size_type to_node_id = std::stol(parts.at(2));
+                                    const vertex_size_type edge_id = util::parse_number<vertex_size_type>(
+                                            parts.at(0));
+                                    const vertex_size_type from_node_id = util::parse_number<vertex_size_type>(
+                                            parts.at(1));
+                                    const vertex_size_type to_node_id = util::parse_number<vertex_size_type>(
+                                            parts.at(2));
 
                                     _edge_map.emplace(edge_id, std::pair{from_node_id, to_node_id});
                                 }
@@ -124,14 +133,17 @@ namespace map_matching_2::io::network {
                                 while (std::getline(edge_geometry, line)) {
                                     boost::split(parts, line, boost::is_any_of("^"));
 
-                                    const vertex_size_type edge_id = std::stol(parts.at(0));
+                                    const vertex_size_type edge_id = util::parse_number<vertex_size_type>(parts.at(0));
                                     // const std::string name = parts.at(1);
                                     // const std::string type = parts.at(2);
 
                                     line_type geometry;
                                     geometry.reserve(parts.size() > 4 ? parts.size() - 4 : 0);
                                     for (std::size_t j = 4; j + 1 < parts.size(); j += 2) {
-                                        point_type_in input_point{std::stod(parts.at(j + 1)), std::stod(parts.at(j))};
+                                        point_type_in input_point{
+                                                util::parse_number<coordinate_type_in>(parts.at(j + 1)),
+                                                util::parse_number<coordinate_type_in>(parts.at(j))
+                                        };
                                         point_type_out point;
                                         reproject_point(input_point, point, _reprojector_variant);
                                         geometry.emplace_back(std::move(point));

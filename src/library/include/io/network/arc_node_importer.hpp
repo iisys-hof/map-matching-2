@@ -38,6 +38,8 @@
 
 #include "geometry/algorithm/srs_dispatch.hpp"
 
+#include "util/string.hpp"
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::network {
@@ -65,6 +67,7 @@ namespace map_matching_2::io::network {
                         if constexpr (std::same_as<OutputCS, graph_cs_type>) {
                             using point_type_in = geometry::point_type<InputCS>;
                             using point_type_out = geometry::point_type<OutputCS>;
+                            using coordinate_type_in = typename geometry::data<point_type_in>::coordinate_type;
 
                             using node_type = geometry::network::node_type<point_type_out>;
 
@@ -87,7 +90,10 @@ namespace map_matching_2::io::network {
                                 std::uint64_t id = 0;
                                 while (std::getline(nodes, line)) {
                                     boost::split(parts, line, boost::is_any_of("\t;,| "));
-                                    point_type_in point{std::stod(parts.at(0)), std::stod(parts.at(1))};
+                                    point_type_in point{
+                                            util::parse_number<coordinate_type_in>(parts.at(0)),
+                                            util::parse_number<coordinate_type_in>(parts.at(1))
+                                    };
                                     const vertex_size_type vertex_index = _graph_helper.add_vertex_with_index_mapping(
                                             node_type{id++, std::move(point), _reprojector_variant});
                                     _node_map.emplace_back(vertex_index);
@@ -103,8 +109,8 @@ namespace map_matching_2::io::network {
                                 id = 0;
                                 while (std::getline(arcs, line)) {
                                     boost::split(parts, line, boost::is_any_of("\t;,| "));
-                                    const std::size_t index_a = std::stoul(parts.at(0));
-                                    const std::size_t index_b = std::stoul(parts.at(1));
+                                    const std::size_t index_a = util::parse_number<std::size_t>(parts.at(0));
+                                    const std::size_t index_b = util::parse_number<std::size_t>(parts.at(1));
                                     const vertex_size_type &vertex_index_a = _node_map.at(index_a);
                                     const vertex_size_type &vertex_index_b = _node_map.at(index_b);
                                     const auto &node_a = _graph_helper.graph().get_vertex_data(

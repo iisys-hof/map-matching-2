@@ -26,6 +26,7 @@
 #include "matching/traits/network.hpp"
 
 #include "util/time_helper.hpp"
+#include "util/string.hpp"
 
 #include "helper/matcher_fixture.hpp"
 
@@ -383,10 +384,14 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
             auto columns = csv.get_col_names();
 
             for (const auto &row : csv) {
-                double correct_fraction = std::stod(row["correct_fraction"].get<std::string>());
-                double error_fraction = std::stod(row["error_fraction"].get<std::string>());
-                double error_added = std::stod(row["error_added"].get<std::string>());
-                double error_missed = std::stod(row["error_missed"].get<std::string>());
+                double correct_fraction = map_matching_2::util::parse_number<double>(
+                        row["correct_fraction"].get<std::string>());
+                double error_fraction = map_matching_2::util::parse_number<double>(
+                        row["error_fraction"].get<std::string>());
+                double error_added = map_matching_2::util::parse_number<double>(
+                        row["error_added"].get<std::string>());
+                double error_missed = map_matching_2::util::parse_number<double>
+                        (row["error_missed"].get<std::string>());
 
                 BOOST_CHECK_EQUAL(correct_fraction, 1.0);
                 BOOST_CHECK_EQUAL(error_fraction, 0.0);

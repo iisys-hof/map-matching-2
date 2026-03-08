@@ -33,6 +33,7 @@
 
 #include "util/checks.hpp"
 #include "util/chrono.hpp"
+#include "util/string.hpp"
 
 #include "../importer.hpp"
 
@@ -167,7 +168,7 @@ namespace map_matching_2::io::track {
                     if (not time.empty()) {
                         if (_no_parse_time) {
                             if (util::is_number(time)) {
-                                timestamp = std::stoul(time);
+                                timestamp = util::parse_number<std::uint64_t>(time);
                                 valid_time = true;
                             }
                         } else {
@@ -176,8 +177,8 @@ namespace map_matching_2::io::track {
                         }
                     }
 
-                    const coordinate_type_in x = std::stod(trkpt->lon().getValue());
-                    const coordinate_type_in y = std::stod(trkpt->lat().getValue());
+                    const coordinate_type_in x = util::parse_number<coordinate_type_in>(trkpt->lon().getValue());
+                    const coordinate_type_in y = util::parse_number<coordinate_type_in>(trkpt->lat().getValue());
                     point_type_out out_point;
                     geometry::reproject_point(point_type_in{x, y}, out_point, _reprojector_variant);
 

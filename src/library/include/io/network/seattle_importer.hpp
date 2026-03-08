@@ -33,6 +33,8 @@
 
 #include "geometry/algorithm/srs_dispatch.hpp"
 
+#include "util/string.hpp"
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::network {
@@ -87,10 +89,13 @@ namespace map_matching_2::io::network {
                                 while (std::getline(seattle, line)) {
                                     boost::split(parts, line, boost::is_any_of("\t"));
 
-                                    vertex_size_type edge_id = std::stol(parts.at(0));
-                                    vertex_size_type from_node_id = std::stol(parts.at(1));
-                                    vertex_size_type to_node_id = std::stol(parts.at(2));
-                                    bool two_way = std::stoi(parts.at(3)) == 1;
+                                    vertex_size_type edge_id = util::parse_number<vertex_size_type>(
+                                            parts.at(0));
+                                    vertex_size_type from_node_id = util::parse_number<vertex_size_type>(
+                                            parts.at(1));
+                                    vertex_size_type to_node_id = util::parse_number<vertex_size_type>(
+                                            parts.at(2));
+                                    bool two_way = util::parse_bool(parts.at(3)) == 1;
                                     std::string wkt_line = parts.at(6);
 
                                     boost::trim(wkt_line);

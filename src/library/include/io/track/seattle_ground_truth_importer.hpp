@@ -26,6 +26,8 @@
 
 #include <osmium/osm/types.hpp>
 
+#include "util/string.hpp"
+
 #include "../importer.hpp"
 
 namespace map_matching_2::io::track {
@@ -87,8 +89,8 @@ namespace map_matching_2::io::track {
                     while (std::getline(seattle, line)) {
                         boost::split(parts, line, boost::is_any_of("\t"));
 
-                        std::uint64_t edge_id = std::stoul(parts.at(0));
-                        bool two_way = std::stoi(parts.at(3)) == 1;
+                        std::uint64_t edge_id = util::parse_number<std::uint64_t>(parts.at(0));
+                        bool two_way = util::parse_bool(parts.at(3)) == 1;
                         std::string wkt_line = parts.at(6);
 
                         boost::trim(wkt_line);
@@ -116,8 +118,8 @@ namespace map_matching_2::io::track {
                     while (std::getline(route, line)) {
                         boost::split(parts, line, boost::is_any_of("\t"));
 
-                        std::uint64_t edge_id = std::stoul(parts.at(0));
-                        bool from_to_to = std::stoi(parts.at(1)) == 1;
+                        std::uint64_t edge_id = util::parse_number<std::uint64_t>(parts.at(0));
+                        bool from_to_to = util::parse_bool(parts.at(1)) == 1;
 
                         const auto &edge_pair = lines.at(edge_id);
                         const line_type &edge = edge_pair.first;

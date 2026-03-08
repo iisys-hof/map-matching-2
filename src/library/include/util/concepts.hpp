@@ -19,11 +19,15 @@
 #include <concepts>
 #include <variant>
 #include <iterator>
+#include <type_traits>
 
 namespace map_matching_2::util {
 
     template<typename>
     inline constexpr bool dependent_false_v = false;
+
+    template<typename T>
+    concept numeric = std::is_arithmetic_v<std::remove_cvref_t<T>>;
 
     template<typename Container>
     using is_forward_access = std::is_base_of<std::forward_iterator_tag,

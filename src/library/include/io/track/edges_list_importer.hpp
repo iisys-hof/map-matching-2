@@ -33,6 +33,7 @@
 #include "graph/traits/graph.hpp"
 
 #include "util/checks.hpp"
+#include "util/string.hpp"
 
 #include "../importer.hpp"
 
@@ -134,14 +135,14 @@ namespace map_matching_2::io::track {
 
                         edge_ids.clear();
                         if (_delimiters.empty()) {
-                            edge_ids.emplace_back(std::stol(line));
+                            edge_ids.emplace_back(util::parse_number<std::int64_t>(line));
                         } else {
                             for (const auto &column : _columns) {
                                 std::size_t col = 0;
                                 if (util::is_number(column)) {
-                                    col = std::stoul(column);
+                                    col = util::parse_number<std::size_t>(column);
                                 }
-                                edge_ids.emplace_back(std::stol(parts.at(col)));
+                                edge_ids.emplace_back(util::parse_number<std::int64_t>(parts.at(col)));
                             }
                         }
 
