@@ -35,6 +35,7 @@
 #include "matching/settings.hpp"
 
 #include "util/time_helper.hpp"
+#include "util/math.hpp"
 
 namespace map_matching_2::environment {
 
@@ -118,6 +119,8 @@ namespace map_matching_2::environment {
                 _track.rich_line = geometry::median_merge(_track.rich_line.line(),
                         _settings.median_merge_distance_tolerance, _settings.adaptive_median_merge, &_network);
             }
+
+            _base_fail_error = _compute_base_fail_error();
         }
 
         [[nodiscard]] const auto &track() const {
@@ -277,7 +280,7 @@ namespace map_matching_2::environment {
 
                         if (route.is_invalid()) {
                             // no route found from current to next position, fail and skip next position
-                            reward -= _fail_reward(current_position);
+                            reward -= _fail_error(current_position);
                             if (_settings.skip_errors) {
                                 new_state = _skip_state(state);
                                 action = skip;
@@ -405,7 +408,7 @@ namespace map_matching_2::environment {
 
                                         if (not prev_route.attaches(route)) {
                                             // when routes do not attach, fail to done state
-                                            reward -= _fail_reward(current_position);
+                                            reward -= _fail_error(current_position);
                                             new_state = _done_state(state);
                                         } else {
                                             // routes attach, calculate additional metrics
@@ -494,14 +497,35 @@ namespace map_matching_2::environment {
             return done_state;
         }
 
-        [[nodiscard]] reward_type _fail_reward(const std::size_t current_position) const {
-            reward_type remaining_length = geometry::default_float_type<reward_type>::v0;
-            for (std::size_t i = current_position; i + 1 < _candidates.size(); ++i) {
-                if (_candidates[i].track->rich_line.has_length(_candidates[i].index)) {
-                    remaining_length += _candidates[i].track->rich_line.length(_candidates[i].index);
+        [[nodiscard]] reward_type _fail_error(const std::size_t current_position) const {
+            reward_type fail_error = geometry::default_float_type<reward_type>::v0;
+            for (std::size_t i = 0; i < _candidates.size(); ++i) {
+                const auto &candidate = _candidates[i];
+                const auto &candidate_rich_line = candidate.track->rich_line;
+                const auto multiplicator = util::gaussian_weight(i, current_position, _candidates.size(),
+                        2.0, 5.0, 3.0);
+                if (candidate.index + 1 < candidate_rich_line.size() and
+                    candidate_rich_line.has_length(candidate.index)) {
+                    fail_error += candidate_rich_line.length(candidate.index) * multiplicator;
+                }
+                if (candidate.index + 2 < candidate_rich_line.size() and
+                    candidate_rich_line.has_direction(candidate.index)) {
+                    fail_error += candidate_rich_line.absolute_direction(candidate.index) * multiplicator;
                 }
             }
-            return remaining_length;
+            return _base_fail_error + fail_error;
+        }
+
+        [[nodiscard]] reward_type _compute_base_fail_error() {
+            reward_type fail_error = geometry::default_float_type<reward_type>::v0;
+            constexpr double multiplicator = 3.0;
+            if (_track.rich_line.has_length()) {
+                fail_error += _track.rich_line.length() * multiplicator;
+            }
+            if (_track.rich_line.has_directions()) {
+                fail_error += _track.rich_line.absolute_directions() * multiplicator;
+            }
+            return fail_error;
         }
 
         [[nodiscard]] state_type _internal2state(const state_internal &state) {
@@ -542,6 +566,7 @@ namespace map_matching_2::environment {
 
         track_type _track;
         std::vector<candidate_type> _candidates;
+        reward_type _base_fail_error;
 
         states_type _states{};
         state_map_type _state_map{};

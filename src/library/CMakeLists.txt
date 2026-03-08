@@ -31,6 +31,7 @@ target_sources(library
         src/util/checks.cpp
         src/util/chrono.cpp
         src/util/compiler.cpp
+        src/util/math.cpp
         src/util/time_helper.cpp
         src/util/version.cpp)
 
