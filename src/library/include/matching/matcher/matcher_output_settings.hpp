@@ -25,20 +25,20 @@ namespace map_matching_2::matching {
     };
 
     static const std::string DEFAULT_CANDIDATE_COLUMNS{
-            "id,part_index,set_index,candidate_index,time,projection,distance,from,to,edge_id,is_result"
+            "id,part_index,set_index,candidate_index,time,projection,distance,edge_id"
     };
 
     struct matcher_output_settings {
         std::string filename, candidates_filename;
         std::string columns, candidates_columns;
-        bool console, verbose;
+        bool console, verbose, candidates_export_all;
 
         constexpr matcher_output_settings(std::string filename, std::string columns,
                 std::string candidates_filename, std::string candidates_columns,
-                const bool console, const bool verbose)
-            : filename{std::move(filename)}, columns{std::move(columns)},
-            candidates_filename{std::move(candidates_filename)}, candidates_columns{std::move(candidates_columns)},
-            console{console}, verbose{verbose} {}
+                const bool candidates_export_all, const bool console, const bool verbose)
+            : filename{std::move(filename)}, candidates_filename{std::move(candidates_filename)},
+            columns{std::move(columns)}, candidates_columns{std::move(candidates_columns)},
+            console{console}, verbose{verbose}, candidates_export_all{candidates_export_all} {}
     };
 
 }

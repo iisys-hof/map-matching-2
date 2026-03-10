@@ -153,6 +153,9 @@ namespace map_matching_2::app {
 
     struct export_data : base_data {
         std::string candidates, candidates_columns;
+        bool candidates_export_all;
+
+        void correct(const po::variables_map &vm) override;
     };
 
     struct prepare_export_data : base_data {

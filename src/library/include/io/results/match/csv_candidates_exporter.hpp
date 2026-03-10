@@ -18,6 +18,7 @@
 
 #include <numeric>
 #include <algorithm>
+#include <optional>
 
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
@@ -49,8 +50,8 @@ namespace map_matching_2::io::results {
         using task_type = candidates_csv_task;
         using base_type = csv_results_exporter<task_type, Delimiter, Quote, Flush>;
 
-        explicit csv_candidates_exporter(std::string filename, const std::string &columns)
-            : base_type{std::move(filename), columns} {
+        explicit csv_candidates_exporter(std::string filename, const std::string &columns, const bool export_all)
+            : base_type{std::move(filename), columns}, _export_all{export_all} {
             _parse_columns();
         }
 
@@ -61,6 +62,18 @@ namespace map_matching_2::io::results {
             using candidate_type = typename MatchResult::environment_type::candidate_type;
             using point_type = typename candidate_type::point_type;
             using segment_type = typename geometry::models<point_type>::segment_type;
+
+            using policy_map_type = boost::unordered_flat_map<std::size_t, boost::unordered_flat_set<std::size_t>>;
+
+            auto edge_is_result = [](const policy_map_type &policy_map,
+                    const std::size_t &candidate_index, const std::size_t &edge_index) -> bool {
+                if (const auto policy_search = policy_map.find(candidate_index);
+                    policy_search != std::end(policy_map)) {
+                    const auto &policy_edges_set = policy_search->second;
+                    return policy_edges_set.find(edge_index) != std::end(policy_edges_set);
+                }
+                return false;
+            };
 
             std::vector<candidate_result> results;
 
@@ -76,9 +89,12 @@ namespace map_matching_2::io::results {
                     const auto &candidates = environment.candidates();
                     const auto &policy = match_result.policies.at(i);
 
-                    boost::unordered_flat_map<std::size_t, boost::unordered_flat_set<std::size_t>> policy_map;
-                    for (auto [candidate_index, edge_index] : policy) {
-                        policy_map[candidate_index].insert(edge_index);
+                    policy_map_type policy_map;
+                    if (not _export_all or _has_is_result) {
+                        // only needed when we are only exporting results, or we have the is_result column
+                        for (auto [candidate_index, edge_index] : policy) {
+                            policy_map[candidate_index].insert(edge_index);
+                        }
                     }
 
                     std::vector<candidate_result> _results;
@@ -90,52 +106,58 @@ namespace map_matching_2::io::results {
                             const auto &candidate_edge = candidate.edges[k];
                             const auto &edge = network.edge(candidate_edge.edge_desc);
 
-                            bool is_result{false};
+                            std::optional<bool> is_result;
                             std::string time{}, projection_wkt{}, from_wkt{}, to_wkt{};
 
-                            for (const auto &_column : _columns) {
-                                switch (_column) {
-                                    case column::TIME: {
-                                        const auto _time = candidate.point().timestamp();
-                                        if (match_result.match_settings.export_timestamps) {
-                                            time = std::to_string(_time);
-                                        } else {
-                                            time = util::format_time(_time,
-                                                    match_result.match_settings.export_time_zone);
+                            if (not _export_all) {
+                                is_result = edge_is_result(policy_map, j, k);
+                            }
+
+                            if (_export_all or is_result.has_value() and is_result.value()) {
+                                for (const auto &_column : _columns) {
+                                    switch (_column) {
+                                        case column::TIME: {
+                                            const auto _time = candidate.point().timestamp();
+                                            if (match_result.match_settings.export_timestamps) {
+                                                time = std::to_string(_time);
+                                            } else {
+                                                time = util::format_time(_time,
+                                                        match_result.match_settings.export_time_zone);
+                                            }
                                         }
+                                        break;
+                                        case column::PROJECTION:
+                                            projection_wkt = geometry::to_wkt(segment_type{
+                                                    candidate.point(), candidate_edge.projection_point
+                                            });
+                                            break;
+                                        case column::FROM:
+                                            from_wkt = geometry::to_wkt(candidate_edge.from->line());
+                                            break;
+                                        case column::TO:
+                                            to_wkt = geometry::to_wkt(candidate_edge.to->line());
+                                            break;
+                                        case column::IS_RESULT:
+                                            if (not is_result.has_value()) {
+                                                is_result = edge_is_result(policy_map, j, k);
+                                            }
+                                            break;
+                                        default:
+                                            break;
                                     }
-                                    break;
-                                    case column::PROJECTION:
-                                        projection_wkt = geometry::to_wkt(segment_type{
-                                                candidate.point(), candidate_edge.projection_point
-                                        });
-                                        break;
-                                    case column::FROM:
-                                        from_wkt = geometry::to_wkt(candidate_edge.from->line());
-                                        break;
-                                    case column::TO:
-                                        to_wkt = geometry::to_wkt(candidate_edge.to->line());
-                                        break;
-                                    case column::IS_RESULT:
-                                        if (auto policy_search = policy_map.find(j);
-                                            policy_search != policy_map.end()) {
-                                            const auto &policy_edges_set = policy_search->second;
-                                            is_result = policy_edges_set.find(k) != policy_edges_set.end();
-                                        }
-                                        break;
-                                    default:
-                                        break;
                                 }
                             }
 
-                            _results.emplace_back(candidate_result{
-                                    match_result.track.id, time,
-                                    std::move(projection_wkt), std::move(from_wkt), std::move(to_wkt),
-                                    i, j, k,
-                                    candidate_edge.distance,
-                                    edge.id,
-                                    is_result
-                            });
+                            if (_export_all or is_result.has_value() and is_result.value()) {
+                                _results.emplace_back(candidate_result{
+                                        match_result.track.id, time,
+                                        std::move(projection_wkt), std::move(from_wkt), std::move(to_wkt),
+                                        i, j, k,
+                                        candidate_edge.distance,
+                                        edge.id,
+                                        is_result.has_value() ? is_result.value() : false
+                                });
+                            }
                         }
                     }
 
@@ -167,6 +189,7 @@ namespace map_matching_2::io::results {
         };
 
         std::vector<column> _columns{};
+        bool _export_all{false}, _has_is_result{false};
 
         void _parse_columns() {
             _columns.reserve(this->_column_strings.size());
@@ -193,6 +216,7 @@ namespace map_matching_2::io::results {
                     _columns.emplace_back(column::EDGE_ID);
                 } else if (_column_string == "is_result") {
                     _columns.emplace_back(column::IS_RESULT);
+                    _has_is_result = true;
                 } else {
                     _columns.emplace_back(column::UNKNOWN);
                 }

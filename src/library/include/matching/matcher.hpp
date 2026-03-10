@@ -69,7 +69,10 @@ namespace map_matching_2::matching {
                 std::uint32_t threads = boost::thread::hardware_concurrency())
             : base_type{threads}, _network{network},
             _exporter{output_settings.filename, output_settings.columns},
-            _candidates_exporter{output_settings.candidates_filename, output_settings.candidates_columns},
+            _candidates_exporter{
+                    output_settings.candidates_filename, output_settings.candidates_columns,
+                    output_settings.candidates_export_all
+            },
             _output_printer{output_settings.console, output_settings.verbose} {
             _output_printer.start();
             _exporter.start();

@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                         network_matcher, map_matching_2::matching::matcher_output_settings{
                                 matches_filename, map_matching_2::matching::DEFAULT_COLUMNS,
                                 candidates_filename, map_matching_2::matching::DEFAULT_CANDIDATE_COLUMNS,
-                                false, true
+                                false, false, true
                         },
                         1
                 };

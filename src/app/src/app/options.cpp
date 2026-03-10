@@ -162,6 +162,17 @@ namespace map_matching_2::app {
         }
     }
 
+    void export_data::correct(const po::variables_map &vm) {
+        if (candidates_export_all) {
+            if (candidates_columns.find("is_result") == std::string::npos) {
+                if (not candidates_columns.empty() and candidates_columns.back() != ',') {
+                    candidates_columns.append(",");
+                }
+                candidates_columns.append("is_result");
+            }
+        }
+    }
+
     void prepare_process_data::correct(const po::variables_map &vm) {
         if (simplify != SIMPLIFY_NONE and simplify != SIMPLIFY_ALL and simplify != SIMPLIFY_OSM_AWARE) {
             throw std::invalid_argument{std::format("simplify specification {} is unknown.", simplify)};
@@ -847,10 +858,16 @@ namespace map_matching_2::app {
                         "  \ttime: track point time\n"
                         "  \tprojection: candidate projection from track point to road network point\n"
                         "  \tdistance: distance in meter\n"
-                        "  \tfrom: route from start of the road network edge to the candidate point as WKT\n"
-                        "  \tto: route from the candidate point to the end of the road network edge as WKT\n"
                         "  \tedge_id: original edge ID the candidate lies on\n"
-                        "  \tis_result: true if this candidate is part of the resulting match");
+                        "  \tfrom: route from start of the road network edge to the candidate point as WKT (off by default)\n"
+                        "  \tto: route from the candidate point to the end of the road network edge as WKT (off by default)\n"
+                        "  \tis_result: true if this candidate is part of the resulting match (off by default)");
+
+        options.add_options()
+                ("candidates-export-all", po::value<bool>(&data.candidates_export_all)->default_value(false, "off"),
+                        "export all candidates, even if they are not part of the resulting match;\n"
+                        "automatically adds is_result column to candidate-columns if it is not already present, "
+                        "since it is necessary to distinguish between candidates that are part of the resulting match and those that are not");
 
         return options;
     }

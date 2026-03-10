@@ -46,7 +46,7 @@ namespace map_matching_2::app {
         const matching::matcher_output_settings _output_settings{
                 output_filename, data.match_output.columns,
                 output_candidates_filename, data.expo.candidates_columns,
-                data.console.console, global.verbose
+                data.expo.candidates_export_all, data.console.console, global.verbose
         };
 
         auto matcher = std::make_unique<matching::matcher<Network>>(
