@@ -32,7 +32,10 @@ namespace map_matching_2::matching {
 
         using multi_track_type = typename network_traits<network_type>::multi_track_type;
         using route_type = typename network_traits<network_type>::route_type;
+        using time_route_type = typename network_traits<network_type>::time_route_type;
         using policy_type = typename network_traits<network_type>::policy_type;
+
+        using timestamp_type = typename network_traits<network_type>::time_point_type::timestamp_type;
 
         const matching::settings &match_settings;
         std::vector<environment_type> environments;
@@ -40,7 +43,9 @@ namespace map_matching_2::matching {
         multi_track_type track;
         multi_track_type prepared;
         std::vector<policy_type> policies;
-        route_type match;
+        time_route_type match;
+        std::vector<timestamp_type> match_times;
+        route_type edges;
         std::vector<std::uint64_t> edge_ids;
         bool aborted{false};
         double duration{0.0};

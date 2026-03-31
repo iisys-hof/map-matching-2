@@ -87,6 +87,7 @@ namespace map_matching_2::io::network {
                                 std::getline(seattle, line);
                                 // read body
                                 while (std::getline(seattle, line)) {
+                                    std::erase(line, '\r');
                                     boost::split(parts, line, boost::is_any_of("\t"));
 
                                     vertex_size_type edge_id = util::parse_number<vertex_size_type>(

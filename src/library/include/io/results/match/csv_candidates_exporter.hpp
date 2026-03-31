@@ -50,8 +50,10 @@ namespace map_matching_2::io::results {
         using task_type = candidates_csv_task;
         using base_type = csv_results_exporter<task_type, Delimiter, Quote, Flush>;
 
-        explicit csv_candidates_exporter(std::string filename, const std::string &columns, const bool export_all)
-            : base_type{std::move(filename), columns}, _export_all{export_all} {
+        using policy_map_type = boost::unordered_flat_map<std::size_t, boost::unordered_flat_set<std::size_t>>;
+
+        explicit csv_candidates_exporter(std::string filename, const std::string &columns)
+            : base_type{std::move(filename), columns} {
             _parse_columns();
         }
 
@@ -63,21 +65,11 @@ namespace map_matching_2::io::results {
             using point_type = typename candidate_type::point_type;
             using segment_type = typename geometry::models<point_type>::segment_type;
 
-            using policy_map_type = boost::unordered_flat_map<std::size_t, boost::unordered_flat_set<std::size_t>>;
-
-            auto edge_is_result = [](const policy_map_type &policy_map,
-                    const std::size_t &candidate_index, const std::size_t &edge_index) -> bool {
-                if (const auto policy_search = policy_map.find(candidate_index);
-                    policy_search != std::end(policy_map)) {
-                    const auto &policy_edges_set = policy_search->second;
-                    return policy_edges_set.find(edge_index) != std::end(policy_edges_set);
-                }
-                return false;
-            };
-
             std::vector<candidate_result> results;
 
             if (this->is_active()) {
+                bool export_all = match_result.match_settings.export_all_candidates;
+
                 std::vector<std::size_t> counts;
                 for (const auto &environment : match_result.environments) {
                     counts.emplace_back(environment.edges());
@@ -90,7 +82,7 @@ namespace map_matching_2::io::results {
                     const auto &policy = match_result.policies.at(i);
 
                     policy_map_type policy_map;
-                    if (not _export_all or _has_is_result) {
+                    if (not export_all or _has_is_result) {
                         // only needed when we are only exporting results, or we have the is_result column
                         for (auto [candidate_index, edge_index] : policy) {
                             policy_map[candidate_index].insert(edge_index);
@@ -109,11 +101,11 @@ namespace map_matching_2::io::results {
                             std::optional<bool> is_result;
                             std::string time{}, projection_wkt{}, from_wkt{}, to_wkt{};
 
-                            if (not _export_all) {
-                                is_result = edge_is_result(policy_map, j, k);
+                            if (not export_all) {
+                                is_result = _edge_is_result(policy_map, j, k);
                             }
 
-                            if (_export_all or is_result.has_value() and is_result.value()) {
+                            if (export_all or is_result.has_value() and is_result.value()) {
                                 for (const auto &_column : _columns) {
                                     switch (_column) {
                                         case column::TIME: {
@@ -139,7 +131,7 @@ namespace map_matching_2::io::results {
                                             break;
                                         case column::IS_RESULT:
                                             if (not is_result.has_value()) {
-                                                is_result = edge_is_result(policy_map, j, k);
+                                                is_result = _edge_is_result(policy_map, j, k);
                                             }
                                             break;
                                         default:
@@ -148,7 +140,7 @@ namespace map_matching_2::io::results {
                                 }
                             }
 
-                            if (_export_all or is_result.has_value() and is_result.value()) {
+                            if (export_all or is_result.has_value() and is_result.value()) {
                                 _results.emplace_back(candidate_result{
                                         match_result.track.id, time,
                                         std::move(projection_wkt), std::move(from_wkt), std::move(to_wkt),
@@ -189,7 +181,7 @@ namespace map_matching_2::io::results {
         };
 
         std::vector<column> _columns{};
-        bool _export_all{false}, _has_is_result{false};
+        bool _has_is_result{false};
 
         void _parse_columns() {
             _columns.reserve(this->_column_strings.size());
@@ -288,6 +280,16 @@ namespace map_matching_2::io::results {
 
         void execute(task_type &&task) override {
             write_result(parse_task(std::move(task)));
+        }
+
+        [[nodiscard]] static bool _edge_is_result(const policy_map_type &policy_map,
+                const std::size_t &candidate_index, const std::size_t &edge_index) {
+            if (const auto policy_search = policy_map.find(candidate_index);
+                policy_search != std::end(policy_map)) {
+                const auto &policy_edges_set = policy_search->second;
+                return policy_edges_set.find(edge_index) != std::end(policy_edges_set);
+            }
+            return false;
         }
 
     };

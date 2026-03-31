@@ -85,6 +85,7 @@ namespace map_matching_2::io::network {
 
                                 // read
                                 while (std::getline(nodes, line)) {
+                                    std::erase(line, '\r');
                                     boost::split(parts, line, boost::is_any_of(" "));
 
                                     const vertex_size_type node_id = util::parse_number<vertex_size_type>(parts.at(0));
@@ -110,6 +111,7 @@ namespace map_matching_2::io::network {
 
                                 // read
                                 while (std::getline(edges, line)) {
+                                    std::erase(line, '\r');
                                     boost::split(parts, line, boost::is_any_of(" "));
 
                                     const vertex_size_type edge_id = util::parse_number<vertex_size_type>(
@@ -131,6 +133,7 @@ namespace map_matching_2::io::network {
 
                                 // read
                                 while (std::getline(edge_geometry, line)) {
+                                    std::erase(line, '\r');
                                     boost::split(parts, line, boost::is_any_of("^"));
 
                                     const vertex_size_type edge_id = util::parse_number<vertex_size_type>(parts.at(0));

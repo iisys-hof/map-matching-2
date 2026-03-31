@@ -26,11 +26,13 @@
 #include "geometry/network/route/eager_route.hpp"
 
 #define MM2_EAGER_ROUTE(CS) map_matching_2::geometry::network::eager_route<MM2_RICH_LINE_VARIANT(CS)>
+#define MM2_EAGER_TIME_ROUTE(CS) map_matching_2::geometry::network::eager_route<MM2_RICH_TIME_LINE_VARIANT(CS)>
 
 #ifdef EXPLICIT_TEMPLATES
 
 #define MM2_EAGER_ROUTE_TEMPLATE(CS) \
-    MM2_EXTERN template class MM2_EAGER_ROUTE(CS);
+    MM2_EXTERN template class MM2_EAGER_ROUTE(CS); \
+    MM2_EXTERN template class MM2_EAGER_TIME_ROUTE(CS);
 
 MM2_EAGER_ROUTE_TEMPLATE(MM2_GEOGRAPHIC)
 MM2_EAGER_ROUTE_TEMPLATE(MM2_SPHERICAL_EQUATORIAL)
@@ -42,6 +44,9 @@ namespace map_matching_2::geometry::network {
 
     template<typename CoordinateSystem>
     using eager_route_type = eager_route<rich_line_variant<CoordinateSystem>>;
+
+    template<typename CoordinateSystem>
+    using eager_time_route_type = eager_route<rich_time_line_variant<CoordinateSystem>>;
 
 }
 

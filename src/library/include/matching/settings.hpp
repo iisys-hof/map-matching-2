@@ -25,6 +25,12 @@ namespace map_matching_2::matching {
 
     struct settings {
 
+        enum TIME_INTERPOLATION {
+            NONE,
+            POINTS,
+            GEOMETRIC
+        };
+
         enum CANDIDATE_SEARCH {
             CIRCLE,
             NEAREST,
@@ -43,8 +49,10 @@ namespace map_matching_2::matching {
 
         geometry::srs_transform tracks_srs_transform{};
 
-        bool export_timestamps{false}, export_edges{false}, export_edge_ids{false}, join_merges{true};
+        bool export_timestamps{false}, export_edges{false}, override_edges{false}, export_match_times{false},
+                export_edge_ids{false}, join_merges{true}, concatenate_skips{false}, export_all_candidates{false};
         std::string output{}, filename{}, export_time_zone{"UTC"}, export_candidates{};
+        TIME_INTERPOLATION time_interpolation{GEOMETRIC};
 
         bool console{false};
 

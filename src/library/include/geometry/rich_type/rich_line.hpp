@@ -71,15 +71,17 @@ namespace map_matching_2::geometry {
         constexpr rich_line(line_type line, const allocator_type &allocator)
             : _line{std::move(line), allocator} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        constexpr explicit rich_line(const linestring<point_type, ContainerT, AllocatorT> &line) requires
+        constexpr explicit rich_line(const linestring<PointT, ContainerT, AllocatorT> &line) requires
             (std::default_initializable<allocator_type>)
             : _line{std::cbegin(line), std::cend(line)} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        constexpr rich_line(const linestring<point_type, ContainerT, AllocatorT> &line,
+        constexpr rich_line(const linestring<PointT, ContainerT, AllocatorT> &line,
                 const allocator_type &allocator)
             : _line{std::cbegin(line), std::cend(line), allocator} {}
 
@@ -89,15 +91,17 @@ namespace map_matching_2::geometry {
         constexpr rich_line(const rich_line &other, const allocator_type &allocator)
             : _line{other._line, allocator} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        constexpr rich_line(const rich_line<point_type, ContainerT, AllocatorT> &other) requires
+        constexpr rich_line(const rich_line<PointT, ContainerT, AllocatorT> &other) requires
             (std::default_initializable<allocator_type>)
             : _line{std::cbegin(other.line()), std::cend(other.line())} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        constexpr rich_line(const rich_line<point_type, ContainerT, AllocatorT> &other,
+        constexpr rich_line(const rich_line<PointT, ContainerT, AllocatorT> &other,
                 const allocator_type &allocator)
             : _line{std::cbegin(other.line()), std::cend(other.line()), allocator} {}
 

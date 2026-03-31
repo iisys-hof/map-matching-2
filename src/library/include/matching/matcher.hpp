@@ -58,21 +58,20 @@ namespace map_matching_2::matching {
         using base_type = util::coordinator<task_type>;
 
         using track_type = typename network_traits<network_type>::track_type;
-        using route_type = typename network_traits<network_type>::route_type;
         using policy_type = typename network_traits<network_type>::policy_type;
         using multi_track_multi_rich_line_type =
         typename network_traits<network_type>::multi_track_multi_rich_line_type;
         using track_rich_line_type = typename network_traits<network_type>::track_rich_line_type;
+        using route_type = typename network_traits<network_type>::route_type;
         using lazy_rich_line_type = typename network_traits<network_type>::lazy_rich_line_type;
+        using time_route_type = typename network_traits<network_type>::time_route_type;
+        using lazy_rich_time_line_type = typename network_traits<network_type>::lazy_rich_time_line_type;
 
         matcher(const network_type &network, const matcher_output_settings &output_settings,
                 std::uint32_t threads = boost::thread::hardware_concurrency())
             : base_type{threads}, _network{network},
             _exporter{output_settings.filename, output_settings.columns},
-            _candidates_exporter{
-                    output_settings.candidates_filename, output_settings.candidates_columns,
-                    output_settings.candidates_export_all
-            },
+            _candidates_exporter{output_settings.candidates_filename, output_settings.candidates_columns},
             _output_printer{output_settings.console, output_settings.verbose} {
             _output_printer.start();
             _exporter.start();
@@ -123,9 +122,10 @@ namespace map_matching_2::matching {
             std::vector<policy_type> _policies;
             _policies.reserve(multi_track.size());
 
-            std::vector<route_type> _matches;
+            std::vector<time_route_type> _matches;
             _matches.reserve(multi_track.size());
 
+            std::vector<route_type> _edges;
             std::vector<std::uint64_t> _edge_ids;
 
             double duration{0.0};
@@ -149,18 +149,25 @@ namespace map_matching_2::matching {
                 _prepared.emplace_back(environment.track().rich_line);
 
                 // result
-                auto route = environment.result(policy);
-                if (settings.export_edge_ids or settings.export_edges) {
+                time_route_type route = environment.result(policy);
+                if (settings.export_edge_ids or settings.export_edges or settings.override_edges) {
                     const auto edge_list = _algorithms.router.edges_list(route);
-                    if (settings.export_edges) {
-                        route = _algorithms.router.export_edges_route(edge_list);
+                    if (settings.export_edges or settings.override_edges) {
+                        _edges.reserve(multi_track.size());
+                        route_type edges = _algorithms.router.export_edges_route(edge_list);
+                        if (settings.override_edges) {
+                            route = edges.template clone<lazy_rich_time_line_type, time_route_type>();
+                        }
+                        _edges.emplace_back(std::move(edges));
+
                     }
                     if (settings.export_edge_ids) {
                         auto ids = _algorithms.router.edge_ids(edge_list);
+                        _edge_ids.reserve(_edge_ids.size() + ids.size());
                         std::move(std::begin(ids), std::end(ids), std::back_inserter(_edge_ids));
                     }
                 }
-                _matches.emplace_back(route_type{route});
+                _matches.emplace_back(std::move(route));
 
                 _policies.emplace_back(std::move(policy));
 
@@ -175,8 +182,20 @@ namespace map_matching_2::matching {
             };
             _match_result.track = std::move(multi_track);
             _match_result.policies = std::move(_policies);
-            _match_result.match = route_type::template merge<lazy_rich_line_type>({_matches.begin(), _matches.end()});
-            _match_result.edge_ids = std::move(_edge_ids);
+            _match_result.match = time_route_type::template merge<lazy_rich_time_line_type>({
+                    std::begin(_matches), std::end(_matches)
+            });
+            if (settings.export_match_times) {
+                _match_result.match_times = _algorithms.router.match_times(_match_result.match);
+            }
+            if (settings.export_edges) {
+                _match_result.edges = route_type::template merge<lazy_rich_line_type>({
+                        std::begin(_edges), std::end(_edges)
+                });
+            }
+            if (settings.export_edge_ids) {
+                _match_result.edge_ids = std::move(_edge_ids);
+            }
             _match_result.duration = duration;
 
             _output_printer.pass(_output_printer.parse_result(_match_result));

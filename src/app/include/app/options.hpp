@@ -33,36 +33,40 @@ namespace map_matching_2::app {
         NONE, PREPARE, MATCH, SERVER, COMPARE
     };
 
-    const std::string FORMAT_OSM{"osm"};
-    const std::string FORMAT_ARC_NODE{"arc-node"};
-    const std::string FORMAT_SEATTLE{"seattle"};
-    const std::string FORMAT_MELBOURNE{"melbourne"};
-    const std::string FORMAT_GISCUP{"giscup"};
+    constexpr std::string_view FORMAT_OSM = "osm";
+    constexpr std::string_view FORMAT_ARC_NODE = "arc-node";
+    constexpr std::string_view FORMAT_SEATTLE = "seattle";
+    constexpr std::string_view FORMAT_MELBOURNE = "melbourne";
+    constexpr std::string_view FORMAT_GISCUP = "giscup";
 
-    const std::string OSM_TAGS_PROFILE_CAR{"car"};
-    const std::string OSM_TAGS_PROFILE_MANUAL{"manual"};
+    constexpr std::string_view OSM_TAGS_PROFILE_CAR = "car";
+    constexpr std::string_view OSM_TAGS_PROFILE_MANUAL = "manual";
 
-    const std::string SIMPLIFY_ALL{"all"};
-    const std::string SIMPLIFY_NONE{"none"};
-    const std::string SIMPLIFY_OSM_AWARE{"osm-aware"};
+    constexpr std::string_view SIMPLIFY_ALL = "all";
+    constexpr std::string_view SIMPLIFY_NONE = "none";
+    constexpr std::string_view SIMPLIFY_OSM_AWARE = "osm-aware";
 
-    const std::string FILE_TYPE_CSV{"csv"};
-    const std::string FILE_TYPE_GPX{"gpx"};
-    const std::string FILE_TYPE_LIST{"list"};
-    const std::string FILE_TYPE_SEATTLE{"seattle"};
+    constexpr std::string_view FILE_TYPE_CSV = "csv";
+    constexpr std::string_view FILE_TYPE_GPX = "gpx";
+    constexpr std::string_view FILE_TYPE_LIST = "list";
+    constexpr std::string_view FILE_TYPE_SEATTLE = "seattle";
 
-    const std::string FILTER_METHOD_WITHIN{"within"};
-    const std::string FILTER_METHOD_INTERSECTS{"intersects"};
+    constexpr std::string_view FILTER_METHOD_WITHIN = "within";
+    constexpr std::string_view FILTER_METHOD_INTERSECTS = "intersects";
 
-    const std::string CANDIDATE_SEARCH_CIRCLE{"circle"};
-    const std::string CANDIDATE_SEARCH_NEAREST{"nearest"};
-    const std::string CANDIDATE_SEARCH_COMBINED{"combined"};
-    const std::string CANDIDATE_SEARCH_NEXT{"next"};
+    constexpr std::string_view INTERPOLATION_METHOD_NONE = "none";
+    constexpr std::string_view INTERPOLATION_METHOD_POINTS = "points";
+    constexpr std::string_view INTERPOLATION_METHOD_GEOMETRIC = "geometric";
 
-    const std::string MODEL_POLICY_ITERATION{"policy-iteration"};
-    const std::string MODEL_VALUE_ITERATION{"value-iteration"};
-    const std::string MODEL_Q_LEARNING{"q-learning"};
-    const std::string MODEL_VITERBI{"viterbi"};
+    constexpr std::string_view CANDIDATE_SEARCH_CIRCLE = "circle";
+    constexpr std::string_view CANDIDATE_SEARCH_NEAREST = "nearest";
+    constexpr std::string_view CANDIDATE_SEARCH_COMBINED = "combined";
+    constexpr std::string_view CANDIDATE_SEARCH_NEXT = "next";
+
+    constexpr std::string_view MODEL_POLICY_ITERATION = "policy-iteration";
+    constexpr std::string_view MODEL_VALUE_ITERATION = "value-iteration";
+    constexpr std::string_view MODEL_Q_LEARNING = "q-learning";
+    constexpr std::string_view MODEL_VITERBI = "viterbi";
 
     struct base_data {
         virtual void correct(const po::variables_map &vm);
@@ -95,8 +99,9 @@ namespace map_matching_2::app {
     };
 
     struct match_output_data : output_data {
-        bool export_timestamps, export_edges, export_edge_ids, join_merges;
-        std::string columns, export_time_zone;
+        bool export_timestamps, export_edges, override_edges, export_match_times, export_edge_ids, join_merges,
+                concatenate_skips;
+        std::string columns, export_time_zone, time_interpolation;
 
         void correct(const po::variables_map &vm) override;
     };

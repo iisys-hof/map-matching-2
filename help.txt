@@ -550,7 +550,7 @@ Console Options:
                                         messages
 
 Performance Options:
-  --threads arg (=128)                  threads that are used for parallel 
+  --threads arg (=32)                   threads that are used for parallel 
                                         (i.e., multi-threading) matching or 
                                         comparing;
                                         set to 1 for disabling multi-threading,
@@ -663,6 +663,12 @@ Match Output Options:
                                           times (off by default)
                                           prepared_times: list of prepared 
                                           track point times (off by default)
+                                          match_times: list of match point 
+                                          times with interpolation as per 
+                                          setting below (off by default)
+                                          edges: match enlarged to complete 
+                                          edges (off by default; if used, 
+                                          combine with simplify osm-aware)
                                           edge_ids: list of original edge IDs 
                                           (off by default; if used, combine 
                                           with simplify osm-aware
@@ -687,13 +693,77 @@ Match Output Options:
                                         resulting routes overlap the network 
                                         edges perfectly since they do not 
                                         start, end, and turn within the edges 
-                                        at new points matching the track
+                                        at new points matching the track;
+                                        overrides match column with edges 
+                                        column, does not work together with 
+                                        match-times column, since extracting 
+                                        the edges loses the time information
+  --time-interpolation arg (=geometric) interpolation method to use for 
+                                        match_times column export, only is 
+                                        actually computed when the match_times 
+                                        column is specified;
+                                        the timestamps for the match are 
+                                        constructed from the matched track, 
+                                        i.e., the prepared track after 
+                                        trajectory-simplification was used, 
+                                        when it is enabled, or the original 
+                                        track when trajectory-simplification is
+                                        turned off;
+                                        each mapped track point timestamp is 
+                                        assigned to the corresponding match 
+                                        point, then, the match points inbetween
+                                        adjacent mapped track points are 
+                                        interpolated based on one of the 
+                                        following methods:
+                                        "none"
+                                          no interpolation is used, the 
+                                          match_times list contains null values
+                                          for non-existing timestamps;
+                                          this setting is recommended to be 
+                                          used with join-merges set to off to 
+                                          keep joint points,
+                                          otherwise, some track point times are
+                                          likely to be missing in the mapped 
+                                          match points
+                                        "points"
+                                          linear interpolation based on the 
+                                          number of points between the 
+                                          available timestamps;
+                                          this setting does not take into 
+                                          account the distance between the 
+                                          route points
+                                        "geometric"
+                                          linear interpolation based on 
+                                          geometric distances between the 
+                                          available timestamps;
+                                          this setting takes into account the 
+                                          distance between the route points
+                                        default is "geometric"
   --join-merges arg (=on)               by default, the routes between 
                                         candidates are concatenated, this 
                                         parameter removes additional joint 
                                         points when possible, so all joint 
                                         points are removed except when reverse 
                                         movements within an edge happen
+  --concatenate-skips arg (=off)        concatenate skips between candidates, 
+                                        when possible; this tries to route 
+                                        between candidates where the optimizer 
+                                        decided that no route inbetween, i.e., 
+                                        a gap, results in a lower error; this 
+                                        setting overrides the behavior after 
+                                        optimization is done, to concatenate 
+                                        partial matches into a complete match; 
+                                        however, this can lead to large detours
+                                        in the match, but it prevents matches 
+                                        to have gaps; this option cannot 
+                                        connect matches that span over isolated
+                                        networks, i.e., such gaps cannot be 
+                                        removed as there exists no route to 
+                                        connect the gaps; this setting can 
+                                        somewhat circumvent the skip-errors 
+                                        setting of the optimizer, and it works 
+                                        more reliable than turning the 
+                                        optimizer skip-errors setting off
 
 Tracks Options:
   --tracks arg                          path to track(s) file;
@@ -870,7 +940,7 @@ Export Options:
                                         filename, if no filename is given, no 
                                         candidates are exported;
                                         filename is appended to output folder
-  --candidates-columns arg (=id,part_index,set_index,candidate_index,time,projection,distance,from,to,edge_id,is_result)
+  --candidates-columns arg (=id,part_index,set_index,candidate_index,time,projection,distance,edge_id)
                                         output columns in order for the 
                                         candidate exports, separated by comma;
                                           id: id of the track, aggregated in 
@@ -884,16 +954,25 @@ Export Options:
                                           projection: candidate projection from
                                           track point to road network point
                                           distance: distance in meter
-                                          from: route from start of the road 
-                                          network edge to the candidate point 
-                                          as WKT
-                                          to: route from the candidate point to
-                                          the end of the road network edge as 
-                                          WKT
                                           edge_id: original edge ID the 
                                           candidate lies on
+                                          from: route from start of the road 
+                                          network edge to the candidate point 
+                                          as WKT (off by default)
+                                          to: route from the candidate point to
+                                          the end of the road network edge as 
+                                          WKT (off by default)
                                           is_result: true if this candidate is 
-                                          part of the resulting match
+                                          part of the resulting match (off by 
+                                          default)
+  --candidates-export-all arg (=off)    export all candidates, even if they are
+                                        not part of the resulting match;
+                                        automatically adds is_result column to 
+                                        candidate-columns if it is not already 
+                                        present, since it is necessary to 
+                                        distinguish between candidates that are
+                                        part of the resulting match and those 
+                                        that are not
 
 Matching Options:
   --max-time arg (=0.0)                 when max-time (defined in seconds) is 
@@ -1298,7 +1377,7 @@ Console Options:
                                         messages
 
 Performance Options:
-  --threads arg (=128)                  threads that are used for parallel 
+  --threads arg (=32)                   threads that are used for parallel 
                                         (i.e., multi-threading) matching or 
                                         comparing;
                                         set to 1 for disabling multi-threading,

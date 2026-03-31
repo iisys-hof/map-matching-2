@@ -283,6 +283,161 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
         BOOST_CHECK_CLOSE_FRACTION(route_3_1.length(), 1.0, 1e-3);
     }
 
+    BOOST_FIXTURE_TEST_CASE(time_routing_test, matcher_fixture<matcher_metric>) {
+        network_fixture<network_import_metric> network_fixture;
+        network_import_metric network = network_fixture.generate_grid_network();
+
+        network_metric network_matcher = prepare_network(network);
+
+        // prepare algorithms
+        map_matching_2::util::time_helper _time_helper;
+        map_matching_2::matching::algorithms _algorithms{network_matcher, _time_helper};
+
+        // prepare match settings
+        map_matching_2::matching::settings match_settings{};
+        match_settings.radius = 1.5;
+        match_settings.simplify_track = false;
+        match_settings.median_merge = false;
+        match_settings.export_timestamps = true;
+
+        using multi_track_type = map_matching_2::geometry::track::import_multi_track_type<time_point_type>;
+        using timestamp_type = map_matching_2::matching::network_traits<typename
+            matcher_metric::network_type>::timestamp_type;
+
+        auto check_track = [&](const auto &track, const auto &times,
+                const map_matching_2::matching::settings::TIME_INTERPOLATION time_interpolation) {
+            std::cout << track.str() << std::endl;
+
+            // build environment and learner
+            using environment_type = map_matching_2::environment::single<network_type>;
+            using learning_type = map_matching_2::learning::value_iteration<environment_type>;
+
+            environment_type _environment{network_matcher, _algorithms, match_settings};
+            learning_type _learner{_environment, match_settings};
+
+            // set track and match
+            _environment.set(track);
+            auto policy = _learner();
+
+            // time evaluation
+            auto time_route = _algorithms.router.candidates_route(_environment.candidates(), policy, false, true, false,
+                    true, time_interpolation);
+            auto match_times = _algorithms.router.match_times(time_route);
+
+            std::cout << time_route.str() << std::endl;
+            std::copy(std::cbegin(match_times), std::cend(match_times),
+                    std::ostream_iterator<timestamp_type>(std::cout, ","));
+            std::cout << std::endl;
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(
+                    std::cbegin(match_times), std::cend(match_times),
+                    std::cbegin(times), std::cend(times));
+        };
+
+        auto track_1 = create_track("one", {
+                {2.0, 2.0, true, 10},
+                {5.0, 2.0, true, 20},
+                {5.0, 5.0, true, 30}
+        });
+        std::vector<timestamp_type> times_1_a{10, 13, 17, 20, 23, 27, 30};
+        check_track(track_1, times_1_a, map_matching_2::matching::settings::TIME_INTERPOLATION::GEOMETRIC);
+        std::vector<timestamp_type> times_1_b{10, 13, 17, 20, 23, 27, 30};
+        check_track(track_1, times_1_b, map_matching_2::matching::settings::TIME_INTERPOLATION::POINTS);
+        std::vector<timestamp_type> times_1_c{10, 0, 0, 20, 0, 0, 30};
+        check_track(track_1, times_1_c, map_matching_2::matching::settings::TIME_INTERPOLATION::NONE);
+
+        auto track_2 = create_track("two", {
+                {2.0, 2.0, true, 10},
+                {4.0, 2.0, true, 20},
+                {4.0, 4.0, true, 30}
+        });
+        std::vector<timestamp_type> times_2_a{10, 15, 20, 25, 30};
+        check_track(track_2, times_2_a, map_matching_2::matching::settings::TIME_INTERPOLATION::GEOMETRIC);
+        std::vector<timestamp_type> times_2_b{10, 15, 20, 25, 30};
+        check_track(track_2, times_2_b, map_matching_2::matching::settings::TIME_INTERPOLATION::POINTS);
+        std::vector<timestamp_type> times_2_c{10, 0, 20, 0, 30};
+        check_track(track_2, times_2_c, map_matching_2::matching::settings::TIME_INTERPOLATION::NONE);
+
+        // auto track_3 = create_track("three", {
+        //         {4.0, 5.0, true, 40},
+        //         {4.0, 7.0, true, 50},
+        //         {6.0, 7.0, true, 60}
+        // });
+        // multi_track_type track_2_3{"two-three", std::vector{track_2, track_3}};
+        // std::vector<timestamp_type> times_2_3_a{10, 15, 20, 25, 30};
+        // check_track(track_2_3, times_2_3_a, map_matching_2::matching::settings::TIME_INTERPOLATION::GEOMETRIC);
+        // std::vector<timestamp_type> times_2_3_b{10, 15, 20, 25, 30};
+        // check_track(track_2_3, times_2_3_b, map_matching_2::matching::settings::TIME_INTERPOLATION::POINTS);
+        // std::vector<timestamp_type> times_2_3_c{10, 0, 20, 0, 30};
+        // check_track(track_2_3, times_2_3_c, map_matching_2::matching::settings::TIME_INTERPOLATION::NONE);
+    }
+
+    BOOST_FIXTURE_TEST_CASE(matching_time_test, matcher_fixture<matcher_metric>) {
+        network_fixture<network_import_metric> network_fixture;
+        network_import_metric network = network_fixture.generate_grid_network();
+
+        network_metric network_matcher = prepare_network(network);
+
+        auto track = create_track("one", {
+                {2.3, 2.2, true, 0},
+                {5.1, 2.3, true, 10},
+                {4.9, 5.8, true, 20}
+        });
+
+        std::cout << track.str() << std::endl;
+
+        // prepare algorithms
+        map_matching_2::util::time_helper _time_helper;
+        map_matching_2::matching::algorithms _algorithms{network_matcher, _time_helper};
+
+        // prepare match settings
+        map_matching_2::matching::settings match_settings{};
+        match_settings.radius = 1.5;
+        match_settings.simplify_track = false;
+        match_settings.median_merge = false;
+        match_settings.export_timestamps = true;
+        match_settings.export_match_times = true;
+
+        // build environment and learner
+        using environment_type = map_matching_2::environment::single<network_type>;
+        using learning_type = map_matching_2::learning::value_iteration<environment_type>;
+
+        environment_type _environment{network_matcher, _algorithms, match_settings};
+        learning_type _learner{_environment, match_settings};
+
+        // set track and match
+        _environment.set(track);
+        auto policy = _learner();
+
+        // get result
+        auto time_route = _environment.result(policy);
+        std::cout << time_route.str() << std::endl;
+
+        // evaluate
+        using multi_rich_line_type = map_matching_2::matching::network_traits<typename
+            matcher_metric::network_type>::lazy_multi_rich_line_type;
+        using rich_line_type = map_matching_2::geometry::multi_rich_line_traits<multi_rich_line_type>::rich_line_type;
+        using line_type = map_matching_2::geometry::multi_rich_line_traits<multi_rich_line_type>::line_type;
+        line_type ground_truth_line;
+        boost::geometry::read_wkt("LINESTRING(2.3 2,3 2,4 2,5 2,5 3,5 4,5 5,5 5.8)", ground_truth_line);
+        multi_rich_line_type ground_truth{rich_line_type{ground_truth_line}};
+        std::cout << ground_truth.str() << std::endl;
+
+        map_matching_2::geometry::line_comparator<multi_rich_line_type> _comparator{};
+        auto comparison = _comparator.compare(ground_truth, time_route.get_multi_rich_line<multi_rich_line_type>());
+
+        BOOST_CHECK_EQUAL(comparison.correct_fraction, 1.0);
+
+        // time evaluation
+        auto match_times = _algorithms.router.match_times(time_route);
+        using timestamp_type = map_matching_2::matching::network_traits<typename
+            matcher_metric::network_type>::timestamp_type;
+        std::vector<timestamp_type> ground_truth_times{0, 3, 6, 10, 13, 15, 18, 20};
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(std::cbegin(match_times), std::cend(match_times),
+                std::cbegin(ground_truth_times), std::cend(ground_truth_times));
+    }
+
     BOOST_FIXTURE_TEST_CASE(matching_test, matcher_fixture<matcher_metric>) {
         auto matching_func = [&](const map_matching_2::matching::settings::MODEL model,
                 const std::string &file_prefix) {
@@ -300,10 +455,11 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 network_fixture<network_import_metric> network_fixture;
                 network_import_metric network = network_fixture.generate_grid_network();
 
+                const std::string additional_columns = ",track_times,prepared_times,match_times,edges,edge_ids";
                 network_metric network_matcher = prepare_network(network);
                 matcher_metric matcher{
                         network_matcher, map_matching_2::matching::matcher_output_settings{
-                                matches_filename, map_matching_2::matching::DEFAULT_COLUMNS,
+                                matches_filename, map_matching_2::matching::DEFAULT_COLUMNS + additional_columns,
                                 candidates_filename, map_matching_2::matching::DEFAULT_CANDIDATE_COLUMNS,
                                 false, false, true
                         },
@@ -318,6 +474,9 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
                 match_settings.median_merge = false;
                 match_settings.export_candidates = file_prefix + "_test_candidates.csv";
                 match_settings.model = model;
+                match_settings.export_match_times = true;
+                match_settings.export_edges = true;
+                match_settings.export_edge_ids = true;
 
                 map_matching_2::matching::matcher_forwarder matcher_forwarder{matcher, match_settings};
 
@@ -384,13 +543,13 @@ BOOST_AUTO_TEST_SUITE(matcher_tests)
             auto columns = csv.get_col_names();
 
             for (const auto &row : csv) {
-                double correct_fraction = map_matching_2::util::parse_number<double>(
+                auto correct_fraction = map_matching_2::util::parse_number<double>(
                         row["correct_fraction"].get<std::string>());
-                double error_fraction = map_matching_2::util::parse_number<double>(
+                auto error_fraction = map_matching_2::util::parse_number<double>(
                         row["error_fraction"].get<std::string>());
-                double error_added = map_matching_2::util::parse_number<double>(
+                auto error_added = map_matching_2::util::parse_number<double>(
                         row["error_added"].get<std::string>());
-                double error_missed = map_matching_2::util::parse_number<double>
+                auto error_missed = map_matching_2::util::parse_number<double>
                         (row["error_missed"].get<std::string>());
 
                 BOOST_CHECK_EQUAL(correct_fraction, 1.0);

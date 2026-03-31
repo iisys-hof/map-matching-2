@@ -19,13 +19,17 @@
 #include "types/geometry/rich_type/rich_line.hpp"
 #include "types/geometry/rich_type/eager_rich_line.hpp"
 #include "types/geometry/rich_type/lazy_rich_line.hpp"
+#include "types/geometry/rich_type/lazy_multi_rich_line.hpp"
 #include "types/geometry/network/route/route.hpp"
 #include "types/geometry/network/route/eager_route.hpp"
 #include "types/geometry/network/route/lazy_route.hpp"
 
+#include "util/math.hpp"
+
 #include "helper/geometry_helper.hpp"
 
 using point_type = map_matching_2::geometry::point_type<map_matching_2::geometry::cs_cartesian>;
+using time_point_type = map_matching_2::geometry::time_point_type<map_matching_2::geometry::cs_cartesian>;
 using line_type = map_matching_2::geometry::linestring_type<point_type>;
 
 BOOST_AUTO_TEST_SUITE(route_tests)
@@ -579,6 +583,84 @@ BOOST_AUTO_TEST_SUITE(route_tests)
             map_matching_2::geometry::cs_cartesian>>();
         test_routes.template operator()<map_matching_2::geometry::network::lazy_route_type<
             map_matching_2::geometry::cs_cartesian>>();
+    }
+
+    BOOST_AUTO_TEST_CASE(route_time_test) {
+        auto test_routes = []<typename Route, typename TimeRoute>() {
+            using route_type = Route;
+            using time_route_type = TimeRoute;
+
+            auto test_rich_lines = []<typename RichLine, typename RichTimeLine>() {
+                using rich_line_type = RichLine;
+                using rich_time_line_type = RichTimeLine;
+
+                using multi_rich_line_type = map_matching_2::geometry::lazy_multi_rich_line<rich_line_type>;
+                using multi_rich_time_line_type = map_matching_2::geometry::lazy_multi_rich_line<rich_time_line_type>;
+
+                using timestamp_type = typename time_point_type::timestamp_type;
+                using length_type = typename rich_line_type::length_type;
+
+                const auto route_1 = route_type{
+                        rich_line_type{
+                                create_line<point_type, line_type>(
+                                        {0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0})
+                        }
+                };
+                auto route_2 = route_1.template clone<rich_time_line_type, time_route_type>();
+
+                BOOST_CHECK_EQUAL(
+                        route_1.template get_multi_rich_line<multi_rich_line_type>(),
+                        route_2.template get_multi_rich_line<multi_rich_line_type>());
+                BOOST_CHECK_EQUAL(
+                        route_1.template get_multi_rich_line<multi_rich_time_line_type>(),
+                        route_2.template get_multi_rich_line<multi_rich_time_line_type>());
+
+                const auto multi_rich_line_2 = route_2.template get_multi_rich_line<multi_rich_line_type>();
+                for (std::size_t i = 0; i < multi_rich_line_2.size(); ++i) {
+                    const auto &rich_line = multi_rich_line_2.rich_lines()[i];
+
+                    const auto &distances = rich_line.lengths();
+                    BOOST_CHECK_EQUAL(distances.size(), 9);
+
+                    const auto route_times =
+                            map_matching_2::util::interpolate_by_distance<timestamp_type>(1, 10, distances);
+                    BOOST_CHECK_EQUAL(route_times.size(), 10);
+
+                    auto &reference = route_2.rich_lines()[i];
+                    std::visit([&](auto &&_rich_line) {
+                        auto &_line = _rich_line.get().line();
+                        for (std::size_t j = 0; j < _line.size(); ++j) {
+                            auto &_point = const_cast<time_point_type &>(_line[j]);
+                            _point.timestamp(route_times[j]);
+                        }
+                    }, reference);
+
+                    std::visit([&](auto &&_rich_line) {
+                        auto &_line = _rich_line.get().line();
+                        for (std::size_t j = 0; j < _line.size(); ++j) {
+                            auto &_point = _line[j];
+                            BOOST_CHECK_EQUAL(_point.timestamp(), route_times[j]);
+                        }
+                    }, reference);
+
+                }
+
+            };
+
+            test_rich_lines.template operator()<
+                map_matching_2::geometry::eager_rich_line_type<point_type>,
+                map_matching_2::geometry::eager_rich_line_type<time_point_type>>();
+            test_rich_lines.template operator()<
+                map_matching_2::geometry::lazy_rich_line_type<point_type>,
+                map_matching_2::geometry::lazy_rich_line_type<time_point_type>>();
+        };
+
+        test_routes.template operator()<
+            map_matching_2::geometry::network::eager_route_type<map_matching_2::geometry::cs_cartesian>,
+            map_matching_2::geometry::network::eager_time_route_type<map_matching_2::geometry::cs_cartesian>>();
+        test_routes.template operator()<
+            map_matching_2::geometry::network::lazy_route_type<map_matching_2::geometry::cs_cartesian>,
+            map_matching_2::geometry::network::lazy_time_route_type<map_matching_2::geometry::cs_cartesian>>();
     }
 
 BOOST_AUTO_TEST_SUITE_END()

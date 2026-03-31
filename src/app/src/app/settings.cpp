@@ -27,14 +27,18 @@ namespace map_matching_2::app {
 
         settings.tracks_srs_transform = data.srs_tracks.srs_transform;
 
-        settings.export_timestamps = data.match_output.export_timestamps;
+        settings.export_match_times = data.match_output.export_match_times;
         settings.export_edges = data.match_output.export_edges;
+        settings.override_edges = data.match_output.override_edges;
+        settings.export_timestamps = data.match_output.export_timestamps;
         settings.export_edge_ids = data.match_output.export_edge_ids;
         settings.join_merges = data.match_output.join_merges;
+        settings.concatenate_skips = data.match_output.concatenate_skips;
         settings.output = data.match_output.output;
         settings.filename = data.match_output.filename;
         settings.export_time_zone = data.match_output.export_time_zone;
         settings.export_candidates = data.expo.candidates;
+        settings.export_all_candidates = data.expo.candidates_export_all;
         settings.console = data.console.console;
 
         settings.max_time = data.matching.max_time;
@@ -80,6 +84,14 @@ namespace map_matching_2::app {
         settings.epsilon = data.learning.epsilon;
         settings.early_stop_factor = data.learning.early_stop_factor;
         settings.episodes = data.learning.episodes;
+
+        if (data.match_output.time_interpolation == INTERPOLATION_METHOD_NONE) {
+            settings.time_interpolation = matching::settings::TIME_INTERPOLATION::NONE;
+        } else if (data.match_output.time_interpolation == INTERPOLATION_METHOD_POINTS) {
+            settings.time_interpolation = matching::settings::TIME_INTERPOLATION::POINTS;
+        } else if (data.match_output.time_interpolation == INTERPOLATION_METHOD_GEOMETRIC) {
+            settings.time_interpolation = matching::settings::TIME_INTERPOLATION::GEOMETRIC;
+        }
 
         if (data.matching.candidate_search == CANDIDATE_SEARCH_CIRCLE) {
             settings.candidate_search = matching::settings::CANDIDATE_SEARCH::CIRCLE;

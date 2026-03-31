@@ -28,7 +28,10 @@
 #include "geometry/algorithm/distance.hpp"
 #include "geometry/algorithm/substring.hpp"
 
+#include "util/math.hpp"
 #include "util/time_helper.hpp"
+
+#include "../settings.hpp"
 
 namespace map_matching_2::matching {
 
@@ -47,8 +50,13 @@ namespace map_matching_2::matching {
         using length_type = typename network_traits<network_type>::length_type;
         using route_type = typename network_traits<network_type>::route_type;
         using lazy_rich_line_type = typename network_traits<network_type>::lazy_rich_line_type;
+        using lazy_rich_time_line_type = typename network_traits<network_type>::lazy_rich_time_line_type;
         using lazy_multi_rich_line_type = typename network_traits<network_type>::lazy_multi_rich_line_type;
+        using lazy_multi_rich_time_line_type = typename network_traits<network_type>::lazy_multi_rich_time_line_type;
         using policy_type = typename network_traits<network_type>::policy_type;
+        using time_route_type = typename network_traits<network_type>::time_route_type;
+        using time_point_type = typename network_traits<network_type>::time_point_type;
+        using timestamp_type = typename network_traits<network_type>::timestamp_type;
 
         constexpr explicit router(const network_type &network, util::time_helper &time_helper)
             : _time_helper{time_helper}, _network{network} {}
@@ -250,38 +258,171 @@ namespace map_matching_2::matching {
             return route_type{true};
         }
 
-        [[nodiscard]] route_type candidates_route(
-                const std::vector<candidate_type> &candidates, const policy_type &policy,
-                const bool within_edge_turns = false, const bool join_merges = true,
-                const bool a_star = false, const bool a_star_euclidean = false,
-                const double max_distance_factor = 10.0) const {
-            std::vector<route_type> routes;
-            routes.reserve(not candidates.empty() ? candidates.size() - 1 : 0);
-            bool skipped = false;
-            for (std::size_t i = 0, j = 1; j < policy.size(); ++i, ++j) {
-                const auto &from_policy_pair = policy[i];
-                const auto &to_policy_pair = policy[j];
+        void route_times(time_route_type &route, const std::vector<candidate_type> &candidates,
+                const std::size_t from, const std::size_t to,
+                const matching::settings::TIME_INTERPOLATION &time_interpolation) const {
+            if (route.is_invalid()) {
+                return;
+            }
 
-                const auto from = from_policy_pair.first;
-                const auto to = to_policy_pair.first;
+            const auto &candidate_from = candidates[from];
+            const auto &candidate_to = candidates[to];
+            const auto &from_point = candidate_from.track->rich_line.at(candidate_from.index);
+            const auto &to_point = candidate_to.track->rich_line.at(candidate_to.index);
 
-                if (from == to) {
-                    // skip detected
-                    ++i;
+            if (time_interpolation == settings::TIME_INTERPOLATION::NONE) {
+                auto &rich_lines = route.rich_lines();
+                if (not rich_lines.empty()) {
+                    // for (const auto &rich_line_variant : rich_lines) {
+                    //     const auto rich_line_size = _size(rich_line_variant);
+                    //     for (std::size_t i = 0; i < rich_line_size; ++i) {
+                    //         auto &point = const_cast<time_point_type &>(_at(rich_line_variant, i));
+                    //         point.timestamp(std::numeric_limits<timestamp_type>::max());
+                    //         point.set_valid(false);
+                    //     }
+                    // }
+                    std::visit([&](auto &&rich_line_ref) {
+                        auto &rich_line = rich_line_ref.get();
+                        if (not rich_line.empty()) {
+                            auto &point = const_cast<time_point_type &>(rich_line.front());
+                            point.timestamp(from_point.timestamp());
+                            point.set_valid(from_point.is_valid());
+                        }
+                    }, rich_lines.front());
+                    std::visit([&](auto &&rich_line_ref) {
+                        auto &rich_line = rich_line_ref.get();
+                        if (not rich_line.empty()) {
+                            auto &point = const_cast<time_point_type &>(rich_line.back());
+                            point.timestamp(to_point.timestamp());
+                            point.set_valid(to_point.is_valid());
+                        }
+                    }, rich_lines.back());
+                }
+            } else if (time_interpolation == settings::TIME_INTERPOLATION::POINTS) {
+                std::size_t points = route.sizes();
+                std::size_t distinct_points = route.distinct_sizes();
+                const auto route_times = util::interpolate<timestamp_type>(
+                        from_point.timestamp(), to_point.timestamp(), distinct_points);
+                bool all_valid = from_point.is_valid() and to_point.is_valid();
+
+                std::size_t i = 0, j = 0;
+                const time_point_type *prev_point = nullptr;
+                while (i < distinct_points and j < route.size()) {
+                    auto &rich_line_variant = route.rich_lines()[j];
+                    std::visit([&](auto &&rich_line_ref) {
+                        auto &rich_line = rich_line_ref.get();
+                        for (std::size_t k = 0; k < rich_line.size(); ++k) {
+                            auto &point = const_cast<time_point_type &>(rich_line[k]);
+                            if (i > 0 and prev_point and geometry::equals_points(*prev_point, point)) {
+                                // we need to use the same time for same points
+                                i--;
+                            }
+                            point.timestamp(route_times[i++]);
+                            point.set_valid(all_valid);
+                            prev_point = &point;
+                        }
+                    }, rich_line_variant);
                     ++j;
-                    skipped = true;
-                    continue;
+                }
+            } else if (time_interpolation == settings::TIME_INTERPOLATION::GEOMETRIC) {
+                std::size_t size = route.size();
+                std::size_t points = route.sizes();
+                std::size_t minimal_distance_size = points >= size ? points - size : 0;
+
+                std::vector<length_type> distances;
+                distances.reserve(points);
+
+                const time_point_type *prev_point = nullptr;
+                for (const auto &rich_line_variant : route.rich_lines()) {
+                    std::visit([&](auto &&rich_line_ref) {
+                        auto &rich_line = rich_line_ref.get();
+                        const auto &rich_line_distances = rich_line.lengths();
+                        std::copy(std::cbegin(rich_line_distances), std::cend(rich_line_distances),
+                                std::back_inserter(distances));
+                        if (prev_point and not geometry::equals_points(*prev_point, rich_line.front())) {
+                            // lines are not attached, add intermediate distance
+                            distances.emplace_back(geometry::point_distance(*prev_point, rich_line.front()));
+                        }
+                        prev_point = &(rich_line.back());
+                        // check for attached?
+                    }, rich_line_variant);
                 }
 
-                const auto source = from_policy_pair.second;
-                const auto target = to_policy_pair.second;
+                assert(distances.size() >= minimal_distance_size);
 
-                route_type route = candidate_route(candidates, from, source, to, target,
-                        within_edge_turns, a_star, a_star_euclidean, max_distance_factor);
+                const auto route_times = util::interpolate_by_distance<timestamp_type>(
+                        from_point.timestamp(), to_point.timestamp(), distances);
+                bool all_valid = from_point.is_valid() and to_point.is_valid();
 
+                std::size_t i = 0, j = 0;
+                prev_point = nullptr;
+                while (i < route_times.size() and j < route.size()) {
+                    auto &rich_line_variant = route.rich_lines()[j];
+                    std::visit([&](auto &&rich_line_ref) {
+                        auto &rich_line = rich_line_ref.get();
+                        for (std::size_t k = 0; k < rich_line.size(); ++k) {
+                            auto &point = const_cast<time_point_type &>(rich_line[k]);
+                            if (i > 0 and k == 0 and j > 0 and prev_point and
+                                geometry::equals_points(*prev_point, point)) {
+                                // we need to use the same time for attached rich lines
+                                i--;
+                            }
+                            point.timestamp(route_times[i++]);
+                            point.set_valid(all_valid);
+                            prev_point = &point;
+                        }
+                    }, rich_line_variant);
+                    ++j;
+                }
+
+                assert(i == route_times.size());
+                assert(j == route.size());
+            }
+
+            // std::cout << geometry::to_wkt(from_point) << " " << geometry::to_wkt(to_point) << std::endl;
+            // std::cout << route.wkt() << std::endl;
+        }
+
+        [[nodiscard]] std::vector<timestamp_type> match_times(const time_route_type &route) const {
+            std::vector<timestamp_type> match_times;
+            const time_point_type *prev_point = nullptr;
+            const auto &rich_lines = route.rich_lines();
+            for (std::size_t i = 0; i < rich_lines.size(); ++i) {
+                const auto &rich_line_variant = rich_lines[i];
+                std::visit([&](auto &&rich_line_ref) {
+                    const auto &rich_line = rich_line_ref.get();
+                    if (not rich_line.empty()) {
+                        const bool attaches = prev_point and geometry::equals_points(*prev_point, rich_line.front());
+                        auto &line = rich_line.line();
+                        for (std::size_t j = 0; j < line.size(); ++j) {
+                            if (attaches and i > 0 and j == 0) {
+                                // skip first point of next rich line if they attach
+                                continue;
+                            }
+
+                            const auto &point = line[j];
+                            match_times.emplace_back(point.timestamp());
+                        }
+                        prev_point = &(rich_line.back());
+                    }
+                }, rich_line_variant);
+            }
+            return match_times;
+        }
+
+        [[nodiscard]] time_route_type candidates_route(
+                const std::vector<candidate_type> &candidates, const policy_type &policy,
+                const bool within_edge_turns = false, const bool join_merges = true,
+                const bool concatenate_skips = false, const bool export_match_times = false,
+                const settings::TIME_INTERPOLATION time_interpolation = settings::TIME_INTERPOLATION::NONE,
+                const bool a_star = false, const bool a_star_euclidean = false,
+                const double max_distance_factor = 10.0) const {
+
+            auto join_route = [&]<typename RichLineT, typename RouteT>(
+                    RouteT &route, std::vector<RouteT> &routes, bool &skipped) {
                 if (join_merges and not skipped and
                     not routes.empty() and not route.is_invalid() and not route.rich_lines().empty()) {
-                    route_type &prev_route = routes.back();
+                    RouteT &prev_route = routes.back();
                     if (not prev_route.is_invalid() and not prev_route.empty()) {
                         const auto &prev_route_back_ref_var = prev_route.rich_lines().back();
                         std::visit([this, &prev_route, &route](auto &&prev_route_back_ref) {
@@ -290,7 +431,7 @@ namespace map_matching_2::matching {
                                 const point_type &prev_route_last_point = prev_route_back.back();
                                 const auto point_search = _network.point_in_edges(prev_route_last_point);
                                 if (not point_search.first) {
-                                    route_type::template join<lazy_rich_line_type>(prev_route, route, true);
+                                    RouteT::template join<RichLineT, RouteT>(prev_route, route, true);
                                 }
                             }
                         }, prev_route_back_ref_var);
@@ -301,16 +442,62 @@ namespace map_matching_2::matching {
                     skipped = false;
                     routes.emplace_back(std::move(route));
                 }
+            };
+
+            std::vector<time_route_type> time_routes;
+            std::vector<route_type> routes;
+            if (export_match_times) {
+                time_routes.reserve(not candidates.empty() ? candidates.size() - 1 : 0);
+            } else {
+                routes.reserve(not candidates.empty() ? candidates.size() - 1 : 0);
             }
 
-            return route_type::template merge<lazy_rich_line_type>({routes.begin(), routes.end()});
+            bool skipped = false;
+            for (std::size_t i = 0, j = 1; j < policy.size(); ++i, ++j) {
+                double current_max_distance_factor = max_distance_factor;
+
+                const auto &from_policy_pair = policy[i];
+                const auto &to_policy_pair = policy[j];
+
+                const auto from = from_policy_pair.first;
+                const auto to = to_policy_pair.first;
+
+                if (from == to) {
+                    // skip detected
+                    if (concatenate_skips) {
+                        // disable max_distance_factor because we really want to connect now
+                        current_max_distance_factor = -1;
+                    } else {
+                        ++i;
+                        ++j;
+                        skipped = true;
+                    }
+                    continue;
+                }
+
+                const auto source = from_policy_pair.second;
+                const auto target = to_policy_pair.second;
+
+                route_type route = candidate_route(candidates, from, source, to, target,
+                        within_edge_turns, a_star, a_star_euclidean, current_max_distance_factor);
+
+                time_route_type time_route = route.template clone<lazy_rich_time_line_type, time_route_type>();
+                if (export_match_times) {
+                    route_times(time_route, candidates, from, to, time_interpolation);
+                }
+
+                join_route.template operator()<lazy_rich_time_line_type, time_route_type>(
+                        time_route, time_routes, skipped);
+            }
+
+            return time_route_type::template merge<lazy_rich_time_line_type>({time_routes.begin(), time_routes.end()});
         }
 
-        [[nodiscard]] std::vector<std::reference_wrapper<const edge_data_type>> edges_list(
-                const route_type &route) const {
+        template<typename MultiRichLineT = lazy_multi_rich_line_type, typename RouteT = route_type>
+        [[nodiscard]] std::vector<std::reference_wrapper<const edge_data_type>> edges_list(const RouteT &route) const {
             std::vector<std::reference_wrapper<const edge_data_type>> edges;
 
-            const auto multi_rich_line = route.template get_multi_rich_line<lazy_multi_rich_line_type>();
+            const auto multi_rich_line = route.template get_multi_rich_line<MultiRichLineT>();
             for (const auto &rich_line : multi_rich_line.rich_lines()) {
                 if (not rich_line.empty()) {
                     for (std::size_t i = 0; i < rich_line.size() - 1; ++i) {

@@ -89,6 +89,7 @@ namespace map_matching_2::io::network {
                                 std::string line;
                                 std::uint64_t id = 0;
                                 while (std::getline(nodes, line)) {
+                                    std::erase(line, '\r');
                                     boost::split(parts, line, boost::is_any_of("\t;,| "));
                                     point_type_in point{
                                             util::parse_number<coordinate_type_in>(parts.at(0)),
@@ -108,6 +109,7 @@ namespace map_matching_2::io::network {
 
                                 id = 0;
                                 while (std::getline(arcs, line)) {
+                                    std::erase(line, '\r');
                                     boost::split(parts, line, boost::is_any_of("\t;,| "));
                                     const std::size_t index_a = util::parse_number<std::size_t>(parts.at(0));
                                     const std::size_t index_b = util::parse_number<std::size_t>(parts.at(1));

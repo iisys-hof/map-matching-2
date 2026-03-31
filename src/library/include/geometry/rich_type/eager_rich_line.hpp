@@ -90,17 +90,19 @@ namespace map_matching_2::geometry {
             rich_line_data_base_type::_compute(*this);
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        explicit eager_rich_line(const linestring<point_type, ContainerT, AllocatorT> &line) requires
+        explicit eager_rich_line(const linestring<PointT, ContainerT, AllocatorT> &line) requires
             (std::default_initializable<allocator_type>)
             : rich_line_data_base_type{}, rich_line_base_type{line} {
             rich_line_data_base_type::_compute(*this);
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line(const linestring<point_type, ContainerT, AllocatorT> &line,
+        eager_rich_line(const linestring<PointT, ContainerT, AllocatorT> &line,
                 const allocator_type &allocator)
             : rich_line_data_base_type{allocator}, rich_line_base_type{line, allocator} {
             rich_line_data_base_type::_compute(*this);
@@ -112,37 +114,42 @@ namespace map_matching_2::geometry {
         constexpr eager_rich_line(const eager_rich_line &other, const allocator_type &allocator)
             : rich_line_data_base_type{other, allocator}, rich_line_base_type{other, allocator} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        constexpr eager_rich_line(const eager_rich_line<point_type, ContainerT, AllocatorT> &other) requires
+        constexpr eager_rich_line(const eager_rich_line<PointT, ContainerT, AllocatorT> &other) requires
             (std::default_initializable<allocator_type>)
             : rich_line_data_base_type{other}, rich_line_base_type{other} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        constexpr eager_rich_line(const eager_rich_line<point_type, ContainerT, AllocatorT> &other,
+        constexpr eager_rich_line(const eager_rich_line<PointT, ContainerT, AllocatorT> &other,
                 const allocator_type &allocator)
             : rich_line_data_base_type{other, allocator}, rich_line_base_type{other, allocator} {}
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line(const rich_line<point_type, ContainerT, AllocatorT> &other) requires
+        eager_rich_line(const rich_line<PointT, ContainerT, AllocatorT> &other) requires
             (std::default_initializable<allocator_type>)
             : rich_line_data_base_type{}, rich_line_base_type{other.line()} {
             rich_line_data_base_type::_compute(*this);
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line(const rich_line<point_type, ContainerT, AllocatorT> &other,
+        eager_rich_line(const rich_line<PointT, ContainerT, AllocatorT> &other,
                 const allocator_type &allocator)
             : rich_line_data_base_type{allocator}, rich_line_base_type{other.line(), allocator} {
             rich_line_data_base_type::_compute(*this);
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line(const lazy_rich_line<point_type, ContainerT, AllocatorT> &other) requires
+        eager_rich_line(const lazy_rich_line<PointT, ContainerT, AllocatorT> &other) requires
             (std::default_initializable<allocator_type>)
             : rich_line_data_base_type{
                     other.length(), other.azimuth(), other.directions(), other.absolute_directions()
@@ -153,9 +160,10 @@ namespace map_matching_2::geometry {
                     std::back_inserter(rich_line_data_base_type::_azimuths));
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line(const lazy_rich_line<point_type, ContainerT, AllocatorT> &other,
+        eager_rich_line(const lazy_rich_line<PointT, ContainerT, AllocatorT> &other,
                 const allocator_type &allocator)
             : rich_line_data_base_type{
                     other.length(), other.azimuth(), other.directions(), other.absolute_directions(), allocator
@@ -189,17 +197,19 @@ namespace map_matching_2::geometry {
             return *this;
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line &operator=(const rich_line<point_type, ContainerT, AllocatorT> &other) {
+        eager_rich_line &operator=(const rich_line<PointT, ContainerT, AllocatorT> &other) {
             rich_line_base_type::line().assign(std::cbegin(other.line()), std::cend(other.line()));
             rich_line_data_base_type::_compute(*this);
             return *this;
         }
 
-        template<template<typename, typename> typename ContainerT,
+        template<typename PointT,
+            template<typename, typename> typename ContainerT,
             template<typename> typename AllocatorT>
-        eager_rich_line &operator=(const lazy_rich_line<point_type, ContainerT, AllocatorT> &other) {
+        eager_rich_line &operator=(const lazy_rich_line<PointT, ContainerT, AllocatorT> &other) {
             rich_line_data_base_type::_length = other.length();
             rich_line_data_base_type::_azimuth = other.azimuth();
             rich_line_data_base_type::_directions = other.directions();

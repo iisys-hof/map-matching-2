@@ -127,6 +127,30 @@ namespace map_matching_2::geometry::network {
             return _rich_lines.size();
         }
 
+        [[nodiscard]] std::size_t sizes() const {
+            std::size_t size = 0;
+            for (const auto &rich_line_variant : _rich_lines) {
+                size += _size(rich_line_variant);
+            }
+            return size;
+        }
+
+        [[nodiscard]] std::size_t distinct_sizes() const {
+            std::size_t size = 0;
+            const point_type *prev_point = nullptr;
+            for (const auto &rich_line_variant : _rich_lines) {
+                const auto rich_line_size = _size(rich_line_variant);
+                for (std::size_t i = 0; i < rich_line_size; ++i) {
+                    const auto &point = _at(rich_line_variant, i);
+                    if (not prev_point or not geometry::equals_points(*prev_point, point)) {
+                        ++size;
+                    }
+                    prev_point = &point;
+                }
+            }
+            return size;
+        }
+
         [[nodiscard]] bool is_connected() const {
             if (empty()) {
                 return true;
@@ -158,17 +182,8 @@ namespace map_matching_2::geometry::network {
                 const auto &rich_line = _rich_lines.front();
                 return _has_length(rich_line);
             } else {
-                for (std::size_t i = 0, j = 1; j < size(); ++i, ++j) {
-                    const auto &curr_rich_line = _rich_lines[i];
-
-                    // check current length
-                    if (_has_length(curr_rich_line)) {
-                        return true;
-                    }
-
-                    const auto &next_rich_line = _rich_lines[j];
-                    // in last loop, also check next length
-                    if (j + 1 >= size() and _has_length(next_rich_line)) {
+                for (const auto &rich_line : _rich_lines) {
+                    if (_has_length(rich_line)) {
                         return true;
                     }
                 }
@@ -188,18 +203,9 @@ namespace map_matching_2::geometry::network {
                 bool has_length = false;
                 length_type length = default_float_type<length_type>::v0;
 
-                for (std::size_t i = 0, j = 1; j < size(); ++i, ++j) {
-                    const auto &curr_rich_line = _rich_lines[i];
-                    const auto &next_rich_line = _rich_lines[j];
-
-                    // add current length
-                    if (_has_length(curr_rich_line)) {
-                        length += _get_length(curr_rich_line);
-                        has_length = true;
-                    }
-                    // in last loop, also add next length
-                    if (j + 1 >= size() and _has_length(next_rich_line)) {
-                        length += _get_length(next_rich_line);
+                for (const auto &rich_line : _rich_lines) {
+                    if (_has_length(rich_line)) {
+                        length += _get_length(rich_line);
                         has_length = true;
                     }
                 }
@@ -292,8 +298,9 @@ namespace map_matching_2::geometry::network {
                         // check if rich lines are attached
                         if (_attaches(curr_rich_line, next_rich_line)) {
                             // has direction only when attached
-                            if (_size(curr_rich_line) >= 2 and
-                                _has_azimuth(curr_rich_line, _size(curr_rich_line) - 2) and
+                            const auto current_rich_line_size = _size(curr_rich_line);
+                            if (current_rich_line_size >= 2 and
+                                _has_azimuth(curr_rich_line, current_rich_line_size - 2) and
                                 _has_azimuth(next_rich_line, 0)) {
                                 return true;
                             }
@@ -332,11 +339,12 @@ namespace map_matching_2::geometry::network {
                         // check if rich lines are attached
                         if (_attaches(curr_rich_line, next_rich_line)) {
                             // add direction inbetween only when attached
-                            if (_size(curr_rich_line) >= 2 and
-                                _has_azimuth(curr_rich_line, _size(curr_rich_line) - 2) and
+                            const auto current_rich_line_size = _size(curr_rich_line);
+                            if (current_rich_line_size >= 2 and
+                                _has_azimuth(curr_rich_line, current_rich_line_size - 2) and
                                 _has_azimuth(next_rich_line, 0)) {
                                 const auto direction = geometry::direction_deg(
-                                        _get_azimuth(curr_rich_line, _size(curr_rich_line) - 2),
+                                        _get_azimuth(curr_rich_line, current_rich_line_size - 2),
                                         _get_azimuth(next_rich_line, 0));
                                 directions += direction;
                                 has_directions = true;
@@ -383,11 +391,12 @@ namespace map_matching_2::geometry::network {
                         // check if rich lines are attached
                         if (_attaches(curr_rich_line, next_rich_line)) {
                             // add direction inbetween only when attached
-                            if (_size(curr_rich_line) >= 2 and
-                                _has_azimuth(curr_rich_line, _size(curr_rich_line) - 2) and
+                            const auto current_rich_line_size = _size(curr_rich_line);
+                            if (current_rich_line_size >= 2 and
+                                _has_azimuth(curr_rich_line, current_rich_line_size - 2) and
                                 _has_azimuth(next_rich_line, 0)) {
                                 const auto direction = geometry::direction_deg(
-                                        _get_azimuth(curr_rich_line, _size(curr_rich_line) - 2),
+                                        _get_azimuth(curr_rich_line, current_rich_line_size - 2),
                                         _get_azimuth(next_rich_line, 0));
                                 absolute_directions += std::fabs(direction);
                                 has_directions = true;
@@ -456,7 +465,8 @@ namespace map_matching_2::geometry::network {
             }
 
             for (const auto &rich_line : _rich_lines) [[likely]] {
-                for (std::size_t i = 0, j = 1; j < _size(rich_line); ++i, ++j) [[likely]] {
+                const auto rich_line_size = _size(rich_line);
+                for (std::size_t i = 0, j = 1; j < rich_line_size; ++i, ++j) [[likely]] {
                     const auto &_first = _at(rich_line, i);
                     const auto &_second = _at(rich_line, j);
                     if (not geometry::equals_points(_first, _second)) [[likely]] {
@@ -466,6 +476,19 @@ namespace map_matching_2::geometry::network {
             }
 
             return false;
+        }
+
+        template<is_rich_line RichLineT, is_route RouteT = route>
+        [[nodiscard]] RouteT clone() const {
+            using _route_type = RouteT;
+            using _rich_line_type = RichLineT;
+            using _rich_line_variant_type = typename _route_type::rich_line_variant_type;
+
+            std::list<_rich_line_variant_type> rich_lines{};
+            for (const auto &rich_line : _rich_lines) {
+                rich_lines.emplace_back(_as<_rich_line_type>(rich_line));
+            }
+            return _route_type{std::move(rich_lines)};
         }
 
         template<is_route RouteT = route>
@@ -1196,19 +1219,19 @@ namespace map_matching_2::geometry::network {
 
         [[nodiscard]] static const point_type &_at(const rich_line_reference_variant_type &rich_line_variant,
                 std::size_t pos) {
-            return std::visit([pos](auto &&rich_line) -> const point_type &{
+            return std::visit([pos](auto &&rich_line) -> const point_type & {
                 return rich_line.get().at(pos);
             }, rich_line_variant);
         }
 
         [[nodiscard]] static const point_type &_front(const rich_line_reference_variant_type &rich_line_variant) {
-            return std::visit([](auto &&rich_line) -> const point_type &{
+            return std::visit([](auto &&rich_line) -> const point_type & {
                 return rich_line.get().front();
             }, rich_line_variant);
         }
 
         [[nodiscard]] static const point_type &_back(const rich_line_reference_variant_type &rich_line_variant) {
-            return std::visit([](auto &&rich_line) -> const point_type &{
+            return std::visit([](auto &&rich_line) -> const point_type & {
                 return rich_line.get().back();
             }, rich_line_variant);
         }

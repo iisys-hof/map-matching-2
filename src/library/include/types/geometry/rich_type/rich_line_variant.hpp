@@ -41,10 +41,15 @@
     MM2_EAGER_RICH_LINE_CS(CS), \
     MM2_LAZY_RICH_LINE_CS(CS)>
 
+#define MM2_RICH_TIME_LINE_VARIANT(CS) std::variant< \
+    MM2_EAGER_RICH_TIME_LINE(CS, MM2_MEMORY_TYPES), \
+    MM2_LAZY_RICH_TIME_LINE(CS, MM2_MEMORY_TYPES)>
+
 #ifdef EXPLICIT_TEMPLATES
 
 #define MM2_RICH_LINE_VARIANT_TEMPLATE(CS) \
-    MM2_EXTERN template class MM2_RICH_LINE_VARIANT(CS);
+    MM2_EXTERN template class MM2_RICH_LINE_VARIANT(CS); \
+    MM2_EXTERN template class MM2_RICH_TIME_LINE_VARIANT(CS);
 
 MM2_RICH_LINE_VARIANT_TEMPLATE(MM2_GEOGRAPHIC)
 MM2_RICH_LINE_VARIANT_TEMPLATE(MM2_SPHERICAL_EQUATORIAL)
@@ -56,6 +61,9 @@ namespace map_matching_2::geometry {
 
     template<typename CoordinateSystem>
     using rich_line_variant = MM2_RICH_LINE_VARIANT(CoordinateSystem);
+
+    template<typename CoordinateSystem>
+    using rich_time_line_variant = MM2_RICH_TIME_LINE_VARIANT(CoordinateSystem);
 
 }
 

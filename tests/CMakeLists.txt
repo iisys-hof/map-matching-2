@@ -21,6 +21,7 @@ endif ()
 
 target_sources(map_matching_2_tests
         PRIVATE
+        algorithm_tests.cpp
         compare_tests.cpp
         concept_inheritance.cpp
         graph_algorithm_tests.cpp

@@ -184,9 +184,12 @@ namespace map_matching_2::geometry::network {
             return std::pair{false, std::pair<std::size_t, std::size_t>{}};
         }
 
-        [[nodiscard]] std::pair<bool, edge_descriptor> fitting_edge(const segment_type &segment) const {
+        [[nodiscard]] std::pair<bool, edge_descriptor> fitting_edge(const segment_type &segment,
+                const double epsilon = 1e-6) const {
             using angle_type = typename edge_data_type::rich_line_type::angle_type;
+            using length_type = typename edge_data_type::rich_line_type::length_type;
             angle_type best_angle = geometry::default_float_type<angle_type>::v180;
+            length_type best_length = std::numeric_limits<length_type>::infinity();
             const auto azimuth = geometry::azimuth_segment_deg(segment);
             const edge_descriptor *edge = nullptr;
             const segment_type *best_segment = nullptr;
@@ -196,10 +199,16 @@ namespace map_matching_2::geometry::network {
                 const segment_type &near_segment = segment_pair.first;
                 const auto near_azimuth = geometry::azimuth_segment_deg(near_segment);
                 const auto angle_diff = std::fabs(geometry::angle_diff(azimuth, near_azimuth));
+                const auto length_sum = geometry::point_distance(segment.first, near_segment.first) +
+                        geometry::point_distance(segment.second, near_segment.second);
                 if (best_segment == nullptr or
                     (geometry::equals_points(segment.first, near_segment.first) and
-                        geometry::equals_points(segment.second, near_segment.second)) or angle_diff < best_angle) {
+                        geometry::equals_points(segment.second, near_segment.second)) or angle_diff < best_angle or
+                    (std::fabs(angle_diff - best_angle) < epsilon and best_segment != nullptr and
+                        length_sum < geometry::point_distance(segment.first, best_segment->first) +
+                        geometry::point_distance(segment.second, best_segment->second))) {
                     best_angle = angle_diff;
+                    best_length = length_sum;
                     best_segment = &near_segment;
                     edge = &segment_pair.second.first;
                 }

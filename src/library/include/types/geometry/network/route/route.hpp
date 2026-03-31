@@ -25,11 +25,13 @@
 #include "geometry/network/route/route.hpp"
 
 #define MM2_ROUTE(CS) map_matching_2::geometry::network::route<MM2_RICH_LINE_VARIANT(CS)>
+#define MM2_TIME_ROUTE(CS) map_matching_2::geometry::network::route<MM2_RICH_TIME_LINE_VARIANT(CS)>
 
 #ifdef EXPLICIT_TEMPLATES
 
 #define MM2_ROUTE_TEMPLATE(CS) \
-    MM2_EXTERN template class MM2_ROUTE(CS);
+    MM2_EXTERN template class MM2_ROUTE(CS); \
+    MM2_EXTERN template class MM2_TIME_ROUTE(CS);
 
 MM2_ROUTE_TEMPLATE(MM2_GEOGRAPHIC)
 MM2_ROUTE_TEMPLATE(MM2_SPHERICAL_EQUATORIAL)
@@ -41,6 +43,9 @@ namespace map_matching_2::geometry::network {
 
     template<typename CoordinateSystem>
     using route_type = route<rich_line_variant<CoordinateSystem>>;
+
+    template<typename CoordinateSystem>
+    using time_route_type = route<rich_time_line_variant<CoordinateSystem>>;
 
 }
 

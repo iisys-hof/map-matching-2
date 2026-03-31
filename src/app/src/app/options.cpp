@@ -77,6 +77,10 @@ namespace map_matching_2::app {
     void match_output_data::correct(const po::variables_map &vm) {
         std::vector<std::string> _column_strings;
         boost::split(_column_strings, columns, boost::is_any_of(","));
+        export_match_times = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "match_times") !=
+                std::cend(_column_strings);
+        export_edges = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "edges") !=
+                std::cend(_column_strings);
         export_edge_ids = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "edge_ids") !=
                 std::cend(_column_strings);
 
@@ -85,13 +89,31 @@ namespace map_matching_2::app {
             export_time_zone = "UTC";
         }
 
+        if (time_interpolation != INTERPOLATION_METHOD_NONE and
+            time_interpolation != INTERPOLATION_METHOD_POINTS and
+            time_interpolation != INTERPOLATION_METHOD_GEOMETRIC) {
+            throw std::invalid_argument{
+                    std::format("time interpolation method {} is invalid.", time_interpolation)
+            };
+        }
+
         if (not vm["quiet"].empty() and not vm["quiet"].as<bool>() and
             not vm["console"].empty() and not vm["console"].as<bool>()) {
+            if (export_match_times) {
+                std::cout << std::format("Enabled export match times with interpolation method {}.",
+                        time_interpolation) << std::endl;
+            }
             if (export_edges) {
                 std::cout << "Enabled export edges mode." << std::endl;
             }
+            if (override_edges) {
+                std::cout << "Enabled matches to export edges override mode." << std::endl;
+            }
             if (not join_merges) {
                 std::cout << "Disabled joining merged routes." << std::endl;
+            }
+            if (concatenate_skips) {
+                std::cout << "Enabled concatenating skipped situations." << std::endl;
             }
         }
     }
@@ -164,7 +186,11 @@ namespace map_matching_2::app {
 
     void export_data::correct(const po::variables_map &vm) {
         if (candidates_export_all) {
-            if (candidates_columns.find("is_result") == std::string::npos) {
+            std::vector<std::string> _column_strings;
+            boost::split(_column_strings, candidates_columns, boost::is_any_of(","));
+            bool has_is_result = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "is_result") !=
+                    std::cend(_column_strings);
+            if (has_is_result) {
                 if (not candidates_columns.empty() and candidates_columns.back() != ',') {
                     candidates_columns.append(",");
                 }
@@ -571,6 +597,8 @@ namespace map_matching_2::app {
                         "  \tmatch_length: match length in meter\n"
                         "  \ttrack_times: list of track point times (off by default)\n"
                         "  \tprepared_times: list of prepared track point times (off by default)\n"
+                        "  \tmatch_times: list of match point times with interpolation as per setting below (off by default)\n"
+                        "  \tedges: match enlarged to complete edges (off by default; if used, combine with simplify osm-aware)\n"
                         "  \tedge_ids: list of original edge IDs (off by default; if used, combine with simplify osm-aware")
                 ("export-timestamps", po::value<bool>(&data.export_timestamps)->default_value(false, "off"),
                         "export unix timestamps for start_time, end_time, track_times, and prepared_times; "
@@ -578,17 +606,50 @@ namespace map_matching_2::app {
                 ("export-time-zone",
                         po::value<std::string>(&data.export_time_zone)->default_value(util::current_time_zone()),
                         "time-zone to use for time export; if empty, uses UTC; by default uses system time zone")
-                ("export-edges", po::value<bool>(&data.export_edges)->default_value(false, "off"),
+                ("export-edges", po::value<bool>(&data.override_edges)->default_value(false, "off"),
                         "export matched routes based on the complete network edges instead of the actual parts, "
                         "this is only useful if the routes are later compared to matches that come from a list of edge IDs, "
                         "it returns routes with parts in the beginning and ending of the track, and at turns, "
                         "that have no equivalent part in the track, "
                         "however, the resulting routes overlap the network edges perfectly "
-                        "since they do not start, end, and turn within the edges at new points matching the track")
+                        "since they do not start, end, and turn within the edges at new points matching the track;\n"
+                        "overrides match column with edges column, does not work together with match-times column, "
+                        "since extracting the edges loses the time information")
+                ("time-interpolation",
+                        po::value<std::string>(&data.time_interpolation)->default_value("geometric"),
+                        "interpolation method to use for match_times column export, "
+                        "only is actually computed when the match_times column is specified;\n"
+                        "the timestamps for the match are constructed from the matched track, i.e., "
+                        "the prepared track after trajectory-simplification was used, when it is enabled, "
+                        "or the original track when trajectory-simplification is turned off;\n"
+                        "each mapped track point timestamp is assigned to the corresponding match point, "
+                        "then, the match points inbetween adjacent mapped track points are interpolated based on one of the following methods:\n"
+                        "\"none\"\n"
+                        "  \tno interpolation is used, the match_times list contains null values for non-existing timestamps;\n"
+                        "  \tthis setting is recommended to be used with join-merges set to off to keep joint points,\n"
+                        "  \totherwise, some track point times are likely to be missing in the mapped match points\n"
+                        "\"points\"\n"
+                        "  \tlinear interpolation based on the number of points between the available timestamps;\n"
+                        "  \tthis setting does not take into account the distance between the route points\n"
+                        "\"geometric\"\n"
+                        "  \tlinear interpolation based on geometric distances between the available timestamps;\n"
+                        "  \tthis setting takes into account the distance between the route points\n"
+                        "default is \"geometric\"")
                 ("join-merges", po::value<bool>(&data.join_merges)->default_value(true, "on"),
                         "by default, the routes between candidates are concatenated, "
                         "this parameter removes additional joint points when possible, "
-                        "so all joint points are removed except when reverse movements within an edge happen");
+                        "so all joint points are removed except when reverse movements within an edge happen")
+                ("concatenate-skips", po::value<bool>(&data.concatenate_skips)->default_value(false, "off"),
+                        "concatenate skips between candidates, when possible; "
+                        "this tries to route between candidates where the optimizer decided "
+                        "that no route inbetween, i.e., a gap, results in a lower error; "
+                        "this setting overrides the behavior after optimization is done, "
+                        "to concatenate partial matches into a complete match; "
+                        "however, this can lead to large detours in the match, but it prevents matches to have gaps; "
+                        "this option cannot connect matches that span over isolated networks, i.e., "
+                        "such gaps cannot be removed as there exists no route to connect the gaps; "
+                        "this setting can somewhat circumvent the skip-errors setting of the optimizer, "
+                        "and it works more reliable than turning the optimizer skip-errors setting off");
 
         output.add(options);
 
@@ -1143,7 +1204,7 @@ namespace map_matching_2::app {
                         "BOX (10 20, 40 50);\n"
                         "for a bounding box from x coordinates 10 to 40 and y coordinates 20 to 50; "
                         "the filter should be defined in the same spatial reference system as the tracks")
-                ("filter-method", po::value<std::string>(&data.filter_method)->default_value(FILTER_METHOD_WITHIN),
+                ("filter-method", po::value<std::string>(&data.filter_method)->default_value("within"),
                         "filter method used with the filter polygon, possible options:"
                         "\"within\"\n"
                         "  \tonly keeps tracks that lie completely within the polygon with all points,\n"

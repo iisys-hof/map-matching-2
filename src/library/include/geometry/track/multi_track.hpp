@@ -45,6 +45,17 @@ namespace map_matching_2::geometry::track {
         constexpr multi_track(track_type track)
             : id{std::move(track.id)}, multi_rich_line{std::move(track.rich_line)} {}
 
+        constexpr multi_track(std::string id, std::vector<track_type> tracks)
+            : id{std::move(id)} {
+            using rich_lines_container_type = typename multi_rich_line_type::rich_lines_container_type;
+            rich_lines_container_type rich_lines;
+            rich_lines.reserve(tracks.size());
+            for (auto &track : tracks) {
+                rich_lines.emplace_back(std::move(track.rich_line));
+            }
+            multi_rich_line = multi_rich_line_type{std::move(rich_lines)};
+        }
+
         constexpr multi_track(std::string id, line_type line)
             : id{std::move(id)}, multi_rich_line{rich_line_type{std::move(line)}} {}
 

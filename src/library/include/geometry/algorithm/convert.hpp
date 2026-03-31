@@ -78,7 +78,9 @@ namespace map_matching_2::geometry {
                 output.emplace_back(typename ContainerOut::value_type{in, allocator});
             }
         }
-        output.shrink_to_fit();
+        if constexpr (util::has_shrink_to_fit<ContainerOut>) {
+            output.shrink_to_fit();
+        }
         return output;
     }
 

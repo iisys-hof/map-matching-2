@@ -41,10 +41,11 @@ namespace map_matching_2::environment {
         using network_type = Network;
         using algorithms_type = matching::algorithms<network_type>;
         using track_type = typename matching::network_traits<network_type>::track_type;
-        using route_type = typename matching::network_traits<network_type>::route_type;
         using candidate_type = typename matching::network_traits<network_type>::candidate_type;
         using length_type = typename matching::network_traits<network_type>::length_type;
         using angle_type = typename matching::network_traits<network_type>::angle_type;
+        using policy_type = typename matching::network_traits<network_type>::policy_type;
+        using time_route_type = typename matching::network_traits<network_type>::time_route_type;
 
         using action_type = std::int64_t;
 
@@ -340,11 +341,11 @@ namespace map_matching_2::environment {
             return _algorithms.time_helper.update_and_has_reached();
         }
 
-        [[nodiscard]] route_type result(
-                const std::vector<std::pair<std::size_t, std::size_t>> &policy) const {
+        [[nodiscard]] time_route_type result(const policy_type &policy) const {
             return _algorithms.router.candidates_route(
                     _candidates, policy, _settings.within_edge_turns, _settings.join_merges,
-                    _settings.a_star, _settings.routing_max_distance_factor);
+                    _settings.concatenate_skips, _settings.export_match_times, _settings.time_interpolation,
+                    _settings.a_star, _settings.a_star_euclidean, _settings.routing_max_distance_factor);
         }
 
     private:

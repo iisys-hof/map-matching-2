@@ -27,7 +27,8 @@
 namespace map_matching_2::io::results {
 
     struct match_csv_task {
-        std::string id, track, prepared, match, start_time, end_time, track_times, prepared_times, edge_ids;
+        std::string id, track, prepared, match, start_time, end_time, track_times, prepared_times, match_times,
+                edges, edge_ids;
         bool aborted;
         double duration, track_length, prepared_length, match_length;
     };
@@ -52,7 +53,7 @@ namespace map_matching_2::io::results {
             static constexpr auto length_zero = geometry::default_float_type<length_type>::v0;
 
             std::string track_wkt{}, prepared_wkt{}, match_wkt{}, start_time{}, end_time{}, track_times{},
-                    prepared_times{}, edge_ids{};
+                    prepared_times{}, match_times{}, edges_wkt{}, edge_ids{};
             length_type track_length{length_zero}, prepared_length{length_zero}, match_length{length_zero};
 
             if (this->is_active()) {
@@ -156,6 +157,28 @@ namespace map_matching_2::io::results {
                                 prepared_times = oss.str();
                             }
                             break;
+                        case column::MATCH_TIMES:
+                            if (not match_result.match_times.empty()) {
+                                std::ostringstream oss;
+                                bool first = true;
+                                for (const auto &time : match_result.match_times) {
+                                    if (not first) {
+                                        oss << ',';
+                                    }
+                                    first = false;
+                                    if (match_result.match_settings.export_timestamps) {
+                                        oss << time;
+                                    } else {
+                                        oss << util::format_time(time,
+                                                match_result.match_settings.export_time_zone);
+                                    }
+                                }
+                                match_times = oss.str();
+                            }
+                            break;
+                        case column::EDGES:
+                            edges_wkt = match_result.edges.wkt();
+                            break;
                         case column::EDGE_IDS:
                             if (not match_result.edge_ids.empty()) {
                                 std::ostringstream oss;
@@ -180,7 +203,7 @@ namespace map_matching_2::io::results {
                     match_result.track.id,
                     std::move(track_wkt), std::move(prepared_wkt), std::move(match_wkt),
                     std::move(start_time), std::move(end_time), std::move(track_times), std::move(prepared_times),
-                    std::move(edge_ids),
+                    std::move(match_times), std::move(edges_wkt), std::move(edge_ids),
                     match_result.aborted, match_result.duration,
                     track_length, prepared_length, match_length,
             };
@@ -205,6 +228,8 @@ namespace map_matching_2::io::results {
             MATCH_LENGTH,
             TRACK_TIMES,
             PREPARED_TIMES,
+            MATCH_TIMES,
+            EDGES,
             EDGE_IDS,
             UNKNOWN
         };
@@ -240,6 +265,10 @@ namespace map_matching_2::io::results {
                     _columns.emplace_back(column::TRACK_TIMES);
                 } else if (_column_string == "prepared_times") {
                     _columns.emplace_back(column::PREPARED_TIMES);
+                } else if (_column_string == "match_times") {
+                    _columns.emplace_back(column::MATCH_TIMES);
+                } else if (_column_string == "edges") {
+                    _columns.emplace_back(column::EDGES);
                 } else if (_column_string == "edge_ids") {
                     _columns.emplace_back(column::EDGE_IDS);
                 } else {
@@ -291,6 +320,12 @@ namespace map_matching_2::io::results {
                         break;
                     case column::PREPARED_TIMES:
                         result.emplace_back(task.prepared_times);
+                        break;
+                    case column::MATCH_TIMES:
+                        result.emplace_back(task.match_times);
+                        break;
+                    case column::EDGES:
+                        result.emplace_back(task.edges);
                         break;
                     case column::EDGE_IDS:
                         result.emplace_back(task.edge_ids);

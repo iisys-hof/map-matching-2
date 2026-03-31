@@ -42,6 +42,7 @@ namespace map_matching_2::matching {
         using coordinate_system_type = typename geometry::network::network_traits<network_type>::coordinate_system_type;
         using point_type = typename geometry::network::network_traits<network_type>::point_type;
         using time_point_type = typename geometry::models<point_type>::explicit_time_point_type;
+        using timestamp_type = typename time_point_type::timestamp_type;
 
         using multi_track_type = geometry::track::multi_track_type<time_point_type>;
         using multi_track_multi_rich_line_type = typename multi_track_type::multi_rich_line_type;
@@ -57,10 +58,14 @@ namespace map_matching_2::matching {
         using angle_type = typename geometry::data<point_type>::angle_type;
 
         using route_type = geometry::network::lazy_route_type<coordinate_system_type>;
+        using time_route_type = geometry::network::lazy_time_route_type<coordinate_system_type>;
 
         using lazy_multi_rich_line_type = geometry::lazy_multi_rich_line_type<point_type>;
+        using lazy_multi_rich_time_line_type = geometry::lazy_multi_rich_line_type<time_point_type>;
         using lazy_rich_line_type = typename geometry::multi_rich_line_traits<
             lazy_multi_rich_line_type>::rich_line_type;
+        using lazy_rich_time_line_type = typename geometry::multi_rich_line_traits<
+            lazy_multi_rich_time_line_type>::rich_line_type;
 
         using policy_element_type = std::pair<std::size_t, std::size_t>;
         using policy_type = std::vector<policy_element_type>;

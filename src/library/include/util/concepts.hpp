@@ -64,6 +64,11 @@ namespace map_matching_2::util {
         { container.capacity() } -> std::same_as<std::size_t>;
     };
 
+    template<typename Container>
+    concept has_shrink_to_fit = requires(Container &container) {
+        { container.shrink_to_fit() } -> std::same_as<void>;
+    };
+
     template<typename T, typename... U>
     concept is_any_of = (std::same_as<T, U> || ...);
 
