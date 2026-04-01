@@ -7,7 +7,7 @@ endif ()
 
 FetchContent_Declare(expat
         GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-        GIT_TAG R_2_7_4
+        GIT_TAG R_2_7_5
         SOURCE_SUBDIR expat
         EXCLUDE_FROM_ALL)
 
