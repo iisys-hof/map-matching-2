@@ -144,7 +144,6 @@ target_include_directories(library
 target_include_directories(library SYSTEM
         PUBLIC
         ${GPX_INCLUDE_DIR}
-        ${CSV_INCLUDE_DIR}
         ${OSMIUM_INCLUDE_DIRS})
 
 target_link_libraries(library
@@ -156,6 +155,7 @@ target_link_libraries(library
         Boost::serialization
         date::date
         date::date-tz
+        csv
         gpx
         ${OSMIUM_IO_LIBRARIES})
 

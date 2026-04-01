@@ -25,8 +25,6 @@ endif ()
 
 add_subdirectory("${csv_parser_SOURCE_DIR}" "${csv_parser_BINARY_DIR}" EXCLUDE_FROM_ALL)
 
-set(CSV_INCLUDE_DIR "${csv_parser_SOURCE_DIR}/include" CACHE PATH "csv parser include dir" FORCE)
-
 if (NOT BUILD_ONLY_LIBRARY)
     install(FILES
             "${csv_parser_SOURCE_DIR}/LICENSE"
