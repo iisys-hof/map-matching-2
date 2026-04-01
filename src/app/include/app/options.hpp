@@ -101,6 +101,7 @@ namespace map_matching_2::app {
     struct match_output_data : output_data {
         bool export_timestamps, export_edges, override_edges, export_match_times, export_edge_ids, join_merges,
                 concatenate_skips;
+        double export_routing_max_distance_factor_override;
         std::string columns, export_time_zone, time_interpolation;
 
         void correct(const po::variables_map &vm) override;
@@ -168,7 +169,7 @@ namespace map_matching_2::app {
     };
 
     struct prepare_process_data : base_data {
-        bool remove_unconnected, remove_duplicate_nodes, remove_duplicate_edges;
+        bool remove_oneway_dead_ends, remove_unconnected, remove_duplicate_nodes, remove_duplicate_edges;
         std::string simplify;
 
         void correct(const po::variables_map &vm) override;

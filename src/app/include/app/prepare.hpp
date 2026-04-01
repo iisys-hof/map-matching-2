@@ -120,6 +120,15 @@ namespace map_matching_2::app {
     }
 
     template<typename NetworkImport>
+    void _remove_oneway_dead_ends(std::unique_ptr<NetworkImport> &network_import, const prepare_data &data) {
+        if (data.process.remove_oneway_dead_ends) {
+            verbose_frame("Remove one-way dead ends", [&]() {
+                network_import->remove_oneway_dead_ends();
+            });
+        }
+    }
+
+    template<typename NetworkImport>
     void _remove_unconnected(std::unique_ptr<NetworkImport> &network_import, const prepare_data &data) {
         if (data.process.remove_unconnected) {
             verbose_frame("Remove unconnected", [&]() {
@@ -224,6 +233,7 @@ namespace map_matching_2::app {
     void _import_network(std::unique_ptr<NetworkImport> &network_import, const prepare_data &data) {
         _execute_import(network_import->graph_helper(), data);
         _simplify(network_import, data);
+        _remove_oneway_dead_ends(network_import, data);
         _remove_unconnected(network_import, data);
         _remove_duplicate_nodes(network_import, data);
         _remove_duplicate_edges(network_import, data);

@@ -148,6 +148,11 @@ namespace map_matching_2::matching {
 
                 _prepared.emplace_back(environment.track().rich_line);
 
+                if (settings.export_routing_max_distance_factor_override != settings.routing_max_distance_factor) {
+                    // route cache is distance-factor dependent, needs to be cleared when the export setting is different
+                    _algorithms.router.clear_route_cache();
+                }
+
                 // result
                 time_route_type route = environment.result(policy);
                 if (settings.export_edge_ids or settings.export_edges or settings.override_edges) {

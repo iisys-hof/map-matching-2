@@ -221,7 +221,8 @@ namespace map_matching_2::environment {
             return _algorithms.router.candidates_route(
                     _candidates, policy, _settings.within_edge_turns, _settings.join_merges,
                     _settings.concatenate_skips, _settings.export_match_times, _settings.time_interpolation,
-                    _settings.a_star, _settings.a_star_euclidean, _settings.routing_max_distance_factor);
+                    _settings.a_star, _settings.a_star_euclidean,
+                    _settings.export_routing_max_distance_factor_override);
         }
 
         [[nodiscard]] const state_internal &state2internal(state_type state) const {

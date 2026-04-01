@@ -168,6 +168,14 @@ namespace map_matching_2::matching {
             return std::cref(*return_route);
         }
 
+        void clear_route_cache() {
+            _route_cache.clear();
+        }
+
+        void reset_route_cache() {
+            _route_cache = route_cache_type{};
+        }
+
         [[nodiscard]] route_type candidate_route(
                 const std::vector<candidate_type> &candidates,
                 const std::size_t from, const std::size_t source, const std::size_t to, const std::size_t target,
@@ -416,7 +424,7 @@ namespace map_matching_2::matching {
                 const bool concatenate_skips = false, const bool export_match_times = false,
                 const settings::TIME_INTERPOLATION time_interpolation = settings::TIME_INTERPOLATION::NONE,
                 const bool a_star = false, const bool a_star_euclidean = false,
-                const double max_distance_factor = 10.0) const {
+                const double export_max_distance_factor = 10.0) const {
 
             auto join_route = [&]<typename RichLineT, typename RouteT>(
                     RouteT &route, std::vector<RouteT> &routes, bool &skipped) {
@@ -453,9 +461,10 @@ namespace map_matching_2::matching {
             }
 
             bool skipped = false;
-            for (std::size_t i = 0, j = 1; j < policy.size(); ++i, ++j) {
-                double current_max_distance_factor = max_distance_factor;
+            bool a_star_override = a_star or export_max_distance_factor < 0;
+            bool within_edge_turns_override = within_edge_turns;
 
+            for (std::size_t i = 0, j = 1; j < policy.size(); ++i, ++j) {
                 const auto &from_policy_pair = policy[i];
                 const auto &to_policy_pair = policy[j];
 
@@ -465,8 +474,8 @@ namespace map_matching_2::matching {
                 if (from == to) {
                     // skip detected
                     if (concatenate_skips) {
-                        // disable max_distance_factor because we really want to connect now
-                        current_max_distance_factor = -1;
+                        // the candidate skips may run to wrong edge directions
+                        within_edge_turns_override = true;
                     } else {
                         ++i;
                         ++j;
@@ -479,7 +488,7 @@ namespace map_matching_2::matching {
                 const auto target = to_policy_pair.second;
 
                 route_type route = candidate_route(candidates, from, source, to, target,
-                        within_edge_turns, a_star, a_star_euclidean, current_max_distance_factor);
+                        within_edge_turns_override, a_star_override, a_star_euclidean, export_max_distance_factor);
 
                 time_route_type time_route = route.template clone<lazy_rich_time_line_type, time_route_type>();
                 if (export_match_times) {
@@ -488,6 +497,8 @@ namespace map_matching_2::matching {
 
                 join_route.template operator()<lazy_rich_time_line_type, time_route_type>(
                         time_route, time_routes, skipped);
+
+                within_edge_turns_override = within_edge_turns;
             }
 
             return time_route_type::template merge<lazy_rich_time_line_type>({time_routes.begin(), time_routes.end()});

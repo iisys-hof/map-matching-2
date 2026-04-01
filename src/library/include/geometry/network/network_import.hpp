@@ -114,12 +114,73 @@ namespace map_matching_2::geometry::network {
             _simplify_vertex_set = false;
         }
 
+        void remove_oneway_dead_ends() {
+            bool reindex = false;
+            graph_type &graph = this->graph();
+
+            auto is_dead_end = [&](const vertex_descriptor &vertex_desc) {
+                auto in_edges_v = graph.in_edges_view(vertex_desc);
+                auto out_edges_v = graph.out_edges_view(vertex_desc);
+
+                const edge_size_type out_degree = out_edges_v.size();
+                const edge_size_type in_degree = in_edges_v.size();
+
+                // incoming edges but no outgoing edges, this is a dead end with no return
+                return in_degree > 0 and out_degree == 0;
+            };
+
+            auto remove_dead_end = [&](auto &&self, std::list<vertex_descriptor> &vertices) -> void {
+                if (vertices.empty()) {
+                    return;
+                }
+
+                const vertex_descriptor vertex_desc = vertices.front();
+                vertices.pop_front();
+
+                if (is_dead_end(vertex_desc)) {
+                    // first gather all incoming vertices, to reversely travel them after removing the current one
+                    auto in_edges_v = graph.in_edges_view(vertex_desc);
+                    for (auto in_it = in_edges_v.begin(); in_it != in_edges_v.end(); in_it = in_edges_v.next(in_it)) {
+                        const edge_descriptor &in_edge = in_edges_v[in_it];
+                        const vertex_descriptor source_vertex_in = graph.source(in_edge);
+                        vertices.emplace_back(source_vertex_in);
+                    }
+
+                    // remove current vertex
+                    reindex = true;
+                    graph.clear_vertex(vertex_desc);
+                    graph.remove_vertex(vertex_desc);
+
+                    // proceed recursively with next
+                    self(self, vertices);
+                }
+            };
+
+            const auto vertices_v = graph.vertices_view();
+
+            vertex_descriptor vertex_desc, vertex_val;
+            vertex_desc = vertices_v.begin();
+            for (vertex_val = vertex_desc; vertex_desc != vertices_v.end(); vertex_desc = vertex_val) {
+                vertex_val = vertices_v.next(vertex_val);
+
+                if (is_dead_end(vertex_desc)) {
+                    std::list<vertex_descriptor> vertices{vertex_desc};
+                    remove_dead_end(remove_dead_end, vertices);
+                }
+            }
+
+            if (reindex) {
+                graph.reindex();
+            }
+        }
+
         void remove_unconnected_components() {
+            bool reindex = false;
             boost::unordered_flat_set<std::size_t> visited;
             graph::queue_type<vertex_descriptor> queue;
 
-            using discovered_type = std::vector<vertex_descriptor>;
-            std::vector<discovered_type> components;
+            using discovered_type = std::deque<vertex_descriptor>;
+            std::deque<discovered_type> components;
 
             const auto vertices_v = this->graph().vertices_view();
             for (auto it = vertices_v.begin(); it != vertices_v.end(); it = vertices_v.next(it)) {
@@ -144,13 +205,16 @@ namespace map_matching_2::geometry::network {
                 if (&component_nodes != &largest_component) {
                     // only remove nodes not from the largest component
                     for (const vertex_descriptor vertex_desc : component_nodes) {
+                        reindex = true;
                         this->graph().clear_vertex(vertex_desc);
                         this->graph().remove_vertex(vertex_desc);
                     }
                 }
             }
 
-            this->graph().reindex();
+            if (reindex) {
+                this->graph().reindex();
+            }
         }
 
         void remove_duplicate_nodes(const bool simplify = true, const bool simplify_network_complete = true) {
@@ -452,7 +516,7 @@ namespace map_matching_2::geometry::network {
         class vertex_visitor : public graph::visitor {
 
         public:
-            explicit constexpr vertex_visitor(std::vector<vertex_descriptor> &discovered)
+            explicit constexpr vertex_visitor(std::deque<vertex_descriptor> &discovered)
                 : _discovered{discovered} {}
 
             template<typename Graph>
@@ -461,7 +525,7 @@ namespace map_matching_2::geometry::network {
             }
 
         private:
-            std::vector<vertex_descriptor> &_discovered;
+            std::deque<vertex_descriptor> &_discovered;
 
         };
 

@@ -34,6 +34,8 @@ namespace map_matching_2::app {
         settings.export_edge_ids = data.match_output.export_edge_ids;
         settings.join_merges = data.match_output.join_merges;
         settings.concatenate_skips = data.match_output.concatenate_skips;
+        settings.export_routing_max_distance_factor_override =
+                data.match_output.export_routing_max_distance_factor_override;
         settings.output = data.match_output.output;
         settings.filename = data.match_output.filename;
         settings.export_time_zone = data.match_output.export_time_zone;

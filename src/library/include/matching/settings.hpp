@@ -61,8 +61,9 @@ namespace map_matching_2::matching {
                 candidate_adoption_siblings{true}, candidate_adoption_nearby{true}, candidate_adoption_reverse{false},
                 adaptive_radius{true};
         double warp_speed{1500.0}, max_time{0.0}, routing_max_distance_factor{5.0},
-                simplify_track_distance_tolerance{5.0}, median_merge_distance_tolerance{10.0}, radius{200.0},
-                radius_upper_limit{10000.0}, radius_lower_limit{200.0};
+                export_routing_max_distance_factor_override{5.0}, simplify_track_distance_tolerance{5.0},
+                median_merge_distance_tolerance{10.0}, radius{200.0}, radius_upper_limit{10000.0},
+                radius_lower_limit{200.0};
         std::size_t k_nearest{16};
         CANDIDATE_SEARCH candidate_search{COMBINED};
 

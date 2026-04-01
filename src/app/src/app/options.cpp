@@ -116,6 +116,17 @@ namespace map_matching_2::app {
                 std::cout << "Enabled concatenating skipped situations." << std::endl;
             }
         }
+
+        const bool is_exported_routing_max_distance_factor_override_missing =
+                vm["export-routing-max-distance-factor-override"].empty();
+        if (is_exported_routing_max_distance_factor_override_missing) {
+            if (concatenate_skips) {
+                export_routing_max_distance_factor_override = -1.0;
+            } else {
+                const double routing_max_distance_factor = vm["routing-max-distance-factor"].as<double>();
+                export_routing_max_distance_factor_override = routing_max_distance_factor;
+            }
+        }
     }
 
     void prepare_network_data::correct(const po::variables_map &vm) {
@@ -649,7 +660,21 @@ namespace map_matching_2::app {
                         "this option cannot connect matches that span over isolated networks, i.e., "
                         "such gaps cannot be removed as there exists no route to connect the gaps; "
                         "this setting can somewhat circumvent the skip-errors setting of the optimizer, "
-                        "and it works more reliable than turning the optimizer skip-errors setting off");
+                        "and it works more reliable than turning the optimizer skip-errors setting off")
+                ("export-routing-max-distance-factor-override",
+                        po::value<double>(&data.export_routing_max_distance_factor_override),
+                        "max distance factor override for exporting for upper bound for routing algorithm; "
+                        "overrides routing-max-distance-factor after optimization has been performed, "
+                        "for connecting the partial matches between the candidates; "
+                        "by default uses the same value as routing-max-distance-factor, "
+                        "unless concatenate-skips is on, then it uses -1 by default, "
+                        "effectively disabling the distance limit to make sure all partial matches are eventually connected, "
+                        "can also be set to an arbitrary value to connect gaps only up to a certain distance limit; "
+                        "when this setting is different to routing-max-distance-factor, "
+                        "the internal routing cache has to be cleared before exporting, "
+                        "as it is depends on the distance limit; "
+                        "when this setting is disabled with a negative value, the A*-search algorithm is used instead of "
+                        "Dijkstra's algorithm, as it has better performance in this specific case");
 
         output.add(options);
 
@@ -974,6 +999,10 @@ namespace map_matching_2::app {
                         "  \thowever, use this when you export edge_ids with the matches later,\n"
                         "  \tas only then the ids are correctly preserved during simplification\n"
                         "default is \"all\"")
+                ("remove-oneway-dead-ends", po::value<bool>(&data.remove_oneway_dead_ends)->default_value(false, "off"),
+                        "remove dead ends that are reached by a one-way incoming edge, "
+                        "but have no outgoing edges, which means that vehicles get stuck and cannot leave anymore, "
+                        "usually happens due to map errors or when outgoing edges are filtered out by other tags than incoming edges have")
                 ("remove-unconnected", po::value<bool>(&data.remove_unconnected)->default_value(false, "off"),
                         "remove weakly unconnected components so that only the largest subgraph remains;\n"
                         "when multiple isle networks are imported, only the largest isle remains;\n"
