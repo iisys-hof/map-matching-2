@@ -150,8 +150,10 @@ namespace map_matching_2::geometry::network {
                     reindex = true;
                     graph.clear_vertex(vertex_desc);
                     graph.remove_vertex(vertex_desc);
+                }
 
-                    // proceed recursively with next
+                while (not vertices.empty()) {
+                    // proceed recursively
                     self(self, vertices);
                 }
             };
