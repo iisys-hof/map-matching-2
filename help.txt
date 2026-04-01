@@ -396,6 +396,14 @@ Prepare Process Options:
                                           as only then the ids are correctly 
                                           preserved during simplification
                                         default is "all"
+  --remove-oneway-dead-ends arg (=off)  remove dead ends that are reached by a 
+                                        one-way incoming edge, but have no 
+                                        outgoing edges, which means that 
+                                        vehicles get stuck and cannot leave 
+                                        anymore, usually happens due to map 
+                                        errors or when outgoing edges are 
+                                        filtered out by other tags than 
+                                        incoming edges have
   --remove-unconnected arg (=off)       remove weakly unconnected components so
                                         that only the largest subgraph remains;
                                         when multiple isle networks are 
@@ -764,6 +772,32 @@ Match Output Options:
                                         setting of the optimizer, and it works 
                                         more reliable than turning the 
                                         optimizer skip-errors setting off
+  --export-routing-max-distance-factor-override arg
+                                        max distance factor override for 
+                                        exporting for upper bound for routing 
+                                        algorithm; overrides 
+                                        routing-max-distance-factor after 
+                                        optimization has been performed, for 
+                                        connecting the partial matches between 
+                                        the candidates; by default uses the 
+                                        same value as routing-max-distance-fact
+                                        or, unless concatenate-skips is on, 
+                                        then it uses -1 by default, effectively
+                                        disabling the distance limit to make 
+                                        sure all partial matches are eventually
+                                        connected, can also be set to an 
+                                        arbitrary value to connect gaps only up
+                                        to a certain distance limit; when this 
+                                        setting is different to 
+                                        routing-max-distance-factor, the 
+                                        internal routing cache has to be 
+                                        cleared before exporting, as it is 
+                                        depends on the distance limit; when 
+                                        this setting is disabled with a 
+                                        negative value, the A*-search algorithm
+                                        is used instead of Dijkstra's 
+                                        algorithm, as it has better performance
+                                        in this specific case
 
 Tracks Options:
   --tracks arg                          path to track(s) file;
