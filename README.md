@@ -202,6 +202,9 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
     - **Matches:** Export of matches with configurable extra columns into CSV files.
     - **Times:** Timestamps of the start and end time of a track (if available) are automatically outputted.
       Optionally, all timestamps of the original input track and the simplified track can be outputted as lists.
+    - **Match Times:** Interpolation of timestamps based on the prepared track for the match (optional).
+    - **Concatenation:** Concatenation of partial matches into one singular line by routing between the partial
+      matches (optional).
     - **Comparisons:** Export of comparison results with configurable extra columns into CSV files.
     - **Candidates:** Candidates can be optionally exported into CSV files for expert understanding of how the program
       chose and created the match.
@@ -227,6 +230,7 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
       reduces the number of nodes by a factor of three to four without altering the geometric form and routing behavior
       of the road network. Improves the computational speed of the routing algorithms because fewer nodes need to be
       traversed.
+    - **Dead Ends:** Removal of dead ends that can only be routed into but not out of them (optional).
     - **Weakly Unconnected Graphs:** Optional removing of subgraphs that are not connected to the largest main graph.
     - **Graph Models:** Custom graph models adjacency list and compressed sparse row built for memory mapping.
     - **Graph Baking:** The road network is first imported as mutable adjacency list and then converted into an
@@ -262,7 +266,8 @@ please see the official article (https://doi.org/10.1111/tgis.13107).
       use [rpmalloc](https://github.com/mjansson/rpmalloc) for improving our computational speed significantly.
 - **Others:** There are more features that did not fit in the list.
     - **Gap matching:** Only in MDP tracks can contain gaps and are still matched in a way that they fit together, with
-      gaps in the result then. This is why unconnected subgraphs work, too, and are not removed by default.
+      gaps in the result then. This is why unconnected subgraphs work, too, and are not removed by default. Can be
+      avoided by removing dead ends, unconnected components, and concatenating the partial matches.
     - **Within Edge Turning:** By default, matches do not turn within edges but only at junction. This mode allows to
       turn directly on the road within the edge. This works best without candidate adoption and is automatically applied
       in this case.
@@ -432,7 +437,7 @@ Building the software is straightforward. The following tools and versions are t
     - **GCC:** Version 15.2
     - **Clang:** Version 22
 - **On Windows:**
-    - **Visual Studio C++:** Version 17.14.27 (equivalent to MSVC 1944)
+    - **Visual Studio C++:** Version 17.14.29 (equivalent to MSVC 1944)
 - **Architecture:** Only 64-bit compiler and operating system are officially supported
 
 We provide for Linux various Dockerfiles in the [docker](docker) folder. They contain all necessary information for
