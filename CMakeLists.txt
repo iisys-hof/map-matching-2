@@ -63,10 +63,10 @@ elseif (MSVC)
     option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use static MSVC runtime library" ON)
 endif ()
 
-# rpmalloc crashes with address sanitizer and in MSVC DEBUG with static runtime
+# rpmalloc crashes with address sanitizer, in MSVC DEBUG with static runtime, and on macOS
 # see: https://github.com/mjansson/rpmalloc/issues/175
 cmake_dependent_option(ENABLE_RPMALLOC "Enable rpmalloc" OFF
-        "ADDRESS_SANITIZER OR (USE_STATIC_MSVC_RUNTIME_LIBRARY AND DEBUG_BUILD AND MSVC)" ON)
+        "ADDRESS_SANITIZER OR (USE_STATIC_MSVC_RUNTIME_LIBRARY AND DEBUG_BUILD AND MSVC) OR APPLE" ON)
 
 # rpath override on for default install prefix
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
