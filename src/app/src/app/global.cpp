@@ -19,7 +19,7 @@
 
 #if defined(MM2_WINDOWS)
 #include <windows.h>
-#elif defined(MM2_LINUX)
+#elif defined(MM2_LINUX) || defined(MM2_APPLE)
 #include <sys/ioctl.h>
 #include <unistd.h>
 #endif
@@ -34,7 +34,7 @@ namespace map_matching_2::app {
         GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
         std::size_t columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
         std::size_t rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-#elif defined(MM2_LINUX)
+#elif defined(MM2_LINUX) || defined(MM2_APPLE)
         struct winsize w;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
         std::size_t columns = w.ws_col;

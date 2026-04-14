@@ -139,7 +139,7 @@ namespace map_matching_2::io::memory_mapped {
 
     void shrink_to_fit(const std::string &file, std::size_t size);
 
-#elif defined(MM2_LINUX)
+#elif defined(MM2_LINUX) || defined(MM2_APPLE)
 
     bool flush_address(void *addr, std::size_t size, bool async = false);
 

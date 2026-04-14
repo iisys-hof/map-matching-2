@@ -25,6 +25,10 @@
 #elif defined(MM2_LINUX)
 #include <sys/sysinfo.h>
 #include <sys/mman.h>
+#elif defined(MM2_APPLE)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/mman.h>
 #endif
 
 namespace map_matching_2::io::memory_mapped {
@@ -41,6 +45,12 @@ namespace map_matching_2::io::memory_mapped {
         sysinfo(&mem_info);
         memory = mem_info.totalram;
         memory *= mem_info.mem_unit;
+#elif defined(MM2_APPLE)
+        int mib[2] = {CTL_HW, HW_MEMSIZE};
+        int64_t physical_memory;
+        std::size_t length = sizeof(physical_memory);
+        sysctl(mib, 2, &physical_memory, &length, nullptr, 0);
+        memory = static_cast<std::size_t>(physical_memory);
 #else
 #error "Can not detect total memory"
 #endif
@@ -178,7 +188,7 @@ namespace map_matching_2::io::memory_mapped {
         CloseHandle(hFile);
     }
 
-#elif defined(MM2_LINUX)
+#elif defined(MM2_LINUX) || defined(MM2_APPLE)
 
     bool flush_address(void *addr, const std::size_t size, const bool async) {
         return msync(addr, size, async ? MS_ASYNC : MS_SYNC) == 0;

@@ -20,6 +20,8 @@
 #define MM2_WINDOWS
 #elif defined(__linux__)
 #define MM2_LINUX
+#elif defined(__APPLE__)
+#define MM2_APPLE
 #endif
 
 #define CONCATENATE_IMPL(x, y) x##y
