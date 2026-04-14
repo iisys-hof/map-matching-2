@@ -4,3 +4,4 @@ run/
 cmake.lock
 **/*.osm.pbf
 **/*.AppImage
+/build/
