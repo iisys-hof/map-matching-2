@@ -1,23 +1,15 @@
 # gpx
-set(gpx_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/gpx-src")
-if (EXISTS "${gpx_SOURCE_DIR}")
-    set(gpx_EXISTS ON)
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
-endif ()
+set(BUILD_EXAMPLES OFF CACHE BOOL "do not build gpx examples" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "do not build gpx tests" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "disable shared libs" FORCE)
 
-FetchContent_Declare(gpx
+Managed_FetchContent(gpx
         GIT_REPOSITORY https://github.com/irdvo/gpxlib.git
         GIT_TAG 43df92be29412b7f3b58e63ebea516df9f15b883
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
-set(BUILD_EXAMPLES OFF CACHE BOOL "do not build gpx examples" FORCE)
-set(BUILD_TESTS OFF CACHE BOOL "do not build gpx tests" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "disable shared libs" FORCE)
-
-FetchContent_MakeAvailable(gpx)
-
-if (NOT gpx_EXISTS)
+if (gpx_NEEDS_REFRESH)
     # fix for wrong directory and deprecated cmake version in library when using as subdirectory
     FILE(READ "${gpx_SOURCE_DIR}/CMakeLists.txt" gpx_CMAKE_LISTS)
     STRING(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9\\.]+\\)" "cmake_minimum_required(VERSION 3.10)" gpx_CMAKE_LISTS "${gpx_CMAKE_LISTS}")
@@ -42,5 +34,3 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${gpx_SOURCE_DIR}/COPYING.LESSER"
             DESTINATION doc/gpx)
 endif ()
-
-unset(FETCHCONTENT_FULLY_DISCONNECTED)

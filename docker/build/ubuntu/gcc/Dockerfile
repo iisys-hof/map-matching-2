@@ -6,9 +6,9 @@ FROM ubuntu:20.04 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
-ARG GCC_VERSION=15.2.0
-ARG GDB_VERSION=15.2
-ARG CMAKE_VERSION=4.2.3
+ARG GCC_VERSION=16.1.0
+ARG GDB_VERSION=16.3
+ARG CMAKE_VERSION=4.2.5
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

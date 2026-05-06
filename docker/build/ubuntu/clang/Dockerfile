@@ -6,8 +6,8 @@ FROM ubuntu:20.04 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # only use major LLVM version
-ARG LLVM_VERSION=22
-ARG CMAKE_VERSION=4.2.3
+ARG LLVM_VERSION=21
+ARG CMAKE_VERSION=4.2.5
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

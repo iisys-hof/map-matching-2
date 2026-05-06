@@ -1,20 +1,12 @@
 # bz2
-set(bz2_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/bz2-src")
-if (EXISTS "${bz2_SOURCE_DIR}")
-    set(bz2_EXISTS ON)
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
-endif ()
-
-FetchContent_Declare(bz2
+Managed_FetchContent(bz2
         GIT_REPOSITORY https://gitlab.com/bzip2/bzip2.git
         GIT_TAG 66c46b8c9436613fd81bc5d03f63a61933a4dcc3
         GIT_SUBMODULES ""
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
-FetchContent_MakeAvailable(bz2)
-
-if (NOT bz2_EXISTS)
+if (bz2_NEEDS_REFRESH)
     # override to 3.15 for enabling CMAKE_MSVC_RUNTIME_LIBRARY
     FILE(READ "${bz2_SOURCE_DIR}/CMakeLists.txt" bz2_CMAKE_LISTS)
     STRING(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9\\.]+\\)" "cmake_minimum_required(VERSION 3.15)" bz2_CMAKE_LISTS "${bz2_CMAKE_LISTS}")
@@ -45,5 +37,3 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${bz2_SOURCE_DIR}/COPYING"
             DESTINATION doc/bz2)
 endif ()
-
-unset(FETCHCONTENT_FULLY_DISCONNECTED)

@@ -1,18 +1,10 @@
 # boost
-set(boost_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/boost-src")
-if (EXISTS "${boost_SOURCE_DIR}")
-    set(boost_EXISTS ON)
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
-endif ()
-
-FetchContent_Declare(boost
+Managed_FetchContent(boost
         URL https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2
         URL_HASH SHA256=49551aff3b22cbc5c5a9ed3dbc92f0e23ea50a0f7325b0d198b705e8ee3fc305
         SOURCE_SUBDIR this-directory-does-not-exist)
 
-FetchContent_MakeAvailable(boost)
-
-if (NOT boost_EXISTS)
+if (boost_NEEDS_REFRESH)
     if (WIN32)
         set(_boost_b2 "${boost_SOURCE_DIR}/b2.exe")
     else ()
@@ -122,5 +114,3 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${boost_SOURCE_DIR}/LICENSE_1_0.txt"
             DESTINATION doc/boost)
 endif ()
-
-unset(FETCHCONTENT_FULLY_DISCONNECTED)

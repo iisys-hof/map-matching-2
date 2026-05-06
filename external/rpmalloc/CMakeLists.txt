@@ -1,19 +1,11 @@
 # rpmalloc
-set(rpmalloc_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/rpmalloc-src")
-if (EXISTS "${rpmalloc_SOURCE_DIR}")
-    set(rpmalloc_EXISTS ON)
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
-endif ()
-
-FetchContent_Declare(rpmalloc
+Managed_FetchContent(rpmalloc
         GIT_REPOSITORY https://github.com/mjansson/rpmalloc.git
         GIT_TAG 1.4.5
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
-FetchContent_MakeAvailable(rpmalloc)
-
-if (NOT rpmalloc_EXISTS)
+if (rpmalloc_NEEDS_REFRESH)
     file(WRITE "${rpmalloc_SOURCE_DIR}/CMakeLists.txt"
             [[
 project(rpmalloc
@@ -54,5 +46,3 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${rpmalloc_SOURCE_DIR}/LICENSE"
             DESTINATION doc/rpmalloc)
 endif ()
-
-unset(FETCHCONTENT_FULLY_DISCONNECTED)

@@ -9,7 +9,7 @@ option(ENABLE_GPX "Enable adding library gpx" ON)
 option(ENABLE_BOOST "Enable adding library Boost" ON)
 option(ENABLE_LIBOSMIUM "Enable adding library libosmium" ON)
 
-include(FetchContent)
+include(ManagedFetchContent.cmake)
 message(STATUS "Adding external libraries")
 
 if (ENABLE_ZLIB)

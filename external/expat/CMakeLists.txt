@@ -1,25 +1,17 @@
 # expat
-set(expat_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/expat-src")
-if (EXISTS "${expat_SOURCE_DIR}")
-    set(expat_EXISTS ON)
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
-endif ()
-
-FetchContent_Declare(expat
-        GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-        GIT_TAG R_2_7_5
-        SOURCE_SUBDIR expat
-        EXCLUDE_FROM_ALL)
-
-FetchContent_MakeAvailable(expat)
-
 if (MSVC)
     if (USE_STATIC_MSVC_RUNTIME_LIBRARY)
         set(EXPAT_MSVC_STATIC_CRT "-DEXPAT_MSVC_STATIC_CRT=ON")
     endif ()
 endif ()
 
-if (NOT expat_EXISTS)
+Managed_FetchContent(expat
+        GIT_REPOSITORY https://github.com/libexpat/libexpat.git
+        GIT_TAG R_2_7_5
+        SOURCE_SUBDIR expat
+        EXCLUDE_FROM_ALL)
+
+if (expat_NEEDS_REFRESH)
     execute_process(COMMAND ${CMAKE_COMMAND}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
@@ -45,5 +37,3 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${expat_SOURCE_DIR}/COPYING"
             DESTINATION doc/expat)
 endif ()
-
-unset(FETCHCONTENT_FULLY_DISCONNECTED)

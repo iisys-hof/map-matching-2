@@ -1,19 +1,11 @@
 # zlib
-set(zlib_SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/zlib-src")
-if (EXISTS "${zlib_SOURCE_DIR}")
-    set(zlib_EXISTS ON)
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON)
-endif ()
-
-FetchContent_Declare(zlib
+Managed_FetchContent(zlib
         GIT_REPOSITORY https://github.com/madler/zlib.git
         GIT_TAG v1.3.2
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
-FetchContent_MakeAvailable(zlib)
-
-if (NOT zlib_EXISTS)
+if (zlib_NEEDS_REFRESH)
     execute_process(COMMAND ${CMAKE_COMMAND}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
@@ -40,5 +32,3 @@ if (NOT BUILD_ONLY_LIBRARY)
             "${zlib_SOURCE_DIR}/LICENSE"
             DESTINATION doc/zlib)
 endif ()
-
-unset(FETCHCONTENT_FULLY_DISCONNECTED)
