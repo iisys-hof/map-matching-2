@@ -14,7 +14,7 @@ COPY external external
 COPY src src
 
 RUN cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DEXPLICIT_TEMPLATES=OFF -B build && \
-    cmake --build build --parallel $(nproc) --target install
+    cmake --build build --target install
 
 FROM ubuntu:20.04 AS run
 

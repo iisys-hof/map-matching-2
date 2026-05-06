@@ -494,8 +494,10 @@ cmake --build build --parallel $(nproc) --target install
 For Windows (correct the paths to your CMake and Ninja installations):
 
 ```shell
-# Windows cmd.exe (in PowerShell first enter: cmd)
 # Initialize compiler environment
+# With PowerShell
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1"
+# Alternatively with cmd.exe
 "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 # Now build the program
 "C:\path\to\cmake.exe" -DCMAKE_MAKE_PROGRAM="C:\path\to\ninja.exe" -G Ninja -DCMAKE_BUILD_TYPE=Release -B build
@@ -513,7 +515,8 @@ We provide many CMake parameters to tune the build during configuration, please 
 files in this project.
 
 In the second step, the software itself is built. Due to the complex template structure, this also needs quite some time
-and RAM. In case you are low in RAM, omit the `--parallel $(nproc)` argument or set it to `1` explicitly.
+and RAM. In case you are low on RAM, set `--parallel 1` during building instead of `$(nproc)` on Linux or
+`%NUMBER_OF_PROCESSORS%` on Windows.
 
 The software is installed in the newly created `run` directory, nothing outside of this directory is written.
 

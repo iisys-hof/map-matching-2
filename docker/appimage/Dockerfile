@@ -15,7 +15,7 @@ COPY external external
 COPY src src
 
 RUN cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DEXPLICIT_TEMPLATES=OFF -DCMAKE_INSTALL_PREFIX=/usr -B build && \
-    DESTDIR=/app/AppDir cmake --build build --parallel $(nproc) --target install
+    DESTDIR=/app/AppDir cmake --build build --target install
 
 FROM scratch AS export
 

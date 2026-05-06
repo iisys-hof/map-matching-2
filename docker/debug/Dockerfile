@@ -16,17 +16,17 @@ WORKDIR /app/fmt
 
 RUN git checkout 11.2.0 && \
     cmake -DCMAKE_CXX_COMPILER=g++ -B build && \
-    cmake --build build --parallel $(nproc) --target install
+    cmake --build build --target install
 
 WORKDIR /app/externis
 
 RUN cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -B build && \
-    cmake --build build --parallel $(nproc) --target install
+    cmake --build build --target install
 
 WORKDIR /app/ClangBuildAnalyzer
 
 RUN cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -B build && \
-    cmake --build build --parallel $(nproc) --target install
+    cmake --build build --target install
 
 # Commands:
 # FOLDER=/tmp/map-matching-2/cmake-build-debug-clang/src
