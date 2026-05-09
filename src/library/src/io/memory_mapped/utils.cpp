@@ -22,6 +22,10 @@
 #include <fileapi.h>
 #include <memoryapi.h>
 #include <winioctl.h>
+#elif defined(MM2_APPLE)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/mman.h>
 #elif defined(MM2_LINUX)
 #include <sys/sysinfo.h>
 #include <sys/mman.h>
@@ -36,6 +40,10 @@ namespace map_matching_2::io::memory_mapped {
         statex.dwLength = sizeof(statex);
         GlobalMemoryStatusEx(&statex);
         memory = statex.ullTotalPhys;
+#elif defined(MM2_APPLE)
+        int mib[2] = {CTL_HW, HW_MEMSIZE};
+        std::size_t length = sizeof(memory);
+        sysctl(mib, 2, &memory, &length, nullptr, 0);
 #elif defined(MM2_LINUX)
         struct sysinfo mem_info{};
         sysinfo(&mem_info);
@@ -178,7 +186,7 @@ namespace map_matching_2::io::memory_mapped {
         CloseHandle(hFile);
     }
 
-#elif defined(MM2_LINUX)
+#elif defined(MM2_LINUX) || defined(MM2_APPLE)
 
     bool flush_address(void *addr, const std::size_t size, const bool async) {
         return msync(addr, size, async ? MS_ASYNC : MS_SYNC) == 0;

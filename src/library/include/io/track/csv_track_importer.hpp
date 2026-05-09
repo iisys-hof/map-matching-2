@@ -97,9 +97,10 @@ namespace map_matching_2::io::track {
                                     id.append(_csv_settings.id_aggregator);
                                 }
                                 if (_csv_settings.no_header and util::is_number(_field_id)) {
-                                    id.append(row[util::parse_number<std::size_t>(_field_id)].get<std::string>());
+                                    id.append(row[util::parse_number<std::size_t>(_field_id)]
+                                            .template get<std::string>());
                                 } else {
-                                    id.append(row[_field_id].get<std::string>());
+                                    id.append(row[_field_id].template get<std::string>());
                                 }
                             }
                         }
@@ -116,11 +117,12 @@ namespace map_matching_2::io::track {
                                 time.append(_csv_settings.time_aggregator);
                             }
                             if (_csv_settings.no_header and util::is_number(_field_time)) {
-                                time.append(row[util::parse_number<std::size_t>(_field_time)].get<std::string>());
+                                time.append(row[util::parse_number<std::size_t>(_field_time)]
+                                        .template get<std::string>());
                             } else {
                                 const auto &columns = row.get_col_names();
                                 if (std::find(columns.cbegin(), columns.cend(), _field_time) != columns.cend()) {
-                                    time.append(row[_field_time].get<std::string>());
+                                    time.append(row[_field_time].template get<std::string>());
                                 }
                             }
                         }
@@ -147,9 +149,9 @@ namespace map_matching_2::io::track {
                             std::string wkt_string;
                             if (_csv_settings.no_header and util::is_number(_csv_settings.field_geometry)) {
                                 wkt_string = row[util::parse_number<std::size_t>(_csv_settings.field_geometry)]
-                                        .get<std::string>();
+                                        .template get<std::string>();
                             } else {
-                                wkt_string = row[_csv_settings.field_geometry].get<std::string>();
+                                wkt_string = row[_csv_settings.field_geometry].template get<std::string>();
                             }
                             boost::to_upper(wkt_string);
                             if (wkt_string.starts_with("POINT")) {
@@ -197,15 +199,15 @@ namespace map_matching_2::io::track {
                             coordinate_type_in x, y;
                             if (_csv_settings.no_header and util::is_number(_csv_settings.field_x)) {
                                 x = row[util::parse_number<std::size_t>(_csv_settings.field_x)]
-                                        .get<coordinate_type_in>();
+                                        .template get<coordinate_type_in>();
                             } else {
-                                x = row[_csv_settings.field_x].get<coordinate_type_in>();
+                                x = row[_csv_settings.field_x].template get<coordinate_type_in>();
                             }
                             if (_csv_settings.no_header and util::is_number(_csv_settings.field_y)) {
                                 y = row[util::parse_number<std::size_t>(_csv_settings.field_y)]
-                                        .get<coordinate_type_in>();
+                                        .template get<coordinate_type_in>();
                             } else {
-                                y = row[_csv_settings.field_y].get<coordinate_type_in>();
+                                y = row[_csv_settings.field_y].template get<coordinate_type_in>();
                             }
 
                             if (not _points.contains(id)) {

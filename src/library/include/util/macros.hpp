@@ -18,6 +18,8 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #define MM2_WINDOWS
+#elif defined(__APPLE__)
+#define MM2_APPLE
 #elif defined(__linux__)
 #define MM2_LINUX
 #endif

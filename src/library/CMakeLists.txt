@@ -159,7 +159,7 @@ target_link_libraries(library
         gpx
         ${OSMIUM_IO_LIBRARIES})
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
     target_link_libraries(library
             PUBLIC
             rt)

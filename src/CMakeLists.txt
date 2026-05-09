@@ -24,7 +24,7 @@ if (NOT BUILD_ONLY_LIBRARY)
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             set(COMPILER_SUBDIR "gcc")
-        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
             set(COMPILER_SUBDIR "clang")
         elseif (MSVC)
             set(COMPILER_SUBDIR "msvc")
