@@ -11,7 +11,7 @@ find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 add_executable(map_matching_2_tests)
 
 add_test(NAME map_matching_2_tests
-        COMMAND map_matching_2_tests --logger=HRF,all --color_output=false --report_format=HRF --show_progress=no)
+        COMMAND map_matching_2_tests --logger=JUNIT,all --log_sink=map_matching_2_tests.xml)
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-Wno-deprecated-declarations" _deprecated_declarations)
