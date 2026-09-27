@@ -1,7 +1,7 @@
 # boost
 Managed_FetchContent(boost
-        URL https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2
-        URL_HASH SHA256=49551aff3b22cbc5c5a9ed3dbc92f0e23ea50a0f7325b0d198b705e8ee3fc305
+        URL https://archives.boost.io/release/1.92.0/source/boost_1_92_0.tar.bz2
+        URL_HASH SHA256=5c1d40cb8e19adbf740a4ec2da35b3e58f3f5804b1dce44deb53df72193cbc6c
         SOURCE_SUBDIR this-directory-does-not-exist)
 
 if (boost_NEEDS_REFRESH)
@@ -103,7 +103,7 @@ if (NOT Boost_FOUND)
 
     execute_process(COMMAND ./b2 install link=static,shared ${_runtime_link} threading=multi
             ${_variant} ${_toolset} ${_address_model} ${_cxxflags} ${_linkflags}
-            --without-python --prefix=${boost_BINARY_DIR}
+            --without-python --abbreviate-paths --prefix=${boost_BINARY_DIR}
             WORKING_DIRECTORY "${boost_SOURCE_DIR}")
 endif ()
 

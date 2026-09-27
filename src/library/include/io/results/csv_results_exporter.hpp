@@ -26,13 +26,13 @@
 
 namespace map_matching_2::io::results {
 
-    template<typename CSVTask, char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_results_exporter : public util::coordinator<CSVTask>, public csv_exporter<Delimiter, Quote, Flush> {
+    template<typename CSVTask, char Delimiter = ',', char Quote = '"'>
+    class csv_results_exporter : public util::coordinator<CSVTask>, public csv_exporter<Delimiter, Quote> {
 
     public:
         using task_type = CSVTask;
         using coordinator_type = util::coordinator<CSVTask>;
-        using base_type = csv_exporter<Delimiter, Quote, Flush>;
+        using base_type = csv_exporter<Delimiter, Quote>;
 
         explicit csv_results_exporter(std::string filename, const std::string &columns)
             : coordinator_type{1, 1024}, base_type{std::move(filename)} {

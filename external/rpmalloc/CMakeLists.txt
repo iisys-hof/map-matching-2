@@ -1,7 +1,7 @@
 # rpmalloc
 Managed_FetchContent(rpmalloc
         GIT_REPOSITORY https://github.com/mjansson/rpmalloc.git
-        GIT_TAG 1.4.5
+        GIT_TAG 2.0.1
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
@@ -9,19 +9,25 @@ if (rpmalloc_NEEDS_REFRESH)
     file(WRITE "${rpmalloc_SOURCE_DIR}/CMakeLists.txt"
             [[
 project(rpmalloc
-        VERSION 1.4.5
+        VERSION 2.0.1
         DESCRIPTION "rpmalloc"
         LANGUAGES C)
 
 add_library(rpmalloc STATIC)
 
+set_target_properties(rpmalloc PROPERTIES
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        C_EXTENSIONS ON)
+
+target_compile_options(rpmalloc
+        PRIVATE
+        $<$<C_COMPILER_ID:MSVC>:/experimental:c11atomics>)
+
 target_compile_definitions(rpmalloc
         PRIVATE
         _GNU_SOURCE
-        ENABLE_OVERRIDE=1
-        DEFAULT_SPAN_MAP_COUNT=256
-        PUBLIC
-        ENABLE_PRELOAD=1)
+        ENABLE_OVERRIDE=1)
 
 target_sources(rpmalloc
         PRIVATE

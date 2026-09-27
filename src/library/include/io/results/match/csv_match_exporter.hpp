@@ -33,12 +33,12 @@ namespace map_matching_2::io::results {
         double duration, track_length, prepared_length, match_length;
     };
 
-    template<char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_match_exporter : public csv_results_exporter<match_csv_task, Delimiter, Quote, Flush> {
+    template<char Delimiter = ',', char Quote = '"'>
+    class csv_match_exporter : public csv_results_exporter<match_csv_task, Delimiter, Quote> {
 
     public:
         using task_type = match_csv_task;
-        using base_type = csv_results_exporter<task_type, Delimiter, Quote, Flush>;
+        using base_type = csv_results_exporter<task_type, Delimiter, Quote>;
 
         explicit csv_match_exporter(std::string filename, const std::string &columns)
             : base_type{std::move(filename), columns} {

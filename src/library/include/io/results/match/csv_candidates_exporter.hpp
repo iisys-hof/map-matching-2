@@ -43,12 +43,12 @@ namespace map_matching_2::io::results {
         std::vector<candidate_result> candidates;
     };
 
-    template<char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_candidates_exporter : public csv_results_exporter<candidates_csv_task, Delimiter, Quote, Flush> {
+    template<char Delimiter = ',', char Quote = '"'>
+    class csv_candidates_exporter : public csv_results_exporter<candidates_csv_task, Delimiter, Quote> {
 
     public:
         using task_type = candidates_csv_task;
-        using base_type = csv_results_exporter<task_type, Delimiter, Quote, Flush>;
+        using base_type = csv_results_exporter<task_type, Delimiter, Quote>;
 
         using policy_map_type = boost::unordered_flat_map<std::size_t, boost::unordered_flat_set<std::size_t>>;
 

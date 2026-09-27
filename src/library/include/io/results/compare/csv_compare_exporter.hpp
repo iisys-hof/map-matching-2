@@ -29,12 +29,12 @@ namespace map_matching_2::io::results {
                 correct_fraction, error_fraction, correct, error_added, error_missed;
     };
 
-    template<char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_compare_exporter : public csv_results_exporter<compare_csv_task, Delimiter, Quote, Flush> {
+    template<char Delimiter = ',', char Quote = '"'>
+    class csv_compare_exporter : public csv_results_exporter<compare_csv_task, Delimiter, Quote> {
 
     public:
         using task_type = compare_csv_task;
-        using base_type = csv_results_exporter<task_type, Delimiter, Quote, Flush>;
+        using base_type = csv_results_exporter<task_type, Delimiter, Quote>;
 
         explicit csv_compare_exporter(std::string filename, const std::string &columns)
             : base_type{std::move(filename), columns} {

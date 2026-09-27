@@ -3,7 +3,7 @@ set(BUILD_TESTING OFF CACHE BOOL "do not build protozero tests" FORCE)
 
 Managed_FetchContent(protozero
         GIT_REPOSITORY https://github.com/mapbox/protozero.git
-        GIT_TAG v1.8.1
+        GIT_TAG v1.8.2
         EXCLUDE_FROM_ALL)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${protozero_SOURCE_DIR}/cmake" CACHE STRING "cmake module path" FORCE)

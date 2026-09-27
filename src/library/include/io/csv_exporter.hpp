@@ -22,12 +22,12 @@
 
 namespace map_matching_2::io {
 
-    template<char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_exporter : public file_exporter, public csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush> {
+    template<char Delimiter = ',', char Quote = '"'>
+    class csv_exporter : public file_exporter, public csv::DelimWriter<std::ofstream, Delimiter, Quote> {
 
     public:
         explicit csv_exporter(std::string filename)
-            : file_exporter{std::move(filename)}, csv::DelimWriter<std::ofstream, Delimiter, Quote, Flush>{out()} {}
+            : file_exporter{std::move(filename)}, csv::DelimWriter<std::ofstream, Delimiter, Quote>{out()} {}
 
         ~csv_exporter() override = default;
 

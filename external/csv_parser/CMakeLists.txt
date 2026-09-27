@@ -3,7 +3,7 @@ set(CSV_BUILD_PROGRAMS OFF CACHE BOOL "do not build csv-parser programs" FORCE)
 
 Managed_FetchContent(csv_parser
         GIT_REPOSITORY https://github.com/vincentlaucsb/csv-parser.git
-        GIT_TAG 2.5.2
+        GIT_TAG 5.3.0
         GIT_SUBMODULES ""
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)

@@ -24,12 +24,12 @@ namespace map_matching_2::io::results {
         std::string id, track;
     };
 
-    template<char Delimiter = ',', char Quote = '"', bool Flush = false>
-    class csv_track_exporter : public csv_results_exporter<track_csv_task, Delimiter, Quote, Flush> {
+    template<char Delimiter = ',', char Quote = '"'>
+    class csv_track_exporter : public csv_results_exporter<track_csv_task, Delimiter, Quote> {
 
     public:
         using task_type = track_csv_task;
-        using base_type = csv_results_exporter<task_type, Delimiter, Quote, Flush>;
+        using base_type = csv_results_exporter<task_type, Delimiter, Quote>;
 
         explicit csv_track_exporter(std::string filename)
             : base_type{std::move(filename), "id,track"} {

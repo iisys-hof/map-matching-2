@@ -5,7 +5,7 @@ set(BUILD_TZ_LIB ON CACHE BOOL "enable date timezone library" FORCE)
 
 Managed_FetchContent(date
         GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-        GIT_TAG v3.0.4
+        GIT_TAG v3.0.5
         SOURCE_SUBDIR this-directory-does-not-exist
         EXCLUDE_FROM_ALL)
 
