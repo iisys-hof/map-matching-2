@@ -2,12 +2,13 @@
 
 ## High Performance Map Matching with Markov Decision Processes (MDPs) and Hidden Markov Models (HMMs)
 
-:page_facing_up: Please read the official article for more information about this open source software: \
-**Open source map matching with Markov decision processes: A new method and a detailed benchmark with existing
-approaches** (https://doi.org/10.1111/tgis.13107)
+:page_facing_up: My PhD thesis **Map matching methods for assigning vehicle positions to road networks** is now
+available online for free to read: https://doi.org/10.20378/irb-116612
 
-:exclamation: **TL;DR:** This software can match GPS tracks to OpenStreetMap road networks comparably accurate and
-rapid.
+Please read the PDF for a deep look into my map matching approach. There are plenty of colorful images
+and benchmark tables for understanding the performance and inner workings of my method and my implementation. Thank you!
+
+:exclamation: **TL;DR:** This software can match GPS tracks to OpenStreetMap road networks highly accurate and fast.
 
 ### Table of Contents
 
@@ -29,9 +30,8 @@ In other words, with this software, you can match recorded GPS tracks to the roa
 For example, when you record driving from A to B and the recorded track is not exactly lying on the roads or there are
 outliers, this software resolves the differences between the record and the roads.
 
-The methods in this software are described and benchmarked in more detail in the official article:\
-**Open source map matching with Markov decision processes: A new method and a detailed benchmark with existing
-approaches** (https://doi.org/10.1111/tgis.13107)
+The methods in this software are described and benchmarked in more detail in my PhD thesis:\
+**Map matching methods for assigning vehicle positions to road networks** (https://doi.org/10.20378/irb-116612)
 
 ### Download
 
@@ -57,40 +57,21 @@ Arguments can be appended directly, for example:\
 
 ### Example
 
-![Figure 12](docs/figure12.png "Map Matching 2 Positive Results")
-This is Figure 12 from the mentioned article (https://doi.org/10.1111/tgis.13107).
+![Good matches](docs/10-good-matches.png "Map Matching 2 Good Matches")
+This is Figure 5.1 from my PhD thesis (https://doi.org/10.20378/irb-116612).
 
 It shows nine difficult to match track situations (in <span style="color:#e31a1c">red</span>) with the results
 (in <span style="color:#1f78b4">blue</span>) from this software.
 In the background is the OpenStreetMap network image.
 The tracks are from the Floating Car Data (FCD) set that is available in this repository.
-
-"From left to right, top to bottom, we have: (1) large outlier; (2) shift to east; (3) unclear track shape with shift
-and noise; (4) shift, noise, and outlier; (5) unclear track shape with cross-movement; (6) unclear track shape with
-U-turn and cross movement; (7) sparse cross movement; (8) large outlier; and (9) shifted track part with a large
-outlier."
-(Citation from Figure 12 subtitle in: https://doi.org/10.1111/tgis.13107)
-
 This example shows that our Map Matching 2 software is capable of matching tracks with challenging and uncertain geo
 positions recorded.
-The matches (in <span style="color:#1f78b4">blue</span>) look correct to the human eye in these situations.
-Or at least, a human could probably not create a better result in these situations.
 
-![Figure 13](docs/figure13.png "Map Matching 2 Negative Results")
-This is Figure 13 from the article (https://doi.org/10.1111/tgis.13107).
-
-It shows in the same colors (<span style="color:#e31a1c">red</span> for the tracks,
-<span style="color:#1f78b4">blue</span> for the matches) again difficult situations.
-However, this time, the supposedly correct solution (in <span style="color:#33a02c">green</span>) is different to the
-match.
-
-The matches are not per definition "wrong" as they still resemble the original track to some extent, but they look not
-optimal to the human eye.
-This example shows that in unclear situations, stochastic map matching still might decide for another solution than a
-human would.
-However, we also want to note that these particular examples are very rare and somewhat the worst-case.
-It was easier to find good examples than bad ones in our test data due to the high overall accuracy.
-Please try it out for yourself!
+"From left to right, top to bottom, we have the following situations: 1. large outlier; 2. shift to east; 3. unclear
+track shape with shift through missing data; 4. shift and outlier; 5. sparse track shape with cross movement; 6. noisy
+track shape with U-turn and cross movement; 7. sparse cross movement; 8. large outlier; 9. shifted track part with a
+large outlier."
+(Citation from Figure 5.1 subtitle in: https://doi.org/10.20378/irb-116612)
 
 Here is an overview of the accuracy on all example data set benchmarks from [data](data).
 See also [Benchmarks](#benchmarks) for the benchmark setup.
@@ -126,7 +107,7 @@ also matching errors happen. This cannot be prevented with stochastic methods be
 solution concerning their defined metrics, but in a specific case it might still be wrong.
 
 For more benchmarks and results also in other configurations (on the older "mean correct fraction" accuracy metric),
-please see the official article (https://doi.org/10.1111/tgis.13107).
+please see my PhD thesis (https://doi.org/10.20378/irb-116612).
 
 ### Features
 
@@ -527,60 +508,47 @@ Make sure that Ninja is used from CMake as build tool on both systems.
 
 ### Benchmarks
 
-We recommend reviewing the benchmarks that we made in our publication (https://doi.org/10.1111/tgis.13107).
+I recommend reviewing the benchmarks that I made in my PhD thesis (https://doi.org/10.20378/irb-116612).
 
 All the following examples were run on a dedicated server with 2x AMD EPYC 7742 64-Core Processor with 2x 128 Threads
 and 1024 MB DDR4 RAM on a local NVMe SSD in an Ubuntu 22.04 LTS LXC container.
 
 #### Prepare Benchmarks
 
-In these benchmarks, we compare the old version 0.3 preparation step with the New Version 1.1.7 preparation step.
+In these benchmarks, we compare the version 1.1.7 preparation step.
 
 We used the [data/floating-car-data/conf/prepare.conf](data/floating-car-data/conf/prepare.conf) as a base. The import
 is the `oberfranken-latest.osm.pbf` in the version that we had at the time we ran the benchmarks.
 
-It has to be noted that although the "Max RAM" looks higher in the new version, most of it is "shared memory" that can
-be flushed to disk at any time from the operating system. This means that the actual necessary RAM usage is only some
-MB.
+It has to be noted that although the "Max RAM" looks higher, most of it is "shared memory" that can be flushed to disk
+at any time from the operating system. This means that the actual necessary RAM usage is only some MB.
 
 When disabling the intermediate MMap files (`--memory-mapped-preparation off`), the "Max RAM" usage looks lower, but in
 fact, there is less "shared memory" used.
 So the actual RAM usage during preparation is higher, because less memory is mapped on disk.
 However, less "shared memory" means less overhead, and thus the total memory is less, and the computational speed is
-much higher. Even faster than the old version.
+much higher.
 
-This is a bit difficult to understand, but try it out for yourself and watch the actual memory usage of both variants
+This is a bit challenging to understand, but try it out for yourself and watch the actual memory usage of both variants
 with full and without intermediate MMap in the operating system activity monitor (or Task Manager).
 
-The size of the new MMap binaries is a bit larger than the old memory dump format because it contains a bit more
-overhead, however, it can be opened near instantaneously.
-
-| Mode                              | Time (s) | CPU resources (s) | Max RAM (MiB) | `.osm.pbf` size (MiB) | binary size (MiB) |
-|:----------------------------------|---------:|------------------:|--------------:|----------------------:|------------------:|
-| Prepare (Old Version 0.3)         |    17.71 |             19.44 |         1,821 |                    74 |               283 |
-| Prepare with full MMap (Default)  |    29.09 |             29.36 |         2,297 |                    74 |               494 |
-| Prepare without intermediate MMap |    14.58 |             16.55 |         1,407 |                    74 |               494 |
+| Mode                                | Time (s) | CPU resources (s) | Max RAM (MiB) | `.osm.pbf` size (MiB) | binary size (MiB) |
+|:------------------------------------|---------:|------------------:|--------------:|----------------------:|------------------:|
+| Prepare with Full MMap (Default)    |    29.09 |             29.36 |         2,297 |                    74 |               494 |
+| Prepare with only intermediate MMap |    14.58 |             16.55 |         1,407 |                    74 |               494 |
 
 <details>
 <summary>Prepare Commands</summary>
 
 ```shell
-# Prepare (Old Version 0.3)
-./map_matching_2 \
-  --network data/floating-car-data/oberfranken-latest.osm.pbf \
-  --network-save data/floating-car-data/old/oberfranken.dat \
-  --verbose
-```
-
-```shell
-# Prepare with full MMap (Default)
+# Prepare with Full MMap (Default)
 ./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/prepare.conf \
   --verbose
 ```
 
 ```shell
-# Prepare without intermediate MMap
+# Prepare with only intermediate MMap
 ./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/prepare.conf \
   --memory-mapped-preparation off \
@@ -591,74 +559,40 @@ overhead, however, it can be opened near instantaneously.
 
 #### Match Benchmarks
 
-In the following benchmarks, we match the data from our "Hof data set" from our
-publication (https://doi.org/10.1111/tgis.13107).
+In the following benchmarks, we match the data from our "Hof data set" from my PhD thesis
+(https://doi.org/10.20378/irb-116612).
 
 The benchmarks are based on the [data/floating-car-data/conf/match.conf](data/floating-car-data/conf/match.conf) and
 the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/match_raw.conf) files.
 
-First the benchmark definitions.
-The first letter stands for `O = OLD` or `N = NEW`,
-the second letter stands for `M = Multithreading` or `S = Singlethreading`,
-the third letter when it is defined stands for `R = Raw points`.
-
-| Benchmark | Mode                          | Threads | Track points | Sanitized track points | Candidates | Combinations |
-|:----------|:------------------------------|--------:|-------------:|-----------------------:|-----------:|-------------:|
-| O_M       | Match (Old Version 0.3)       |     256 |       14,651 |                  5,745 |    135,088 |    3,713,118 |
-| N_M       | Match (New Version 1.1.7)     |     256 |       14,651 |                  5,600 |    131,181 |    3,589,816 |
-| O_S       | Match (Old Version 0.3)       |       1 |       14,651 |                  5,745 |    135,088 |    3,713,118 |
-| N_S       | Match (New Version 1.1.7)     |       1 |       14,651 |                  5,600 |    131,181 |    3,589,816 |
-| O_M_R     | Match RAW (Old Version 0.3)   |     256 |       88,807 |                 32,599 |    811,417 |   27,835,497 |
-| N_M_R     | Match RAW (New Version 1.1.7) |     256 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
-| O_S_R     | Match RAW (Old Version 0.3)   |       1 |       88,807 |                 32,599 |    811,417 |   27,835,497 |
-| N_S_R     | Match RAW (New Version 1.1.7) |       1 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
+| Benchmark  | Mode      | Threads | Track points | Sanitized track points | Candidates | Combinations |
+|:-----------|:----------|--------:|-------------:|-----------------------:|-----------:|-------------:|
+| Multi      | Match     |     256 |       14,651 |                  5,600 |    131,181 |    3,589,816 |
+| Single     | Match     |       1 |       14,651 |                  5,600 |    131,181 |    3,589,816 |
+| Multi Raw  | Match Raw |     256 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
+| Single Raw | Match Raw |       1 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
 
 And here are the results, the columns are in the same order as the table above:
 
-| Benchmark | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
-|-----------|---------------:|------------------:|-------------------------:|--------------:|
-| O_M       |           6.91 |             48.50 |                     0.40 |         3,457 |
-| N_M       |           0.60 |             17.03 |                     0.27 |           538 |
-| O_S       |          20.59 |             20.88 |                    14.40 |           923 |
-| N_S       |           9.71 |              9.80 |                     9.64 |           116 |
-| O_M_R     |          11.27 |            168.24 |                     4.08 |         5,429 |
-| N_M_R     |           5.07 |            106.87 |                     4.25 |         2,048 |
-| O_S_R     |          90.53 |             90.45 |                    83.84 |           957 |
-| N_S_R     |          58.86 |             59.30 |                    58.76 |           310 |
+| Benchmark  | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
+|------------|---------------:|------------------:|-------------------------:|--------------:|
+| Multi      |           0.60 |             17.03 |                     0.27 |           538 |
+| Single     |           9.71 |              9.80 |                     9.64 |           116 |
+| Multi Raw  |           5.07 |            106.87 |                     4.25 |         2,048 |
+| Single Raw |          58.86 |             59.30 |                    58.76 |           310 |
 
 <details>
 <summary>Match Commands</summary>
 
 ```shell
-# Match (Old Version 0.3) with all threads
-./map_matching_2 \
-  --network-load data/floating-car-data/old/oberfranken.dat \
-  --tracks data/floating-car-data/points.csv \
-  --wkt --time-format="%F %T%Oz" \
-  --output data/floating-car-data/old/matches.csv \
-  --verbose
-```
-
-```shell
-# Match (New Version 1.1.7) with all threads
+# Match with all threads
 ./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match.conf \
   --verbose
 ```
 
 ```shell
-# Match (Old Version 0.3) with 1 thread
-./map_matching_2 \
-  --network-load data/floating-car-data/old/oberfranken.dat \
-  --tracks data/floating-car-data/points.csv \
-  --wkt --time-format="%F %T%Oz" \
-  --single-threading \
-  --output data/floating-car-data/old/matches.csv \
-  --verbose
-```
-
-```shell
-# Match (New Version 1.1.7) with 1 thread
+# Match with 1 thread
 ./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match.conf \
   --threads 1 \
@@ -666,41 +600,14 @@ And here are the results, the columns are in the same order as the table above:
 ```
 
 ```shell
-# Match RAW (Old Version 0.3) with all threads
-./map_matching_2 \
-  --network-load data/floating-car-data/old/oberfranken.dat \
-  --tracks data/floating-car-data/points_anonymized.csv \
-  --delimiter ";" \
-  --id "device" --id "subid" \
-  --x "lon" --y "lat" \
-  --time "timestamp" --time-format "%F %T%Oz" \
-  --output data/floating-car-data/old/matches_raw.csv \
-  --verbose
-```
-
-```shell
-# Match RAW (New Version 1.1.7) with all threads
+# Match Raw with all threads
 ./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match_raw.conf \
   --verbose
 ```
 
 ```shell
-# Match RAW (Old Version 0.3) with 1 thread
-./map_matching_2 \
-  --network-load data/floating-car-data/old/oberfranken.dat \
-  --tracks data/floating-car-data/points_anonymized.csv \
-  --delimiter ";" \
-  --id "device" --id "subid" \
-  --x "lon" --y "lat" \
-  --time "timestamp" --time-format "%F %T%Oz" \
-  --single-threading \
-  --output data/floating-car-data/old/matches_raw.csv \
-  --verbose
-```
-
-```shell
-# Match RAW (New Version 1.1.7) with 1 thread
+# Match Raw with 1 thread
 ./map_matching_2-1.1.7-x86_64.AppImage \
   --config data/floating-car-data/conf/match_raw.conf \
   --threads 1 \
@@ -709,36 +616,20 @@ And here are the results, the columns are in the same order as the table above:
 
 </details>
 
-We have to note that the old version 0.3 needs to import the prepared binary network files completely into RAM before it
-can start matching. This takes time and RAM each time the matching is started.
+We can see that the total and actual matching time (as stated by the verbose mode) is really fast in the current
+version!
 
-We can see that the total and actual matching time (as stated by the verbose mode) is much faster in the new version!
-Moreover, the new version needs drastically less RAM due to the memory mapping and further optimizations.
+Opening the memory mapped network files in the new version takes barely any time:
 
-The old version needs most of the time for reading the network into RAM, whereas the new version simply openes and maps
-the new memory mapped network files, which is a lot faster and reduces the total runtime drastically.
-
-Reading the network graph alone in the old version needs quite some resources, compared to opening the memory mapped
-network files in the new version:
-
-| Mode                             | Time (s) | CPU resources (s) | Max RAM (MiB) |
-|:---------------------------------|---------:|------------------:|--------------:|
-| Read Network (Old Version 0.3)   |     5.64 |              5.63 |           921 |
-| Open Network (New Version 1.1.7) |     0.10 |              0.20 |            20 |
+| Mode         | Time (s) | CPU resources (s) | Max RAM (MiB) |
+|:-------------|---------:|------------------:|--------------:|
+| Open Network |     0.10 |              0.20 |            20 |
 
 <details>
 <summary>Read / Open Network Commands</summary>
 
 ```shell
-# Read Network (Old Version 0.3)
-echo "" | ./map_matching_2 \
-  --network-load data/floating-car-data/old/oberfranken.dat \
-  --readline --no-compare \
-  --verbose
-```
-
-```shell
-# Open Network (New Version 1.1.7)
+# Open Network
 echo "" | ./map_matching_2-1.1.7-x86_64.AppImage \
     --match \
     --input data/floating-car-data/network/ \
@@ -750,28 +641,18 @@ echo "" | ./map_matching_2-1.1.7-x86_64.AppImage \
 
 #### Compare benchmarks
 
-In this benchmark, we compare the results from the old and new version with the provided map matching results from our
-publication (https://doi.org/10.1111/tgis.13107). This is to check whether the New Version 1.1.7 is as accurate as the
-old
-version 0.3 that was used in the publication.
+In this benchmark, we compare the matches from the previous run with the provided ground truth from the Floating Car
+Data (FCD) set.
 
 The comparison is based on the [data/floating-car-data/conf/compare.conf](data/floating-car-data/conf/compare.conf)
 file.
 
-We compared the results of the old version with the `ground_truth.csv` with the old version and the new version,
-and we compared the results of the new version with the `ground_truth.csv` with the new version.
+| Mode       | Time (s) | CPU resources (s) | Actual comparison time (s) | Max RAM (MiB) | Mean correct fraction (%) | Weighted mean correct fraction (%) |
+|:-----------|---------:|------------------:|---------------------------:|--------------:|--------------------------:|-----------------------------------:|
+| Comparison |     0.36 |              9.00 |                       0.21 |            90 |                     99.62 |                              99.65 |
 
-| Mode                                       | Time (s) | CPU resources (s) | Actual comparison time (s) | Max RAM (MiB) | Mean correct fraction (%) | Weighted mean correct fraction (%) |
-|:-------------------------------------------|---------:|------------------:|---------------------------:|--------------:|--------------------------:|-----------------------------------:|
-| Comparison Old Matches (Old Version 0.3)   |     6.27 |             14.50 |                       0.35 |           927 |                     99.17 |                                N/A |
-| Comparison Old Matches (New Version 1.1.7) |     0.38 |              7.46 |                       0.25 |           126 |                     99.17 |                              98.98 |
-| Comparison New Matches (New Version 1.1.7) |     0.36 |              9.00 |                       0.21 |            90 |                     99.62 |                              99.65 |
+We can see that the accuracy is really high and the comparison is very fast with few resource needs.
 
-We can see that the accuracy is exactly the same. However, the new version is faster comparing the results.
-The sub-second times and small memory differences are subject to measurement uncertainty and in practice equal.
-
-Since the old version needs to load the network even for making a comparison, it takes significantly longer time.
-Moreover, the old version only computes the mean accuracy but not the weighted mean accuracy.
 The mean accuracy is the accuracies of all tracks divided by the number of tracks.
 The weighted mean accuracy takes into account the length of the track and normalizes the accuracies by the track
 lengths. As such, it is more correct because a very short but inaccurate result does not count as much as a very long
@@ -779,32 +660,6 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 
 <details>
 <summary>Compare Commands</summary>
-
-```shell
-# Comparison Old Matches (Old Version 0.3)
-./map_matching_2 \
-  --network-load data/floating-car-data/old/oberfranken.dat \
-  --tracks data/floating-car-data/old/matches.csv \
-  --wkt --geometry "match" \
-  --compare-only \
-  --compare data/floating-car-data/ground_truth.csv \
-  --compare-wkt --compare-geometry "WKT" \
-  --compare-output data/floating-car-data/old/comparison.csv \
-  --verbose
-```
-
-```shell
-# Comparison Old Matches (New Version 1.1.7), there is no config file given in the examples directory
-./map_matching_2-1.1.7-x86_64.AppImage \
-  --compare \
-  --output /data/floating-car-data/old/ \
-  --filename comparison.csv \
-  --match-tracks /data/floating-car-data/old/matches.csv \
-  --match-wkt --match-geometry "match" \
-  --compare-tracks /data/floating-car-data/ground_truth.csv \
-  --compare-wkt --compare-geometry "WKT" \
-  --verbose
-```
 
 ```shell
 # Comparison New Matches (New Version 1.1.7)
@@ -824,25 +679,26 @@ More accuracy metrics from other data sets are shown in the [data](data) subfold
 The development of this application has been sponsored by
 the [Institute of Information Systems at Hof University](https://github.com/iisys-hof).
 
-If you want to cite this work, please also cite the official publication:
+Furthermore, this work has been submitted as PhD thesis to the [University of Bamberg](https://www.uni-bamberg.de/en/).
 
-A. Wöltche, "Open source map matching with Markov decision processes: A new method and a detailed benchmark with
-existing approaches", Transactions in GIS, vol. 27, no. 7, pp. 1959–1991, Oct. 2023,
-doi: [10.1111/tgis.13107](https://dx.doi.org/10.1111%2Ftgis.13107).
+If you want to cite this work, please also cite the my PhD thesis:
+
+Wöltche, Adrian (2026): Map matching methods for assigning vehicle positions to road networks, Bamberg: University of
+Bamberg Press, doi: [10.20378/irb-116612](https://doi.org/10.20378/irb-116612)
 
 Bibtex citation format:
 
 ```text
-@article{Woeltche-2023-Opensourcemapmatching,
-  title     = {{O}pen source map matching with {M}arkov decision processes: {A} new method and a detailed benchmark with existing approaches},
-  author    = {{W}öltche, {A}drian},
-  journal   = {{T}ransactions in {GIS}},
-  volume    = {27},
-  number    = {7},
-  pages     = {1959--1991},
-  year      = {2023},
-  month     = {10},
-  publisher = {{W}iley},
-  doi       = {10.1111/tgis.13107},
+@phdthesis{uniba/116612,
+	author    = {Wöltche, Adrian},
+	title     = {Map matching methods for assigning vehicle positions to road networks},
+	series    = {Schriften aus der Fakultät Wirtschaftsinformatik und Angewandte Informatik der Otto-Friedrich-Universität Bamberg},
+	number    = {51},
+	publisher = {University of Bamberg Press},
+	address   = {Bamberg},
+	year      = {2026},
+	pages     = {xxiv, 195},
+	school    = {Universität Bamberg},
+	doi       = {10.20378/irb-116612},
 }
 ```
