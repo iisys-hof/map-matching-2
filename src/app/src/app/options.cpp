@@ -197,15 +197,19 @@ namespace map_matching_2::app {
 
     void export_data::correct(const po::variables_map &vm) {
         if (candidates_export_all) {
-            std::vector<std::string> _column_strings;
-            boost::split(_column_strings, candidates_columns, boost::is_any_of(","));
-            bool has_is_result = std::find(std::cbegin(_column_strings), std::cend(_column_strings), "is_result") !=
-                    std::cend(_column_strings);
-            if (has_is_result) {
-                if (not candidates_columns.empty() and candidates_columns.back() != ',') {
-                    candidates_columns.append(",");
+            const bool is_candidate_columns_manually = not vm["candidates-columns"].defaulted();
+            if (not is_candidate_columns_manually) {
+                std::vector<std::string> _column_strings;
+                boost::split(_column_strings, candidates_columns, boost::is_any_of(","));
+                const bool has_is_result =
+                        std::find(std::cbegin(_column_strings), std::cend(_column_strings), "is_result") !=
+                        std::cend(_column_strings);
+                if (not has_is_result) {
+                    if (not candidates_columns.empty() and candidates_columns.back() != ',') {
+                        candidates_columns.append(",");
+                    }
+                    candidates_columns.append("is_result");
                 }
-                candidates_columns.append("is_result");
             }
         }
     }
@@ -952,7 +956,8 @@ namespace map_matching_2::app {
         options.add_options()
                 ("candidates-export-all", po::value<bool>(&data.candidates_export_all)->default_value(false, "off"),
                         "export all candidates, even if they are not part of the resulting match;\n"
-                        "automatically adds is_result column to candidate-columns if it is not already present, "
+                        "automatically adds is_result column to candidates-columns "
+                        "if candidates-columns is not manually specified and is_result is not already present, "
                         "since it is necessary to distinguish between candidates that are part of the resulting match and those that are not");
 
         return options;
