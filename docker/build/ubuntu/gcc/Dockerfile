@@ -2,13 +2,13 @@
 # docker build -t map_matching_2-gcc-build -f docker/build/ubuntu/gcc/Dockerfile .
 # docker run -u $(id -u):$(id -g) -v .:/tmp/map-matching-2 -it --rm map_matching_2-gcc-build
 
-FROM ubuntu:20.04 AS build
+FROM ubuntu:22.04 AS build
 
 ARG DEBIAN_FRONTEND="noninteractive"
 # use exact GCC version
-ARG GCC_VERSION=16.1.0
-ARG GDB_VERSION=16.3
-ARG CMAKE_VERSION=4.2.5
+ARG GCC_VERSION=16.2.0
+ARG GDB_VERSION=17.1
+ARG CMAKE_VERSION=4.3.1
 
 RUN apt-get update && apt-get dist-upgrade -y && \
     apt-get install --no-install-recommends -y \

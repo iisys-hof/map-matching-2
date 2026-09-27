@@ -374,8 +374,8 @@ We recommend to always use memory-mapping (default).
 In case you used an older version of this software, all steps could be combined into one run.
 However, now with memory mapped files available, this is not practical anymore.
 Opening the prepared memory mapped files needs virtually no time, no matter how big they are.
-This means that the matching (step 2) can start immediately now
-(except when you opt in for memory dumps instead of memory mapped files).
+This means that the matching (step 2) can start immediately now (except when you opt in for memory dumps instead of
+memory mapped files).
 
 Moreover, the comparison step is now independent of the network graph, so you don't need a network at all to compare
 different matches!
@@ -431,13 +431,13 @@ If you want a prebuilt binary, please see the [Download](#download) section.
 
 Building the software is straightforward. The following tools and versions are tested to work:
 
-- **CMake:** Version 4.2.5
+- **CMake:** Version 4.3.1
 - **Ninja:** Version 1.13.2
 - **On Linux:**
-    - **GCC:** Version 16.1
-    - **Clang:** Version 21
+    - **GCC:** Version 16.2
+    - **Clang:** Version 22
 - **On Windows:**
-    - **Visual Studio C++:** Version 17.14.31 (equivalent to MSVC 1944)
+    - **Visual Studio C++:** Version 17.14.41 (equivalent to MSVC 1944)
 - **Architecture:** Only 64-bit compiler and operating system are officially supported
 
 We provide for Linux various Dockerfiles in the [docker](docker) folder. They contain all necessary information for
@@ -496,7 +496,7 @@ For Windows (correct the paths to your CMake and Ninja installations):
 ```shell
 # Initialize compiler environment
 # With PowerShell
-& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1"
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64
 # Alternatively with cmd.exe
 "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 # Now build the program
@@ -521,7 +521,7 @@ and RAM. In case you are low on RAM, set `--parallel 1` during building instead 
 The software is installed in the newly created `run` directory, nothing outside of this directory is written.
 
 In case you work with [CLion](https://www.jetbrains.com/clion/) on Linux, we recommend that you use one of the
-Dockerfiles under [docker/build](docker/build) as Toolchains. We use the Ubuntu 20.04 GCC and Clang variants.
+Dockerfiles under [docker/build](docker/build) as Toolchains. We use the Ubuntu 22.04 GCC and Clang variants.
 On Windows, you can directly use the MSVC 64-bit Toolchain that you installed via the Visual Studio Installer.
 Make sure that Ninja is used from CMake as build tool on both systems.
 
