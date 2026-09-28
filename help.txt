@@ -1002,7 +1002,9 @@ Export Options:
   --candidates-export-all arg (=off)    export all candidates, even if they are
                                         not part of the resulting match;
                                         automatically adds is_result column to 
-                                        candidate-columns if it is not already 
+                                        candidates-columns if 
+                                        candidates-columns is not manually 
+                                        specified and is_result is not already 
                                         present, since it is necessary to 
                                         distinguish between candidates that are
                                         part of the resulting match and those 
