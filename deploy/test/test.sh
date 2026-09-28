@@ -7,10 +7,9 @@ fi
 
 # define distros to test
 distros=(
-    "ubuntu:20.04:Ubuntu 20.04"
     "ubuntu:22.04:Ubuntu 22.04"
     "ubuntu:24.04:Ubuntu 24.04"
-    "debian:11:Debian 11"
+    "ubuntu:26.04:Ubuntu 26.04"
     "debian:12:Debian 12"
     "debian:13:Debian 13"
 )
