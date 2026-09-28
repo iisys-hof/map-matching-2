@@ -16,7 +16,7 @@ COPY src src
 RUN cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF -DEXPLICIT_TEMPLATES=OFF -B build && \
     cmake --build build --target install
 
-FROM ubuntu:20.04 AS run
+FROM ubuntu:22.04 AS run
 
 COPY --from=build /app/run/gcc/release /app/run
 
