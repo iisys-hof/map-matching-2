@@ -106,8 +106,8 @@ stop was somewhere in the middle, it is factually impossible to achieve 100 % ac
 also matching errors happen. This cannot be prevented with stochastic methods because they seek the most probable
 solution concerning their defined metrics, but in a specific case it might still be wrong.
 
-For more benchmarks and results also in other configurations (on the older "mean correct fraction" accuracy metric),
-please see my PhD thesis (https://doi.org/10.20378/irb-116612).
+For more benchmarks and results also in other configurations and on further data sets, please see my PhD thesis
+(https://doi.org/10.20378/irb-116612).
 
 ### Features
 
@@ -485,7 +485,7 @@ For Windows (correct the paths to your CMake and Ninja installations):
 "C:\path\to\cmake.exe" --build build --parallel %NUMBER_OF_PROCESSORS% --target install
 ```
 
-Building needs multiple GB of disk space and needs several minutes even on fast systems.
+Building needs multiple GB of disk space, RAM, and needs several minutes even on fast systems.
 
 In the first step during configuration, CMake resolves all dependencies automatically,
 check the [external](external) folder if you are interested in the details.
@@ -515,13 +515,14 @@ and 1024 MB DDR4 RAM on a local NVMe SSD in an Ubuntu 22.04 LTS LXC container.
 
 #### Prepare Benchmarks
 
-In these benchmarks, we compare the version 1.1.7 preparation step.
+In these benchmarks, we compare the version 1.1.7 preparation step with and without memory mapping.
 
 We used the [data/floating-car-data/conf/prepare.conf](data/floating-car-data/conf/prepare.conf) as a base. The import
 is the `oberfranken-latest.osm.pbf` in the version that we had at the time we ran the benchmarks.
 
-It has to be noted that although the "Max RAM" looks higher, most of it is "shared memory" that can be flushed to disk
-at any time from the operating system. This means that the actual necessary RAM usage is only some MB.
+It has to be noted that although the "Max RAM" looks higher with memory mapping, most of it is "shared memory" that can
+be flushed to disk at any time from the operating system. This means that the actual necessary RAM usage is only some
+MB.
 
 When disabling the intermediate MMap files (`--memory-mapped-preparation off`), the "Max RAM" usage looks lower, but in
 fact, there is less "shared memory" used.
@@ -531,6 +532,8 @@ much higher.
 
 This is a bit challenging to understand, but try it out for yourself and watch the actual memory usage of both variants
 with full and without intermediate MMap in the operating system activity monitor (or Task Manager).
+
+My PhD thesis (https://doi.org/10.20378/irb-116612) contains more details and benchmarks on this topic.
 
 | Mode                                | Time (s) | CPU resources (s) | Max RAM (MiB) | `.osm.pbf` size (MiB) | binary size (MiB) |
 |:------------------------------------|---------:|------------------:|--------------:|----------------------:|------------------:|
@@ -563,7 +566,8 @@ In the following benchmarks, we match the data from our "Hof data set" from my P
 (https://doi.org/10.20378/irb-116612).
 
 The benchmarks are based on the [data/floating-car-data/conf/match.conf](data/floating-car-data/conf/match.conf) and
-the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/match_raw.conf) files.
+the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/match_raw.conf) files with and without
+multithreading (Multi vs. Single Thread).
 
 | Benchmark  | Mode      | Threads | Track points | Sanitized track points | Candidates | Combinations |
 |:-----------|:----------|--------:|-------------:|-----------------------:|-----------:|-------------:|
@@ -572,7 +576,8 @@ the [data/floating-car-data/conf/match_raw.conf](data/floating-car-data/conf/mat
 | Multi Raw  | Match Raw |     256 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
 | Single Raw | Match Raw |       1 |       88,825 |                 31,765 |    786,265 |   26,364,628 |
 
-And here are the results, the columns are in the same order as the table above:
+And here are the results, the columns are in the same order as the table above. The table is split into two due to its
+width:
 
 | Benchmark  | Total Time (s) | CPU resources (s) | Actual matching time (s) | Max RAM (MiB) |
 |------------|---------------:|------------------:|-------------------------:|--------------:|
@@ -619,7 +624,7 @@ And here are the results, the columns are in the same order as the table above:
 We can see that the total and actual matching time (as stated by the verbose mode) is really fast in the current
 version!
 
-Opening the memory mapped network files in the new version takes barely any time:
+Opening the memory mapped network files in the current version takes barely any time:
 
 | Mode         | Time (s) | CPU resources (s) | Max RAM (MiB) |
 |:-------------|---------:|------------------:|--------------:|
@@ -670,7 +675,8 @@ but very accurate track. The weighted mean accuracy is the true accuracy over al
 
 </details>
 
-More accuracy metrics from other data sets are shown in the [data](data) subfolders.
+More accuracy metrics from other data sets are shown in the [data](data) subfolders. Furthermore, my PhD thesis
+(https://doi.org/10.20378/irb-116612) contains many more benchmarks even with additional data sets.
 
 ### Reference
 
@@ -679,9 +685,10 @@ More accuracy metrics from other data sets are shown in the [data](data) subfold
 The development of this application has been sponsored by
 the [Institute of Information Systems at Hof University](https://github.com/iisys-hof).
 
-Furthermore, this work has been submitted as PhD thesis to the [University of Bamberg](https://www.uni-bamberg.de/en/).
+Furthermore, this application is the basis for my PhD thesis that has been submitted to and has been accepted by
+the [University of Bamberg](https://www.uni-bamberg.de/en/).
 
-If you want to cite this work, please also cite the my PhD thesis:
+If you want to cite this open source work, please also cite my PhD thesis:
 
 Wöltche, Adrian (2026): Map matching methods for assigning vehicle positions to road networks, Bamberg: University of
 Bamberg Press, doi: [10.20378/irb-116612](https://doi.org/10.20378/irb-116612)
