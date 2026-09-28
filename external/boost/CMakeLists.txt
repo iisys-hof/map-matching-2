@@ -1,7 +1,7 @@
 # boost
 Managed_FetchContent(boost
-        URL https://archives.boost.io/release/1.92.0/source/boost_1_92_0.tar.bz2
-        URL_HASH SHA256=5c1d40cb8e19adbf740a4ec2da35b3e58f3f5804b1dce44deb53df72193cbc6c
+        URL https://archives.boost.io/release/1.91.0/source/boost_1_91_0.tar.bz2
+        URL_HASH SHA256=de5e6b0e4913395c6bdfa90537febd9028ea4c0735d2cdb0cd9b45d5f51264f5
         SOURCE_SUBDIR this-directory-does-not-exist)
 
 if (boost_NEEDS_REFRESH)
@@ -61,6 +61,12 @@ endif ()
 find_package(Boost QUIET CONFIG HINTS "${boost_BINARY_DIR}" NO_DEFAULT_PATH)
 
 if (NOT Boost_FOUND)
+    if (WIN32)
+        set(_b2 "./b2.exe")
+    else ()
+        set(_b2 "./b2")
+    endif ()
+
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(_variant "variant=debug")
     else ()
@@ -101,9 +107,10 @@ if (NOT Boost_FOUND)
         endif ()
     endif ()
 
-    execute_process(COMMAND ./b2 install link=static,shared ${_runtime_link} threading=multi
+    execute_process(COMMAND ${_b2} install --prefix=${boost_BINARY_DIR}
+            link=static,shared ${_runtime_link} threading=multi
             ${_variant} ${_toolset} ${_address_model} ${_cxxflags} ${_linkflags}
-            --without-python --abbreviate-paths --prefix=${boost_BINARY_DIR}
+            --without-python --abbreviate-paths
             WORKING_DIRECTORY "${boost_SOURCE_DIR}")
 endif ()
 
